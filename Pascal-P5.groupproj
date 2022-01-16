@@ -1,0 +1,62 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{85D91A28-4D1D-4BDB-8181-2C86DF14920A}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="source\pcom.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="source\pint.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="pcom">
+        <MSBuild Projects="source\pcom.dproj"/>
+    </Target>
+    <Target Name="pcom:Clean">
+        <MSBuild Projects="source\pcom.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="pcom:Make">
+        <MSBuild Projects="source\pcom.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="pint">
+        <MSBuild Projects="source\pint.dproj"/>
+    </Target>
+    <Target Name="pint:Clean">
+        <MSBuild Projects="source\pint.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="pint:Make">
+        <MSBuild Projects="source\pint.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="pcom;pint"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="pcom:Clean;pint:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="pcom:Make;pint:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='Release_Build'">
+        <BuildGroupProject Include="source\pint.dproj">
+            <ProjectGuid>{80F2B9C5-B7C7-479A-9B24-7EFDADA656B4}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="source\pcom.dproj">
+            <ProjectGuid>{AC211089-7C39-46AF-BDA4-7857C7E10B86}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+</Project>
