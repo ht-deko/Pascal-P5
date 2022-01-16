@@ -1,5 +1,4 @@
-(*$c+,t-,d-,l-*)
-{*******************************************************************************
+﻿{*******************************************************************************
 *                                                                              *
 *                           Portable Pascal compiler                           *
 *                           ************************                           *
@@ -104,8 +103,12 @@
 *******************************************************************************}
 
 program pcode(input,output,prd,prr);
+{$APPTYPE Console}
+{$WEAKLINKRTTI ON}
+{$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
 
-label 1;
+uses
+  System.SysUtils, System.Math;
 
 const
 
@@ -345,6 +348,39 @@ var   pc          : address;   (*program address register*)
       pcs         : address;
       bai         : integer;
 
+(*-------------------------------------------------------------------------*)
+
+                           { for Delphi }
+
+(*-------------------------------------------------------------------------*)
+
+  function CurrentChar(var F: Text): WideChar;
+  begin
+    result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
+  end (*CurrentChar*) ;
+
+  function Mod2(A, B: Integer): Integer;
+  begin
+    if B = 0 then
+      result := A
+    else
+      result := A - Floor(Extended(A / B)) * B;
+  end (*Mod2*) ;
+
+  {$HINTS OFF}
+  procedure Get(var F: Text);
+  var
+    ch: Char;
+  begin
+    Read(F, ch);
+  end (*Get*) ;
+  {$HINTS ON}
+
+  procedure Page(var F: Text);
+  begin
+    Write(F, #$0C);
+  end (*Page*) ;
+
 (*--------------------------------------------------------------------*)
 
 { Low level error check and handling }
@@ -366,12 +402,12 @@ begin
      v := v+1+maxint; { convert number to 31 bit unsigned }
      t := v div 268435456+8; { extract high digit }
      digits[8] := digit(t); { place high digit }
-     v := v mod 268435456; { remove digit }
+     v := Mod2(v, 268435456); { remove digit }
      n := 7 { set number of digits-1 }
    end;
    p := 1;
    for i := 1 to n do begin
-      d := v div p mod 16; { extract digit }
+      d := v div Mod2(p, 16); { extract digit }
       digits[i] := digit(d); { place }
       if i < 8 then p := p*16
    end;
@@ -435,11 +471,11 @@ begin
    end
 end; (*pmd*)
 
-procedure errori(string: beta);
+procedure errori(passtr: beta);
 begin writeln; write('*** Runtime error');
       if srclin > 0 then write(' [', srclin:1, ']');
-      writeln(': ', string);
-      pmd; goto 1
+      writeln(': ', string(passtr));
+      pmd; Abort
 end;(*errori*)
 
 { get bit from defined array }
@@ -454,7 +490,7 @@ begin
   if dochkdef then begin
 
     b := storedef[a div 8]; { get byte }
-    r := odd(b div bitmsk[a mod 8])
+    r := odd(b div bitmsk[Mod2(a, 8)])
 
   end else r := true; { always set defined }
 
@@ -475,11 +511,11 @@ begin
 
     sb := storedef[a div 8]; { get byte }
     { test bit as is }
-    r := odd(sb div bitmsk[a mod 8]);
+    r := odd(sb div bitmsk[Mod2(a, 8)]);
     if r <> b then begin
 
-      if b then sb := sb+bitmsk[a mod 8]
-      else sb := sb-bitmsk[a mod 8];
+      if b then sb := sb+bitmsk[Mod2(a, 8)]
+      else sb := sb-bitmsk[Mod2(a, 8)];
       storedef[a div 8] := sb
 
     end
@@ -729,7 +765,7 @@ begin
 
 end;
 
-{ end of accessor functions
+{ end of accessor functions }
 
 (*--------------------------------------------------------------------*)
 
@@ -758,6 +794,7 @@ begin
 
    { fetch instruction from byte store }
    op := store[ad]; ad := ad+1;
+   p := 0; q := 0; q1 := 0;
    if insp[op] then begin p := store[ad]; ad := ad+1 end;
    if insq[op] > 0 then begin
 
@@ -769,7 +806,7 @@ begin
    end;
    write(': ');
    wrthex(op, 2);
-   write(' ', instr[op]:10, '  ');
+   write(' ', string(instr[op]):10, '  ');
    if insp[op] then begin
 
       wrthex(p, 2);
@@ -816,7 +853,7 @@ procedure alignu(algn: address; var flc: address);
   var l: integer;
 begin
   l := flc-1;
-  flc := l + algn  -  (algn+l) mod algn
+  flc := l + algn  -  Mod2(algn+l, algn)
 end (*align*);
 
 { align address, downwards }
@@ -825,7 +862,7 @@ procedure alignd(algn: address; var flc: address);
   var l: integer;
 begin
   l := flc+1;
-  flc := l - algn  +  (algn-l) mod algn
+  flc := l - algn  +  Mod2(algn-l, algn)
 end (*align*);
 
 (*--------------------------------------------------------------------*)
@@ -1109,10 +1146,10 @@ procedure load;
          
    end;(*init*)
 
-   procedure errorl(string: beta); (*error in loading*)
+   procedure errorl(passtr: beta); (*error in loading*)
    begin writeln;
-      writeln('*** Program load error: [', iline:1, '] ', string);
-      goto 1
+      writeln('*** Program load error: [', iline:1, '] ', string(passtr));
+      Abort
    end; (*errorl*)
 
    procedure dmplabs; { dump label table }
@@ -1185,16 +1222,34 @@ procedure load;
       var x: integer; (* label number *)
           again: boolean;
           ch1: char;
+     function GetNum(var F: Text): Integer;
+     var
+       IsNegative: Boolean;
+     begin
+       result := 0;
+       while (CurrentChar(F) = ' ') and not Eoln(F) do
+         Read(F, ch);
+       IsNegative := CurrentChar(F) = '-';
+       if IsNegative then
+         Read(F, ch);
+       while CharInSet(CurrentChar(F), ['0'..'9']) and not Eoln(F) do
+         begin
+           result := result * 10 + Ord(CurrentChar(F)) - Ord('0');
+           Read(F, ch);
+         end;
+       if IsNegative then
+         result := -result;
+     end;
    begin
       again := true;
       while again do
             begin if eof(prd) then errorl('unexpected eof on input  ');
                   getnxt;(* first character of line*)
-                  if not (ch in ['i', 'l', 'q', ' ', ':', 'o', 'g']) then
+                  if not CharInSet(ch, ['i', 'l', 'q', ' ', ':', 'o', 'g']) then
                     errorl('unexpected line start    ');
                   case ch of
                        'i': getlin; { comment }
-                       'l': begin read(prd,x);
+                       'l': begin x := GetNum(prd);
                                   getnxt;
                                   if ch='=' then read(prd,labelvalue)
                                             else labelvalue:= pc;
@@ -1223,11 +1278,11 @@ procedure load;
                               getnxt;
                               while not eoln(prd) and (ch = ' ') do getnxt;
                               repeat
-                                if not (ch in ['a'..'z']) then 
+                                if not CharInSet(ch, ['a'..'z']) then
                                   errorl('No valid option found    ');
                                 ch1 := ch; getnxt;
                                 option[ch1] := ch = '+'; getnxt
-                              until not (ch in ['a'..'z']);
+                              until not CharInSet(ch, ['a'..'z']);
                               getlin 
                             end;
                        'g': begin read(prd,gbsiz); gbset := true; getlin end;
@@ -1262,14 +1317,14 @@ procedure load;
         if eof(prd) then errorl('Unexpected eof on input  ');
         for i := 1 to maxalfa do word[i] := ' ';
         i := 1; { set 1st character of word }
-        if not (ch in ['a'..'z']) then errorl('No operation label       ');
-        while ch in ['a'..'z'] do begin
+        if not CharInSet(ch, ['a'..'z']) then errorl('No operation label       ');
+        while CharInSet(ch, ['a'..'z']) do begin
           if i = maxalfa then errorl('Opcode label is too long ');
           word[i] := ch;
           i := i+1; ch := ' ';
           if not eoln(prd) then read(prd,ch); { next character }
         end;
-        pack(word,1,name)
+        Move(word, name, SizeOf(name))
       end; (*getname*)
 
       procedure storeop;
@@ -1381,8 +1436,8 @@ procedure load;
 
                            127: begin
                                   skpspc;
-                                  if ch in ['0'..'9'] then begin i := 0; 
-                                    while ch in ['0'..'9'] do 
+                                  if CharInSet(ch, ['0'..'9']) then begin i := 0;
+                                    while CharInSet(ch, ['0'..'9']) do
                                       begin i := i*10+ord(ch)-ord('0'); getnxt end;
                                     c := chr(i);   
                                   end else begin
@@ -1440,7 +1495,7 @@ procedure load;
                          repeat
                            if eoln(prd) then errorl('unterminated string      ');
                            getnxt;
-                           c := ch; if (ch = '''') and (prd^ = '''') then begin
+                           c := ch; if (ch = '''') and (CurrentChar(prd) = '''') then begin
                              getnxt; c := ' '
                            end;
                            if c <> '''' then begin
@@ -1660,6 +1715,7 @@ procedure fndfre(len: address; var blk: address);
 var l, b: address;
 begin
   b := 0; { set no block found }
+  l := 0;
   blk := gbtop; { set to bottom of heap }
   while blk < np do begin { search blocks in heap }
      l := getadr(blk); { get length }
@@ -1686,7 +1742,8 @@ procedure cscspc;
 var ad, ad1, l, l1: address;
 begin
    { first, colapse all free blocks at the heap top }
-   l := 0; 
+   ad1 := 0;
+   l := 0;
    while (l >= 0) and (np > gbtop) do begin
      { find last entry }
      ad := gbtop;
@@ -1736,7 +1793,6 @@ end;
 procedure dspspc(len, blk: address);
 var ad: address;
 begin
-   len := len; { shut up compiler check }
    if blk = 0 then errori('Dispose uninit pointer   ')
    else if blk = nilval then errori('Dispose nil pointer      ')
    else if (blk < gbtop) or (blk >= np) then errori('Bad pointer value        ');
@@ -1783,18 +1839,18 @@ procedure callsp;
 
       s := +1; { set sign }
       { skip leading spaces }
-      while (f^ = ' ') and not eoln(f) do get(f);
-      if not (f^ in ['+', '-', '0'..'9']) then
+      while (CurrentChar(f) = ' ') and not eoln(f) do get(f);
+      if not CharInSet(CurrentChar(f), ['+', '-', '0'..'9']) then
         errori('Invalid integer format   ');
-      if f^ = '+' then get(f)
-      else if f^ = '-' then begin get(f); s := -1 end;
-      if not (f^ in ['0'..'9']) then errori('Invalid integer format   ');
+      if CurrentChar(f) = '+' then get(f)
+      else if CurrentChar(f) = '-' then begin get(f); s := -1 end;
+      if not CharInSet(CurrentChar(f), ['0'..'9']) then errori('Invalid integer format   ');
       i := 0; { clear initial value }
-      while (f^ in ['0'..'9']) do begin { parse digit }
+      while CharInSet(CurrentChar(f), ['0'..'9']) do begin { parse digit }
 
-         d := ord(f^)-ord('0');
-         if (i > maxint div 10) or 
-            ((i = maxint div 10) and (d > maxint mod 10)) then 
+         d := ord(CurrentChar(f))-ord('0');
+         if (i > maxint div 10) or
+            ((i = maxint div 10) and (d > Mod2(maxint, 10))) then
            errori('Input value overflows    ');
          i := i*10+d; { add in new digit }
          get(f)
@@ -1839,27 +1895,27 @@ procedure callsp;
       s := false; { set sign }
       r := 0.0; { clear result }
       { skip leading spaces }
-      while (f^ = ' ') and not eoln(f) do get(f);
+      while (CurrentChar(f) = ' ') and not eoln(f) do get(f);
       { get any sign from number }
-      if f^ = '-' then begin get(f); s := true end
-      else if f^ = '+' then get(f);
-      if not (f^ in ['0'..'9']) then errori('Invalid real format      ');
-      while (f^ in ['0'..'9']) do begin { parse digit }
+      if CurrentChar(f) = '-' then begin get(f); s := true end
+      else if CurrentChar(f) = '+' then get(f);
+      if not CharInSet(CurrentChar(f), ['0'..'9']) then errori('Invalid real format      ');
+      while CharInSet(CurrentChar(f), ['0'..'9']) do begin { parse digit }
 
-         d := ord(f^)-ord('0');
+         d := ord(CurrentChar(f))-ord('0');
          r := r*10+d; { add in new digit }
          get(f)
 
       end;
-      if f^ in ['.', 'e', 'E'] then begin { it's a real }
+      if CharInSet(CurrentChar(f), ['.', 'e', 'E']) then begin { it's a real }
 
-         if f^ = '.' then begin { decimal point }
+         if CurrentChar(f) = '.' then begin { decimal point }
 
             get(f); { skip '.' }
-            if not (f^ in ['0'..'9']) then errori('Invalid real format      ');
-            while (f^ in ['0'..'9']) do begin { parse digit }
+            if not CharInSet(CurrentChar(f), ['0'..'9']) then errori('Invalid real format      ');
+            while CharInSet(CurrentChar(f), ['0'..'9']) do begin { parse digit }
 
-               d := ord(f^)-ord('0');
+               d := ord(CurrentChar(f))-ord('0');
                r := r*10+d; { add in new digit }
                get(f);
                e := e-1 { count off right of decimal }
@@ -1867,10 +1923,10 @@ procedure callsp;
             end;
 
          end;
-         if f^ in ['e', 'E'] then begin { exponent }
+         if CharInSet(CurrentChar(f), ['e', 'E']) then begin { exponent }
 
             get(f); { skip 'e' }
-            if not (f^ in ['0'..'9', '+', '-']) then
+            if not CharInSet(CurrentChar(f), ['0'..'9', '+', '-']) then
                errori('Invalid real format      ');
             readi(f, i); { get exponent }
             { find with exponent }
@@ -1904,7 +1960,7 @@ procedure callsp;
 
    procedure putfile(var f: text; var ad: address; fn: fileno);
    begin if not filbuff[fn] then errori('File buffer undefined    ');
-         f^:= getchr(ad+fileidsize); put(f);
+         Write(f, getchr(ad+fileidsize));
          filbuff[fn] := false
    end;(*putfile*)
 
@@ -2021,6 +2077,7 @@ begin (*callsp*)
                         pshint(ord(eof(bfiltable[fn]) and not filbuff[fn]))
                       end;
            7 (*eln*): begin popadr(ad); valfil(ad); fn := store[ad];
+                           line := False;
                            if fn <= prrfn then case fn of
                                  inputfn: line:= eoln(input);
                                  outputfn: errori('Eoln output file         ');
@@ -2372,11 +2429,11 @@ begin (*callsp*)
                       end;
            43 (*fbv*): begin popadr(ad); pshadr(ad); valfil(ad);
                           fn := store[ad];
-                          if fn = inputfn then putchr(ad+fileidsize, input^)
-                          else if fn = prdfn then putchr(ad+fileidsize, prd^)
+                          if fn = inputfn then putchr(ad+fileidsize, CurrentChar(input))
+                          else if fn = prdfn then putchr(ad+fileidsize, CurrentChar(prd))
                           else begin
                             if filstate[fn] = fread then
-                            putchr(ad+fileidsize, filtable[fn]^)
+                            putchr(ad+fileidsize, CurrentChar(filtable[fn]))
                           end
                         end;
            44 (*fvb*): begin popint(i); popadr(ad); pshadr(ad); valfil(ad);
@@ -2409,549 +2466,558 @@ begin
 end;
 
 begin (* main *)
+  AssignFile(prd, 'prd');
+  AssignFile(prr, 'prr');
+  try
+    { Suppress unreferenced errors. }
+    {$WARN COMPARISON_FALSE OFF}
+    if adral = 0 then;
+    if adral = 0 then;
+    if boolal = 0 then;
+    if charmax = 0 then;
+    if charal = 0 then;
+    if codemax = 0 then;
+    if filesize = 0 then;
+    if intdig = 0 then;
+    if markfv = 0 then;
+    if maxresult = 0 then;
+    if ordminchar = 0 then;
+    if ordmaxchar = 0 then;
+    if stackelsize = 0 then;
+    {$WARN COMPARISON_FALSE ON}
 
-  { Suppress unreferenced errors. }
-  if adral = 0 then;
-  if adral = 0 then;     
-  if boolal = 0 then;    
-  if charmax = 0 then;   
-  if charal = 0 then;     
-  if codemax = 0 then;    
-  if filesize = 0 then;   
-  if intdig = 0 then;     
-  if markfv = 0 then;     
-  if maxresult = 0 then;  
-  if ordminchar = 0 then; 
-  if ordmaxchar = 0 then; 
-  if stackelsize = 0 then; 
+    write('P5 Pascal interpreter vs. ', majorver:1, '.', minorver:1);
+    if experiment then write('.x');
+    writeln;
+    writeln;
 
-  write('P5 Pascal interpreter vs. ', majorver:1, '.', minorver:1);
-  if experiment then write('.x');
-  writeln;
-  writeln;
+    { !!! remove this next statement for self compile }
+    {elide}rewrite(prr);{noelide}
 
-  { !!! remove this next statement for self compile }
-  {elide}rewrite(prr);{noelide}
-
-  { construct bit equivalence table }
-  i := 1;
-  for bai := 0 to 7 do begin bitmsk[bai] := i; i := i*2 end;
+    { construct bit equivalence table }
+    i := 1;
+    for bai := 0 to 7 do begin bitmsk[bai] := i; i := i*2 end;
   
-  for sdi := 0 to maxdef do storedef[sdi] := 0; { clear storage defined flags }
+    for sdi := 0 to maxdef do storedef[sdi] := 0; { clear storage defined flags }
 
-  writeln('Assembling/loading program');
-  load; (* assembles and stores code *)
+    writeln('Assembling/loading program');
+    load; (* assembles and stores code *)
   
-  pc := 0; sp := cp; np := gbtop; mp := cp; ep := 5; srclin := 0;
+    pc := 0; sp := cp; np := gbtop; mp := cp; ep := 5; srclin := 0;
   
-  { clear globals }
-  for ad := pctop to gbtop-1 do begin store[ad] := 0; putdef(ad, false) end;
+    { clear globals }
+    for ad := pctop to gbtop-1 do begin store[ad] := 0; putdef(ad, false) end;
 
-  interpreting := true;
+    interpreting := true;
 
-  writeln('Running program');
-  writeln;
-  while interpreting do
-  begin
+    writeln('Running program');
+    writeln;
+    while interpreting do
+    begin
 
-    if pc >= pctop then errori('pc out of range          ');
-    { fetch instruction from byte store }
-    pcs := pc; { save starting pc }
-    getop;
+      if pc >= pctop then errori('pc out of range          ');
+      { fetch instruction from byte store }
+      pcs := pc; { save starting pc }
+      getop;
 
-    (*execute*)
+      (*execute*)
 
-    { trace executed instructions }
-    if dotrcins then begin
+      { trace executed instructions }
+      if dotrcins then begin
 
-       wrthex(pcs, maxdigh);
-       write('/');
-       wrthex(sp, maxdigh);
-       lstins(pcs);
-       writeln
+         wrthex(pcs, maxdigh);
+         write('/');
+         wrthex(sp, maxdigh);
+         lstins(pcs);
+         writeln
 
-    end;
-    case op of
+      end;
+      case op of
 
-          0   (*lodi*): begin getp; getq; pshint(getint(base(p) + q)) end;
-          193 (*lodx*): begin getp; getq; pshint(getbyt(base(p) + q)) end;
-          105 (*loda*): begin getp; getq; pshadr(getadr(base(p) + q)) end;
-          106 (*lodr*): begin getp; getq; pshrel(getrel(base(p) + q)) end;
-          107 (*lods*): begin getp; getq; getset(base(p) + q, s1); pshset(s1) end;
-          108 (*lodb*): begin getp; getq; pshint(ord(getbol(base(p) + q))) end;
-          109 (*lodc*): begin getp; getq; pshint(ord(getchr(base(p) + q))) end;
+            0   (*lodi*): begin getp; getq; pshint(getint(base(p) + q)) end;
+            193 (*lodx*): begin getp; getq; pshint(getbyt(base(p) + q)) end;
+            105 (*loda*): begin getp; getq; pshadr(getadr(base(p) + q)) end;
+            106 (*lodr*): begin getp; getq; pshrel(getrel(base(p) + q)) end;
+            107 (*lods*): begin getp; getq; getset(base(p) + q, s1); pshset(s1) end;
+            108 (*lodb*): begin getp; getq; pshint(ord(getbol(base(p) + q))) end;
+            109 (*lodc*): begin getp; getq; pshint(ord(getchr(base(p) + q))) end;
 
-          1   (*ldoi*): begin getq; pshint(getint(pctop+q)) end;
-          194 (*ldox*): begin getq; pshint(getbyt(pctop+q)) end;
-          65  (*ldoa*): begin getq; pshadr(getadr(pctop+q)) end;
-          66  (*ldor*): begin getq; pshrel(getrel(pctop+q)) end;
-          67  (*ldos*): begin getq; getset(pctop+q, s1); pshset(s1) end;
-          68  (*ldob*): begin getq; pshint(ord(getbol(pctop+q))) end;
-          69  (*ldoc*): begin getq; pshint(ord(getchr(pctop+q))) end;
+            1   (*ldoi*): begin getq; pshint(getint(pctop+q)) end;
+            194 (*ldox*): begin getq; pshint(getbyt(pctop+q)) end;
+            65  (*ldoa*): begin getq; pshadr(getadr(pctop+q)) end;
+            66  (*ldor*): begin getq; pshrel(getrel(pctop+q)) end;
+            67  (*ldos*): begin getq; getset(pctop+q, s1); pshset(s1) end;
+            68  (*ldob*): begin getq; pshint(ord(getbol(pctop+q))) end;
+            69  (*ldoc*): begin getq; pshint(ord(getchr(pctop+q))) end;
 
-          2   (*stri*): begin getp; getq; popint(i); putint(base(p)+q, i) end;
-          195 (*strx*): begin getp; getq; popint(i); putbyt(base(p)+q, i) end;
-          70  (*stra*): begin getp; getq; popadr(ad); putadr(base(p)+q, ad) end;
-          71  (*strr*): begin getp; getq; poprel(r1); putrel(base(p)+q, r1) end;
-          72  (*strs*): begin getp; getq; popset(s1); putset(base(p)+q, s1) end;
-          73  (*strb*): begin getp; getq; popint(i1); b1 := i1 <> 0;
-                              putbol(base(p)+q, b1) end;
-          74  (*strc*): begin getp; getq; popint(i1); c1 := chr(i1);
-                              putchr(base(p)+q, c1) end;
+            2   (*stri*): begin getp; getq; popint(i); putint(base(p)+q, i) end;
+            195 (*strx*): begin getp; getq; popint(i); putbyt(base(p)+q, i) end;
+            70  (*stra*): begin getp; getq; popadr(ad); putadr(base(p)+q, ad) end;
+            71  (*strr*): begin getp; getq; poprel(r1); putrel(base(p)+q, r1) end;
+            72  (*strs*): begin getp; getq; popset(s1); putset(base(p)+q, s1) end;
+            73  (*strb*): begin getp; getq; popint(i1); b1 := i1 <> 0;
+                                putbol(base(p)+q, b1) end;
+            74  (*strc*): begin getp; getq; popint(i1); c1 := chr(i1);
+                                putchr(base(p)+q, c1) end;
 
-          3   (*sroi*): begin getq; popint(i); putint(pctop+q, i) end;
-          196 (*srox*): begin getq; popint(i); putbyt(pctop+q, i) end;
-          75  (*sroa*): begin getq; popadr(ad); putadr(pctop+q, ad) end;
-          76  (*sror*): begin getq; poprel(r1); putrel(pctop+q, r1) end;
-          77  (*sros*): begin getq; popset(s1); putset(pctop+q, s1) end;
-          78  (*srob*): begin getq; popint(i1); b1 := i1 <> 0;
-                              putbol(pctop+q, b1) end;
-          79  (*sroc*): begin getq; popint(i1); c1 := chr(i1);
-                              putchr(pctop+q, c1) end;
+            3   (*sroi*): begin getq; popint(i); putint(pctop+q, i) end;
+            196 (*srox*): begin getq; popint(i); putbyt(pctop+q, i) end;
+            75  (*sroa*): begin getq; popadr(ad); putadr(pctop+q, ad) end;
+            76  (*sror*): begin getq; poprel(r1); putrel(pctop+q, r1) end;
+            77  (*sros*): begin getq; popset(s1); putset(pctop+q, s1) end;
+            78  (*srob*): begin getq; popint(i1); b1 := i1 <> 0;
+                                putbol(pctop+q, b1) end;
+            79  (*sroc*): begin getq; popint(i1); c1 := chr(i1);
+                                putchr(pctop+q, c1) end;
 
-          4 (*lda*): begin getp; getq; pshadr(base(p)+q) end;
-          5 (*lao*): begin getq; pshadr(pctop+q) end;
+            4 (*lda*): begin getp; getq; pshadr(base(p)+q) end;
+            5 (*lao*): begin getq; pshadr(pctop+q) end;
 
-          6   (*stoi*): begin popint(i); popadr(ad); putint(ad, i) end;
-          197 (*stox*): begin popint(i); popadr(ad); putbyt(ad, i) end;
-          80  (*stoa*): begin popadr(ad1); popadr(ad); putadr(ad, ad1) end;
-          81  (*stor*): begin poprel(r1); popadr(ad); putrel(ad, r1) end;
-          82  (*stos*): begin popset(s1); popadr(ad); putset(ad, s1) end;
-          83  (*stob*): begin popint(i1); b1 := i1 <> 0; popadr(ad);
-                              putbol(ad, b1) end;
-          84  (*stoc*): begin popint(i1); c1 := chr(i1); popadr(ad);
-                              putchr(ad, c1) end;
+            6   (*stoi*): begin popint(i); popadr(ad); putint(ad, i) end;
+            197 (*stox*): begin popint(i); popadr(ad); putbyt(ad, i) end;
+            80  (*stoa*): begin popadr(ad1); popadr(ad); putadr(ad, ad1) end;
+            81  (*stor*): begin poprel(r1); popadr(ad); putrel(ad, r1) end;
+            82  (*stos*): begin popset(s1); popadr(ad); putset(ad, s1) end;
+            83  (*stob*): begin popint(i1); b1 := i1 <> 0; popadr(ad);
+                                putbol(ad, b1) end;
+            84  (*stoc*): begin popint(i1); c1 := chr(i1); popadr(ad);
+                                putchr(ad, c1) end;
 
-          127 (*ldcc*): begin pshint(ord(getchr(pc))); pc := pc+1 end;
-          126 (*ldcb*): begin pshint(ord(getbol(pc))); pc := pc+1 end;
-          123 (*ldci*): begin i := getint(pc); pc := pc+intsize; pshint(i) end;
-          125 (*ldcn*): pshadr(nilval) (* load nil *) ;
-          124 (*ldcr*): begin getq; pshrel(getrel(q)) end;
-          7   (*ldcs*): begin getq; getset(q, s1); pshset(s1) end;
+            127 (*ldcc*): begin pshint(ord(getchr(pc))); pc := pc+1 end;
+            126 (*ldcb*): begin pshint(ord(getbol(pc))); pc := pc+1 end;
+            123 (*ldci*): begin i := getint(pc); pc := pc+intsize; pshint(i) end;
+            125 (*ldcn*): pshadr(nilval) (* load nil *) ;
+            124 (*ldcr*): begin getq; pshrel(getrel(q)) end;
+            7   (*ldcs*): begin getq; getset(q, s1); pshset(s1) end;
 
-          9   (*indi*): begin getq; popadr(ad); pshint(getint(ad+q)) end;
-          198 (*indx*): begin getq; popadr(ad); pshint(getbyt(ad+q)) end;
-          85  (*inda*): begin getq; popadr(ad); ad1 := getadr(ad+q); 
-                              pshadr(ad1) end;
-          86  (*indr*): begin getq; popadr(ad); pshrel(getrel(ad+q)) end;
-          87  (*inds*): begin getq; popadr(ad); getset(ad+q, s1); pshset(s1) end;
-          88  (*indb*): begin getq; popadr(ad); pshint(ord(getbol(ad+q))) end;
-          89  (*indc*): begin getq; popadr(ad); pshint(ord(getchr(ad+q))) end;
+            9   (*indi*): begin getq; popadr(ad); pshint(getint(ad+q)) end;
+            198 (*indx*): begin getq; popadr(ad); pshint(getbyt(ad+q)) end;
+            85  (*inda*): begin getq; popadr(ad); ad1 := getadr(ad+q);
+                                pshadr(ad1) end;
+            86  (*indr*): begin getq; popadr(ad); pshrel(getrel(ad+q)) end;
+            87  (*inds*): begin getq; popadr(ad); getset(ad+q, s1); pshset(s1) end;
+            88  (*indb*): begin getq; popadr(ad); pshint(ord(getbol(ad+q))) end;
+            89  (*indc*): begin getq; popadr(ad); pshint(ord(getchr(ad+q))) end;
 
-          93 (*incb*),
-          94 (*incc*),
-          201 (*incx*),
-          10 (*inci*): begin getq; popint(i1);
-                         if dochkovf then if (i1<0) = (q<0) then
-                            if maxint-abs(i1) < abs(q) then
-                              errori('Arithmetic overflow      ');
-                         pshint(i1+q)
-                         end;
-          90 (*inca*): begin getq; popadr(a1); pshadr(a1+q) end;
+            93 (*incb*),
+            94 (*incc*),
+            201 (*incx*),
+            10 (*inci*): begin getq; popint(i1);
+                           if dochkovf then if (i1<0) = (q<0) then
+                              if maxint-abs(i1) < abs(q) then
+                                errori('Arithmetic overflow      ');
+                           pshint(i1+q)
+                           end;
+            90 (*inca*): begin getq; popadr(a1); pshadr(a1+q) end;
 
-          11 (*mst*): begin (*p=level of calling procedure minus level of called
-                              procedure + 1;  set dl and sl, decrement sp*)
-                       (* then length of this element is
-                          max(intsize,realsize,boolsize,charsize,ptrsize *)
-                       getp;
-                       ad := sp; { save mark base }
-                       { allocate mark }
-                       for j := 1 to marksize div intsize do pshint(0);
-                       putadr(ad+marksl, base(p)); { sl }
-                       (* the length of this element is ptrsize *)
-                       putadr(ad+markdl, mp); { dl }
-                       (* idem *)
-                       putadr(ad+markep, ep); { ep }
-                       (* idem *)
-                      end;
+            11 (*mst*): begin (*p=level of calling procedure minus level of called
+                                procedure + 1;  set dl and sl, decrement sp*)
+                         (* then length of this element is
+                            max(intsize,realsize,boolsize,charsize,ptrsize *)
+                         getp;
+                         ad := sp; { save mark base }
+                         { allocate mark }
+                         for j := 1 to marksize div intsize do pshint(0);
+                         putadr(ad+marksl, base(p)); { sl }
+                         (* the length of this element is ptrsize *)
+                         putadr(ad+markdl, mp); { dl }
+                         (* idem *)
+                         putadr(ad+markep, ep); { ep }
+                         (* idem *)
+                        end;
 
-          12 (*cup*): begin (*p=no of locations for parameters, q=entry point*)
-                       getp; getq;
-                       mp := sp+(p+marksize); { mp to base of mark }
+            12 (*cup*): begin (*p=no of locations for parameters, q=entry point*)
+                         getp; getq;
+                         mp := sp+(p+marksize); { mp to base of mark }
 
-                       putadr(mp+markra, pc); { place ra }
-                       pc := q
-                      end;
+                         putadr(mp+markra, pc); { place ra }
+                         pc := q
+                        end;
 
-          13 (*ents*): begin getq; ad := mp+q; (*q = length of dataseg*)
-                          if ad <= np then begin
-                            errori('Store overflow: ents     ');
-                          end;
-                          { clear allocated memory and set undefined }
-                          while sp > ad do
-                            begin sp := sp-1; store[sp] := 0; putdef(sp, false);
+            13 (*ents*): begin getq; ad := mp+q; (*q = length of dataseg*)
+                            if ad <= np then begin
+                              errori('Store overflow: ents     ');
                             end;
-                          putadr(mp+marksb, sp) { set bottom of stack }
-                       end;
+                            { clear allocated memory and set undefined }
+                            while sp > ad do
+                              begin sp := sp-1; store[sp] := 0; putdef(sp, false);
+                              end;
+                            putadr(mp+marksb, sp) { set bottom of stack }
+                         end;
 
-          173 (*ente*): begin getq; ep := sp+q;
-                          if ep <= np then errori('Store overflow: ente     ');
-                          putadr(mp+market, ep) { place current ep }
-                        end;
-                        (*q = max space required on stack*)
+            173 (*ente*): begin getq; ep := sp+q;
+                            if ep <= np then errori('Store overflow: ente     ');
+                            putadr(mp+market, ep) { place current ep }
+                          end;
+                          (*q = max space required on stack*)
                         
-          14  (*retp*): begin
-                         if sp <> getadr(mp+marksb) then 
-                           errori('Stack balance            ');
-                         sp := mp;
-                         pc := getadr(mp+markra); { get ra }
-                         ep := getadr(mp+markep); { get old ep }
-                         mp := getadr(mp+markdl)  { get dl }
-                       end;
-          { For characters and booleans, need to clean 8 bit results because
-            only the lower 8 bits were stored to. }
-          130 (*retc*): begin
-                         if sp <> getadr(mp+marksb) then 
-                           errori('Stack balance            ');
-                         putint(mp+markfv+maxresult div 2, 
-                                ord(getchr(mp+markfv+maxresult div 2)));
-                         { set stack below function result }
-                         sp := mp+markfv+maxresult div 2; 
-                         pc := getadr(mp+markra);
-                         ep := getadr(mp+markep);
-                         mp := getadr(mp+markdl)
-                       end;
-          131 (*retb*): begin
-                         if sp <> getadr(mp+marksb) then 
-                           errori('Stack balance            ');
-                         putint(mp+markfv+maxresult div 2, 
-                                ord(getbol(mp+markfv+maxresult div 2)));
-                         { set stack below function result }
-                         sp := mp+markfv+maxresult div 2;
-                         pc := getadr(mp+markra);
-                         ep := getadr(mp+markep);
-                         mp := getadr(mp+markdl)
-                       end;
-          128 (*reti*),
-          204 (*retx*): begin
-                         if sp <> getadr(mp+marksb) then 
-                           errori('Stack balance            ');
-                         { set stack below function result }
-                         sp := mp+markfv+maxresult div 2;
-                         pc := getadr(mp+markra);
-                         ep := getadr(mp+markep);
-                         mp := getadr(mp+markdl)
-                       end;
-          129 (*retr*): begin
-                         if sp <> getadr(mp+marksb) then 
-                           errori('Stack balance            ');
-                         sp := mp+markfv; { set stack below function result }
-                         pc := getadr(mp+markra);
-                         ep := getadr(mp+markep);
-                         mp := getadr(mp+markdl)
-                       end;
-          132  (*reta*): begin
-                         if sp <> getadr(mp+marksb) then 
-                           errori('Stack balance            ');
-                         { set stack below function result }  
-                         sp := mp+markfv+maxresult div 2;
-                         pc := getadr(mp+markra);
-                         ep := getadr(mp+markep);
-                         mp := getadr(mp+markdl)
-                       end;
+            14  (*retp*): begin
+                           if sp <> getadr(mp+marksb) then
+                             errori('Stack balance            ');
+                           sp := mp;
+                           pc := getadr(mp+markra); { get ra }
+                           ep := getadr(mp+markep); { get old ep }
+                           mp := getadr(mp+markdl)  { get dl }
+                         end;
+            { For characters and booleans, need to clean 8 bit results because
+              only the lower 8 bits were stored to. }
+            130 (*retc*): begin
+                           if sp <> getadr(mp+marksb) then
+                             errori('Stack balance            ');
+                           putint(mp+markfv+maxresult div 2,
+                                  ord(getchr(mp+markfv+maxresult div 2)));
+                           { set stack below function result }
+                           sp := mp+markfv+maxresult div 2;
+                           pc := getadr(mp+markra);
+                           ep := getadr(mp+markep);
+                           mp := getadr(mp+markdl)
+                         end;
+            131 (*retb*): begin
+                           if sp <> getadr(mp+marksb) then
+                             errori('Stack balance            ');
+                           putint(mp+markfv+maxresult div 2,
+                                  ord(getbol(mp+markfv+maxresult div 2)));
+                           { set stack below function result }
+                           sp := mp+markfv+maxresult div 2;
+                           pc := getadr(mp+markra);
+                           ep := getadr(mp+markep);
+                           mp := getadr(mp+markdl)
+                         end;
+            128 (*reti*),
+            204 (*retx*): begin
+                           if sp <> getadr(mp+marksb) then
+                             errori('Stack balance            ');
+                           { set stack below function result }
+                           sp := mp+markfv+maxresult div 2;
+                           pc := getadr(mp+markra);
+                           ep := getadr(mp+markep);
+                           mp := getadr(mp+markdl)
+                         end;
+            129 (*retr*): begin
+                           if sp <> getadr(mp+marksb) then
+                             errori('Stack balance            ');
+                           sp := mp+markfv; { set stack below function result }
+                           pc := getadr(mp+markra);
+                           ep := getadr(mp+markep);
+                           mp := getadr(mp+markdl)
+                         end;
+            132  (*reta*): begin
+                           if sp <> getadr(mp+marksb) then
+                             errori('Stack balance            ');
+                           { set stack below function result }
+                           sp := mp+markfv+maxresult div 2;
+                           pc := getadr(mp+markra);
+                           ep := getadr(mp+markep);
+                           mp := getadr(mp+markdl)
+                         end;
 
-          15 (*csp*): begin q := store[pc]; pc := pc+1; callsp end;
+            15 (*csp*): begin q := store[pc]; pc := pc+1; callsp end;
 
-          16 (*ixa*): begin getq; popint(i); popadr(a1); pshadr(q*i+a1) end;
+            16 (*ixa*): begin getq; popint(i); popadr(a1); pshadr(q*i+a1) end;
 
-          17  { equa }: begin popadr(a2); popadr(a1); pshint(ord(a1=a2)) end;
-          139 { equb },
-          141 { equc },
-          137 { equi }: begin popint(i2); popint(i1); pshint(ord(i1=i2)) end;
-          138 { equr }: begin poprel(r2); poprel(r1); pshint(ord(r1=r2)) end;
-          140 { equs }: begin popset(s2); popset(s1); pshint(ord(s1=s2)) end;
-          142 { equm }: begin getq; compare; pshint(ord(b)) end;
+            17  { equa }: begin popadr(a2); popadr(a1); pshint(ord(a1=a2)) end;
+            139 { equb },
+            141 { equc },
+            137 { equi }: begin popint(i2); popint(i1); pshint(ord(i1=i2)) end;
+            138 { equr }: begin poprel(r2); poprel(r1); pshint(ord(r1=r2)) end;
+            140 { equs }: begin popset(s2); popset(s1); pshint(ord(s1=s2)) end;
+            142 { equm }: begin getq; compare; pshint(ord(b)) end;
 
-          18  { neqa }: begin popadr(a2); popadr(a1); pshint(ord(a1<>a2)) end;
-          145 { neqb },
-          147 { neqc },
-          143 { neqi }: begin popint(i2); popint(i1); pshint(ord(i1<>i2)) end;
-          144 { neqr }: begin poprel(r2); poprel(r1); pshint(ord(r1<>r2)) end;
-          146 { neqs }: begin popset(s2); popset(s1); pshint(ord(s1<>s2)) end;
-          148 { neqm }: begin getq; compare; pshint(ord(not b)) end;
+            18  { neqa }: begin popadr(a2); popadr(a1); pshint(ord(a1<>a2)) end;
+            145 { neqb },
+            147 { neqc },
+            143 { neqi }: begin popint(i2); popint(i1); pshint(ord(i1<>i2)) end;
+            144 { neqr }: begin poprel(r2); poprel(r1); pshint(ord(r1<>r2)) end;
+            146 { neqs }: begin popset(s2); popset(s1); pshint(ord(s1<>s2)) end;
+            148 { neqm }: begin getq; compare; pshint(ord(not b)) end;
 
-          151 { geqb },
-          153 { geqc },
-          149 { geqi }: begin popint(i2); popint(i1); pshint(ord(i1>=i2)) end;
-          150 { geqr }: begin poprel(r2); poprel(r1); pshint(ord(r1>=r2)) end;
-          152 { geqs }: begin popset(s2); popset(s1); pshint(ord(s1>=s2)) end;
-          154 { geqm }: begin getq; compare;
-                              pshint(ord(b or (store[a1+i] >= store[a2+i])))
+            151 { geqb },
+            153 { geqc },
+            149 { geqi }: begin popint(i2); popint(i1); pshint(ord(i1>=i2)) end;
+            150 { geqr }: begin poprel(r2); poprel(r1); pshint(ord(r1>=r2)) end;
+            152 { geqs }: begin popset(s2); popset(s1); pshint(ord(s1>=s2)) end;
+            154 { geqm }: begin getq; compare;
+                                pshint(ord(b or (store[a1+i] >= store[a2+i])))
+                          end;
+
+            157 { grtb },
+            159 { grtc },
+            155 { grti }: begin popint(i2); popint(i1); pshint(ord(i1>i2)) end;
+            156 { grtr }: begin poprel(r2); poprel(r1); pshint(ord(r1>r2)) end;
+            158 { grts }: errori('set inclusion            ');
+            160 { grtm }: begin getq; compare;
+                                pshint(ord(not b and (store[a1+i] > store[a2+i])))
+                          end;
+
+            163 { leqb },
+            165 { leqc },
+            161 { leqi }: begin popint(i2); popint(i1); pshint(ord(i1<=i2)) end;
+            162 { leqr }: begin poprel(r2); poprel(r1); pshint(ord(r1<=r2)) end;
+            164 { leqs }: begin popset(s2); popset(s1); pshint(ord(s1<=s2)) end;
+            166 { leqm }: begin getq; compare;
+                                pshint(ord(b or (store[a1+i] <= store[a2+i])))
+                          end;
+
+            169 { lesb },
+            171 { lesc },
+            167 { lesi }: begin popint(i2); popint(i1); pshint(ord(i1<i2)) end;
+            168 { lesr }: begin poprel(r2); poprel(r1); pshint(ord(r1<r2)) end;
+            170 { less }: errori('Set inclusion            ');
+            172 { lesm }: begin getq; compare;
+                                pshint(ord(not b and (store[a1+i] < store[a2+i])))
+                          end;
+
+            23 (*ujp*): begin getq; pc := q end;
+            24 (*fjp*): begin getq; popint(i); if i = 0 then pc := q end;
+            25 (*xjp*): begin getq; popint(i1); pc := i1*ujplen+q end;
+
+            95 (*chka*),
+            190 (*ckla*): begin getq; popadr(a1); pshadr(a1);
+                               {     0 = assign pointer including nil
+                                 Not 0 = assign pointer from heap address }
+                               if a1 = 0 then
+                                  { if zero, but not nil, it's never been assigned }
+                                  errori('Uninitialized pointer    ')
+                               else if (q <> 0) and (a1 = nilval) then
+                                  { q <> 0 means deref, and it was nil
+                                    (which is not zero) }
+                                  errori('Dereference of nil ptr   ')
+                               else if ((a1 < gbtop) or (a1 >= np)) and
+                                       (a1 <> nilval) then
+                                  { outside heap space (which could have
+                                    contracted!) }
+                                  errori('Bad pointer value        ')
+                               else if dochkrpt and (a1 <> nilval) then begin
+                                 { perform use of freed space check }
+                                 if isfree(a1) then
+                                   { attempt to dereference or assign a freed
+                                     block }
+                                   errori('Ptr used after dispose op')
+                               end
+                         end;
+            97 (*chks*): begin getq; popset(s1); pshset(s1);
+                           for j := setlow to getint(q)-1 do
+                             if j in s1 then errori('Set element out of range ');
+                           for j := getint(q+intsize)+1 to sethigh do
+                             if j in s1 then errori('Set element out of range ');
+                         end;
+            98 (*chkb*),
+            99 (*chkc*),
+            199 { chkx },
+            26 (*chki*): begin getq; popint(i1); pshint(i1);
+                          if (i1 < getint(q)) or (i1 > getint(q+intsize)) then
+                          errori('Value out of range       ')
                         end;
 
-          157 { grtb },
-          159 { grtc },
-          155 { grti }: begin popint(i2); popint(i1); pshint(ord(i1>i2)) end;
-          156 { grtr }: begin poprel(r2); poprel(r1); pshint(ord(r1>r2)) end;
-          158 { grts }: errori('set inclusion            ');
-          160 { grtm }: begin getq; compare;
-                              pshint(ord(not b and (store[a1+i] > store[a2+i])))
-                        end;
+            187 { cks }: pshint(0);
+            175 { ckvi },
+            203 { ckvx },
+            179 { ckvb },
+            180 { ckvc }: begin getq; popint(i2); popint(i1);
+                            pshint(i1); pshint(ord((i1 = q) or (i2 <> 0)));
+                          end;
+            188 { cke }: begin popint(i2); popint(i1);
+                            if i2 = 0 then errori('Variant not active       ')
+                          end;
 
-          163 { leqb },
-          165 { leqc },
-          161 { leqi }: begin popint(i2); popint(i1); pshint(ord(i1<=i2)) end;
-          162 { leqr }: begin poprel(r2); poprel(r1); pshint(ord(r1<=r2)) end;
-          164 { leqs }: begin popset(s2); popset(s1); pshint(ord(s1<=s2)) end;
-          166 { leqm }: begin getq; compare;
-                              pshint(ord(b or (store[a1+i] <= store[a2+i])))
-                        end;
+            { all the dups are defined, but not all used }
+            185 { dupb },
+            186 { dupc },
+            181 { dupi }: begin popint(i1); pshint(i1); pshint(i1) end;
+            182 { dupa }: begin popadr(a1); pshadr(a1); pshadr(a1) end;
+            183 { dupr }: begin poprel(r1); pshrel(r1); pshrel(r1) end;
+            184 { dups }: begin popset(s1); pshset(s1); pshset(s1) end;
 
-          169 { lesb },
-          171 { lesc },
-          167 { lesi }: begin popint(i2); popint(i1); pshint(ord(i1<i2)) end;
-          168 { lesr }: begin poprel(r2); poprel(r1); pshint(ord(r1<r2)) end;
-          170 { less }: errori('Set inclusion            ');
-          172 { lesm }: begin getq; compare;
-                              pshint(ord(not b and (store[a1+i] < store[a2+i])))
-                        end;
+            189 { inv }: begin popadr(ad); putdef(ad, false) end;
 
-          23 (*ujp*): begin getq; pc := q end;
-          24 (*fjp*): begin getq; popint(i); if i = 0 then pc := q end;
-          25 (*xjp*): begin getq; popint(i1); pc := i1*ujplen+q end;
-
-          95 (*chka*),
-          190 (*ckla*): begin getq; popadr(a1); pshadr(a1);
-                             {     0 = assign pointer including nil
-                               Not 0 = assign pointer from heap address }
-                             if a1 = 0 then
-                                { if zero, but not nil, it's never been assigned }
-                                errori('Uninitialized pointer    ')
-                             else if (q <> 0) and (a1 = nilval) then
-                                { q <> 0 means deref, and it was nil
-                                  (which is not zero) }
-                                errori('Dereference of nil ptr   ')
-                             else if ((a1 < gbtop) or (a1 >= np)) and
-                                     (a1 <> nilval) then
-                                { outside heap space (which could have
-                                  contracted!) }
-                                errori('Bad pointer value        ')
-                             else if dochkrpt and (a1 <> nilval) then begin
-                               { perform use of freed space check }
-                               if isfree(a1) then
-                                 { attempt to dereference or assign a freed
-                                   block }
-                                 errori('Ptr used after dispose op')
-                             end
-                       end;
-          97 (*chks*): begin getq; popset(s1); pshset(s1);
-                         for j := setlow to getint(q)-1 do
-                           if j in s1 then errori('Set element out of range ');
-                         for j := getint(q+intsize)+1 to sethigh do
-                           if j in s1 then errori('Set element out of range ');
-                       end;
-          98 (*chkb*),
-          99 (*chkc*),
-          199 { chkx },
-          26 (*chki*): begin getq; popint(i1); pshint(i1);
-                        if (i1 < getint(q)) or (i1 > getint(q+intsize)) then
-                        errori('Value out of range       ')
-                      end;
-
-          187 { cks }: pshint(0);
-          175 { ckvi },
-          203 { ckvx },
-          179 { ckvb },
-          180 { ckvc }: begin getq; popint(i2); popint(i1);
-                          pshint(i1); pshint(ord((i1 = q) or (i2 <> 0)));
-                        end;
-          188 { cke }: begin popint(i2); popint(i1);
-                          if i2 = 0 then errori('Variant not active       ')
-                        end;
-
-          { all the dups are defined, but not all used }
-          185 { dupb },
-          186 { dupc },
-          181 { dupi }: begin popint(i1); pshint(i1); pshint(i1) end;
-          182 { dupa }: begin popadr(a1); pshadr(a1); pshadr(a1) end;
-          183 { dupr }: begin poprel(r1); pshrel(r1); pshrel(r1) end;
-          184 { dups }: begin popset(s1); pshset(s1); pshset(s1) end;
-
-          189 { inv }: begin popadr(ad); putdef(ad, false) end;
-
-          28 (*adi*): begin popint(i2); popint(i1);
-                        if dochkovf then if (i1<0) = (i2<0) then
-                          if maxint-abs(i1) < abs(i2) then
-                            errori('Arithmetic overflow      ');
-                      pshint(i1+i2) end;
-          29 (*adr*): begin poprel(r2); poprel(r1); pshrel(r1+r2) end;
-          30 (*sbi*): begin popint(i2); popint(i1);
-                        if dochkovf then if (i1<0) <> (i2<0) then
-                          if maxint-abs(i1) < abs(i2) then
-                            errori('Arithmetic overflow      ');
-                      pshint(i1-i2) end;
-          31 (*sbr*): begin poprel(r2); poprel(r1); pshrel(r1-r2) end;
-          32 (*sgs*): begin popint(i1); pshset([i1]); end;
-          33 (*flt*): begin popint(i1); pshrel(i1) end;
-
-          { note that flo implies the tos is float as well }
-          34 (*flo*): begin poprel(r1); popint(i1); pshrel(i1); pshrel(r1) end;
-
-          35 (*trc*): begin poprel(r1);
-                        if dochkovf then if (r1 < -maxint) or (r1 > maxint) then
-                          errori('Real argument to large   ');
-                        pshint(trunc(r1)) end;
-          36 (*ngi*): begin popint(i1); pshint(-i1) end;
-          37 (*ngr*): begin poprel(r1); pshrel(-r1) end;
-          38 (*sqi*): begin popint(i1);
-                      if dochkovf then if i1 <> 0 then
-                        if abs(i1) > maxint div abs(i1) then
-                          errori('Arithmetic overflow      ');
-                      pshint(sqr(i1)) end;
-          39 (*sqr*): begin poprel(r1); pshrel(sqr(r1)) end;
-          40 (*abi*): begin popint(i1); pshint(abs(i1)) end;
-          41 (*abr*): begin poprel(r1); pshrel(abs(r1)) end;
-          42 (*not*): begin popint(i1); b1 := i1 <> 0; pshint(ord(not b1)) end;
-          43 (*and*): begin popint(i2); b2 := i2 <> 0;
-                            popint(i1); b1 := i1 <> 0;
-                            pshint(ord(b1 and b2)) end;
-          44 (*ior*): begin popint(i2); b2 := i2 <> 0;
-                            popint(i1); b1 := i1 <> 0;
-                            pshint(ord(b1 or b2)) end;
-          45 (*dif*): begin popset(s2); popset(s1); pshset(s1-s2) end;
-          46 (*int*): begin popset(s2); popset(s1); pshset(s1*s2) end;
-          47 (*uni*): begin popset(s2); popset(s1); pshset(s1+s2) end;
-          48 (*inn*): begin popset(s1); popint(i1); pshint(ord(i1 in s1)) end;
-          49 (*mod*): begin popint(i2); popint(i1);
-                        if dochkovf then if i2 <= 0 then errori('Invalid divisor in mod   ');
-                        pshint(i1 mod i2) end;
-          50 (*odd*): begin popint(i1); pshint(ord(odd(i1))) end;
-          51 (*mpi*): begin popint(i2); popint(i1);
-                        if dochkovf then if (i1 <> 0) and (i2 <> 0) then
-                          if abs(i1) > maxint div abs(i2) then
-                            errori('Arithmetic overflow      ');
-                        pshint(i1*i2) end;
-          52 (*mpr*): begin poprel(r2); poprel(r1); pshrel(r1*r2) end;
-          53 (*dvi*): begin popint(i2); popint(i1);
-                            if dochkovf then if i2 = 0 then errori('Zero divide              ');
-                            pshint(i1 div i2) end;
-          54 (*dvr*): begin poprel(r2); poprel(r1);
-                            if dochkovf then if r2 = 0.0 then errori('Zero divide              ');
-                            pshrel(r1/r2) end;
-          55 (*mov*): begin getq; popint(i2); popint(i1);
-                       for i3 := 0 to q-1 do
-                         begin store[i1+i3] := store[i2+i3];
-                               putdef(i1+i3, getdef(i2+i3)) end;
-                       (* q is a number of storage units *)
-                      end;
-          56 (*lca*): begin getq; pshadr(q) end;
-
-          103 (*decb*),
-          104 (*decc*),
-          202 (*decx*),
-          57  (*deci*): begin getq; popint(i1);
-                          if dochkovf then if (i1<0) <> (q<0) then
-                            if maxint-abs(i1) < abs(q) then
+            28 (*adi*): begin popint(i2); popint(i1);
+                          if dochkovf then if (i1<0) = (i2<0) then
+                            if maxint-abs(i1) < abs(i2) then
                               errori('Arithmetic overflow      ');
-                          pshint(i1-q) end;
+                        pshint(i1+i2) end;
+            29 (*adr*): begin poprel(r2); poprel(r1); pshrel(r1+r2) end;
+            30 (*sbi*): begin popint(i2); popint(i1);
+                          if dochkovf then if (i1<0) <> (i2<0) then
+                            if maxint-abs(i1) < abs(i2) then
+                              errori('Arithmetic overflow      ');
+                        pshint(i1-i2) end;
+            31 (*sbr*): begin poprel(r2); poprel(r1); pshrel(r1-r2) end;
+            32 (*sgs*): begin popint(i1); pshset([i1]); end;
+            33 (*flt*): begin popint(i1); pshrel(i1) end;
 
-          58 (*stp*): interpreting := false;
+            { note that flo implies the tos is float as well }
+            34 (*flo*): begin poprel(r1); popint(i1); pshrel(i1); pshrel(r1) end;
 
-          134 (*ordb*),
-          136 (*ordc*),
-          200 (*ordx*),
-          59  (*ordi*): ; { ord is a no-op }
+            35 (*trc*): begin poprel(r1);
+                          if dochkovf then if (r1 < -maxint) or (r1 > maxint) then
+                            errori('Real argument to large   ');
+                          pshint(trunc(r1)) end;
+            36 (*ngi*): begin popint(i1); pshint(-i1) end;
+            37 (*ngr*): begin poprel(r1); pshrel(-r1) end;
+            38 (*sqi*): begin popint(i1);
+                        if dochkovf then if i1 <> 0 then
+                          if abs(i1) > maxint div abs(i1) then
+                            errori('Arithmetic overflow      ');
+                        pshint(sqr(i1)) end;
+            39 (*sqr*): begin poprel(r1); pshrel(sqr(r1)) end;
+            40 (*abi*): begin popint(i1); pshint(abs(i1)) end;
+            41 (*abr*): begin poprel(r1); pshrel(abs(r1)) end;
+            42 (*not*): begin popint(i1); b1 := i1 <> 0; pshint(ord(not b1)) end;
+            43 (*and*): begin popint(i2); b2 := i2 <> 0;
+                              popint(i1); b1 := i1 <> 0;
+                              pshint(ord(b1 and b2)) end;
+            44 (*ior*): begin popint(i2); b2 := i2 <> 0;
+                              popint(i1); b1 := i1 <> 0;
+                              pshint(ord(b1 or b2)) end;
+            45 (*dif*): begin popset(s2); popset(s1); pshset(s1-s2) end;
+            46 (*int*): begin popset(s2); popset(s1); pshset(s1*s2) end;
+            47 (*uni*): begin popset(s2); popset(s1); pshset(s1+s2) end;
+            48 (*inn*): begin popset(s1); popint(i1); pshint(ord(i1 in s1)) end;
+            49 (*mod*): begin popint(i2); popint(i1);
+                          if dochkovf then if i2 <= 0 then errori('Invalid divisor in mod   ');
+                          pshint(Mod2(i1, i2)) end;
+            50 (*odd*): begin popint(i1); pshint(ord(odd(i1))) end;
+            51 (*mpi*): begin popint(i2); popint(i1);
+                          if dochkovf then if (i1 <> 0) and (i2 <> 0) then
+                            if abs(i1) > maxint div abs(i2) then
+                              errori('Arithmetic overflow      ');
+                          pshint(i1*i2) end;
+            52 (*mpr*): begin poprel(r2); poprel(r1); pshrel(r1*r2) end;
+            53 (*dvi*): begin popint(i2); popint(i1);
+                              if dochkovf then if i2 = 0 then errori('Zero divide              ');
+                              pshint(i1 div i2) end;
+            54 (*dvr*): begin poprel(r2); poprel(r1);
+                              if dochkovf then if r2 = 0.0 then errori('Zero divide              ');
+                              pshrel(r1/r2) end;
+            55 (*mov*): begin getq; popint(i2); popint(i1);
+                         for i3 := 0 to q-1 do
+                           begin store[i1+i3] := store[i2+i3];
+                                 putdef(i1+i3, getdef(i2+i3)) end;
+                         (* q is a number of storage units *)
+                        end;
+            56 (*lca*): begin getq; pshadr(q) end;
 
-          60 (*chr*): ; { chr is a no-op }
+            103 (*decb*),
+            104 (*decc*),
+            202 (*decx*),
+            57  (*deci*): begin getq; popint(i1);
+                            if dochkovf then if (i1<0) <> (q<0) then
+                              if maxint-abs(i1) < abs(q) then
+                                errori('Arithmetic overflow      ');
+                            pshint(i1-q) end;
 
-          61 (*ujc*): errori('Case - error             ');
-          62 (*rnd*): begin poprel(r1);
-                        if dochkovf then if (r1 < -(maxint+0.5)) or (r1 > maxint+0.5) then
-                          errori('Real argument to large   ');
-                        pshint(round(r1)) end;
-          63 (*pck*): begin getq; getq1; popadr(a3); popadr(a2); popadr(a1);
-                       if a2+q > q1 then errori('Pack elements out of bnds');
-                       for i4 := 0 to q-1 do begin chkdef(a1+a2);
-                          store[a3+i4] := store[a1+a2];
-                          putdef(a3+i4, getdef(a1+a2));
-                          a2 := a2+1
-                       end
-                     end;
-          64 (*upk*): begin getq; getq1; popadr(a3); popadr(a2); popadr(a1);
-                       if a3+q > q1 then errori('Unpack elem out of bnds  ');
-                       for i4 := 0 to q-1 do begin chkdef(a1+i4);
-                          store[a2+a3] := store[a1+i4];
-                          putdef(a2+a3, getdef(a1+i4));
-                          a3 := a3+1
-                       end
-                     end;
+            58 (*stp*): interpreting := false;
 
-          110 (*rgs*): begin popint(i2); popint(i1); pshset([i1..i2]) end;
-          112 (*ipj*): begin getp; getq; pc := q;
-                       mp := base(p); { index the mark to restore }
-                       { restore marks until we reach the destination level }
-                       sp := getadr(mp+marksb); { get the stack bottom }
-                       ep := getadr(mp+market) { get the mark ep }
-                     end;
-          113 (*cip*): begin getp; popadr(ad);
-                      mp := sp+(p+marksize);
-                      { replace next link mp with the one for the target }
-                      putadr(mp+marksl, getadr(ad+1*ptrsize));
-                      putadr(mp+markra, pc);
-                      pc := getadr(ad)
-                    end;
-          114 (*lpa*): begin getp; getq; { place procedure address on stack }
-                      pshadr(base(p));
-                      pshadr(q)
-                    end;
-          117 (*dmp*): begin getq; sp := sp+q end; { remove top of stack }
+            134 (*ordb*),
+            136 (*ordc*),
+            200 (*ordx*),
+            59  (*ordi*): ; { ord is a no-op }
 
-          118 (*swp*): begin getq; swpstk(q) end;
+            60 (*chr*): ; { chr is a no-op }
 
-          119 (*tjp*): begin getq; popint(i); if i <> 0 then pc := q end;
-
-          120 (*lip*): begin getp; getq; ad := base(p) + q;
-                         ad1 := getadr(ad); ad2 := getadr(ad+1*ptrsize);
-                         pshadr(ad2); pshadr(ad1); 
+            61 (*ujc*): errori('Case - error             ');
+            62 (*rnd*): begin poprel(r1);
+                          if dochkovf then if (r1 < -(maxint+0.5)) or (r1 > maxint+0.5) then
+                            errori('Real argument to large   ');
+                          pshint(round(r1)) end;
+            63 (*pck*): begin getq; getq1; popadr(a3); popadr(a2); popadr(a1);
+                         if a2+q > q1 then errori('Pack elements out of bnds');
+                         for i4 := 0 to q-1 do begin chkdef(a1+a2);
+                            store[a3+i4] := store[a1+a2];
+                            putdef(a3+i4, getdef(a1+a2));
+                            a2 := a2+1
+                         end
+                       end;
+            64 (*upk*): begin getq; getq1; popadr(a3); popadr(a2); popadr(a1);
+                         if a3+q > q1 then errori('Unpack elem out of bnds  ');
+                         for i4 := 0 to q-1 do begin chkdef(a1+i4);
+                            store[a2+a3] := store[a1+i4];
+                            putdef(a2+a3, getdef(a1+i4));
+                            a3 := a3+1
+                         end
                        end;
 
-          191 (*cta*): begin getq; getq1; popint(i); popadr(ad); pshadr(ad);
-                             pshint(i); ad := ad-q-intsize; ad1 := getadr(ad);
-                             if ad1 < intsize then
-                               errori('System error             ');
-                             ad1 := ad1-adrsize-1;
-                             if ad1 >= q1 then begin
-                               ad := ad-ad1*intsize;
-                               if getadr(ad+(q1-1)*intsize) <> i then
-                                 errori('Change to alloc tagfield ');
-                             end
+            110 (*rgs*): begin popint(i2); popint(i1); pshset([i1..i2]) end;
+            112 (*ipj*): begin getp; getq; pc := q;
+                         mp := base(p); { index the mark to restore }
+                         { restore marks until we reach the destination level }
+                         sp := getadr(mp+marksb); { get the stack bottom }
+                         ep := getadr(mp+market) { get the mark ep }
                        end;
-
-          192 (*ivt*): begin getq; getq1; popint(i); popadr(ad);
-                            pshadr(ad); pshint(i);
-                            if false and dochkdef then begin
-                              b := getdef(ad);
-                              if b then b := i <> getint(ad);
-                              if b then begin
-                                ad := ad+q;
-                                for j := 1 to q1 do
-                                  begin putdef(ad, false); ad := ad+1 end
-                              end
-                            end
+            113 (*cip*): begin getp; popadr(ad);
+                        mp := sp+(p+marksize);
+                        { replace next link mp with the one for the target }
+                        putadr(mp+marksl, getadr(ad+1*ptrsize));
+                        putadr(mp+markra, pc);
+                        pc := getadr(ad)
                       end;
+            114 (*lpa*): begin getp; getq; { place procedure address on stack }
+                        pshadr(base(p));
+                        pshadr(q)
+                      end;
+            117 (*dmp*): begin getq; sp := sp+q end; { remove top of stack }
 
-          174 (*mrkl*): begin getq; srclin := q;
-                              if dotrcsrc then
-                                writeln('Source line executed: ', q:1)
+            118 (*swp*): begin getq; swpstk(q) end;
+
+            119 (*tjp*): begin getq; popint(i); if i <> 0 then pc := q end;
+
+            120 (*lip*): begin getp; getq; ad := base(p) + q;
+                           ad1 := getadr(ad); ad2 := getadr(ad+1*ptrsize);
+                           pshadr(ad2); pshadr(ad1);
+                         end;
+
+            191 (*cta*): begin getq; getq1; popint(i); popadr(ad); pshadr(ad);
+                               pshint(i); ad := ad-q-intsize; ad1 := getadr(ad);
+                               if ad1 < intsize then
+                                 errori('System error             ');
+                               ad1 := ad1-adrsize-1;
+                               if ad1 >= q1 then begin
+                                 ad := ad-ad1*intsize;
+                                 if getadr(ad+(q1-1)*intsize) <> i then
+                                   errori('Change to alloc tagfield ');
+                               end
+                         end;
+
+            192 (*ivt*): begin getq; getq1; popint(i); popadr(ad);
+                              pshadr(ad); pshint(i);
+                              if false and dochkdef then begin
+                                b := getdef(ad);
+                                if b then b := i <> getint(ad);
+                                if b then begin
+                                  ad := ad+q;
+                                  for j := 1 to q1 do
+                                    begin putdef(ad, false); ad := ad+1 end
+                                end
+                              end
                         end;
 
-          { illegal instructions }
-          8,    19,  20,  21,  22,  27,  91,  92,  96, 100, 101, 102, 111, 115, 
-          116, 121, 122, 133, 135, 176, 177, 178, 205, 206, 207, 208, 209, 210, 
-          211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 
-          225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 
-          239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 
-          253, 254, 255: errori('Illegal instruction      ');
+            174 (*mrkl*): begin getq; srclin := q;
+                                if dotrcsrc then
+                                  writeln('Source line executed: ', q:1)
+                          end;
 
-    end
-  end; (*while interpreting*)
+            { illegal instructions }
+            8,    19,  20,  21,  22,  27,  91,  92,  96, 100, 101, 102, 111, 115,
+            116, 121, 122, 133, 135, 176, 177, 178, 205, 206, 207, 208, 209, 210,
+            211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224,
+            225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238,
+            239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252,
+            253, 254, 255: errori('Illegal instruction      ');
 
-  { perform heap dump if requested }
-  if dodmpspc then repspc;
+      end
+    end; (*while interpreting*)
 
-  1 : { abort run }
+    { perform heap dump if requested }
+    if dodmpspc then repspc;
+  except
+    on E: EAbort do
+      ;
+  end;
 
   writeln;
   writeln('program complete');
 
+  CloseFile(prd);
+  Flush(prr);
+  CloseFile(prr);
 end.

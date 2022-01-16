@@ -1,5 +1,4 @@
-(*$c+,t-,d-,l-*)
-{*******************************************************************************
+﻿{*******************************************************************************
 *                                                                              *
 *                     Portable Pascal assembler/interpreter                    *
 *                     *************************************                    *
@@ -79,8 +78,12 @@
 *******************************************************************************}
 
 program pascalcompiler(output,prd,prr);
+{$APPTYPE Console}
+{$WEAKLINKRTTI ON}
+{$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
 
-label 99; { terminate immediately }
+uses
+  System.SysUtils, System.Math;
 
 const
 
@@ -526,6 +529,26 @@ var
     i: 1..500; { index for error number tracking array }
     c: char;
 
+
+(*-------------------------------------------------------------------------*)
+
+                           { for Delphi }
+
+(*-------------------------------------------------------------------------*)
+
+  function CurrentChar(var F: Text): WideChar;
+  begin
+    result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
+  end (*CurrentChar*) ;
+
+  function Mod2(A, B: Integer): Integer;
+  begin
+    if B = 0 then
+      result := A
+    else
+      result := A - Floor(Extended(A / B)) * B;
+  end (*Mod2*) ;
+
 (*-------------------------------------------------------------------------*)
 
                            { type change }
@@ -692,7 +715,7 @@ var
   begin
     if l > top then begin
       writeln('*** Error: Compiler internal error');
-      goto 99
+      Abort
     end;
     t := top;
     while t > l do begin
@@ -737,7 +760,7 @@ var
   { find lower case of character }
   function lcase(c: char): char;
   begin
-    if c in ['A'..'Z'] then c := chr(ord(c)-ord('A')+ord('a'));
+    if CharInSet(c, ['A'..'Z']) then c := chr(ord(c)-ord('A')+ord('a'));
     lcase := c
   end { lcase };
 
@@ -780,6 +803,7 @@ var
   procedure strassvf(var a: strvsp; var b: idstr);
   var i, j, l: integer; p, lp: strvsp;
   begin l := maxids; p := nil; a := nil; j := 1;
+  lp := nil;
     while (l > 1) and (b[l] = ' ') do l := l-1; { find length of fixed string }
     if b[l] = ' ' then l := 0;
     for i := 1 to l do begin
@@ -900,6 +924,7 @@ var
   var i, j, f: integer; c: char;
   begin
     i := 1; j := 1;
+    c := ' '; f := 0;
     while i < maxids do begin
       c := ' '; if a <> nil then begin c := a^.str[j]; j := j+1 end;
       if lcase(c) <> lcase(b[i]) then begin f := i; i := maxids end else i := i+1;
@@ -1210,13 +1235,21 @@ var
     var i,k: integer;
         digit: nmstr; { temp holding for digit string }
         rvalb: nmstr; { temp holding for real string }
-        string: csstr;
+        passtr: csstr;
         lvp: csp; test, ferr: boolean;
         iscmte: boolean;
         ev: integer;
 
     procedure nextch;
-    begin if eol then
+    begin
+      {$IFDEF MSWINDOWS}
+      if CurrentChar(prd) = #$0A then
+        begin
+          Read(prd,ch);
+          Exit;
+        end;
+      {$ENDIF}
+      if eol then
       begin if list then writeln(output); endofline
       end;
       if not eof(prd) then
@@ -1224,7 +1257,7 @@ var
         if list then write(output,ch);
         chcnt := chcnt + 1
        end
-      else
+      else if (sy <> endsy) or (ch <> '.') then
         begin writeln(output,'   *** eof ','encountered');
           test := false
         end
@@ -1264,11 +1297,11 @@ var
           switch(chkref)
         else if ch1 = 'u' then
           switch(chkudtc)
-        else if ch1 in ['a'..'z'] then
+        else if CharInSet(ch1, ['a'..'z']) then
           switch(dummy) { pass through unknown options }
-        else begin 
+        else begin
           { skip all likely option chars }
-          while ch in ['a'..'z','A'..'Z','+','-','0'..'9','_'] do
+          while CharInSet(ch, ['a'..'z','A'..'Z','+','-','0'..'9','_']) do
             nextch;
         end;
       until ch <> ',';
@@ -1311,7 +1344,7 @@ var
         begin op := noop; i := 0;
           repeat i := i+1; if i<= digmax then digit[i] := ch; nextch
           until chartp[ch] <> number;
-          if ((ch = '.') and (prd^ <> '.') and (prd^ <> ')')) or
+          if ((ch = '.') and (CurrentChar(prd) <> '.') and (CurrentChar(prd) <> ')')) or
              (lcase(ch) = 'e') then
             begin
               k := i;
@@ -1343,7 +1376,7 @@ var
                     until chartp[ch] <> number
                   end
                  end;
-               new(lvp,reel); pshcst(lvp); sy:= realconst;
+               new(lvp); pshcst(lvp); sy:= realconst;
                lvp^.cclass := reel;
                with lvp^ do
                  begin for i := 1 to digmax do rvalb[i] := ' ';
@@ -1375,25 +1408,25 @@ var
         end;
       chstrquo:
         begin lgth := 0; sy := stringconst;  op := noop;
-          for i := 1 to strglgth do string[i] := ' ';
+          for i := 1 to strglgth do passtr[i] := ' ';
           repeat
             repeat nextch; lgth := lgth + 1;
-                   if lgth <= strglgth then string[lgth] := ch
+                   if lgth <= strglgth then passtr[lgth] := ch
             until (eol) or (ch = '''');
             if eol then error(202) else nextch
           until ch <> '''';
-          string[lgth] := ' '; { get rid of trailing quote }
+          passtr[lgth] := ' '; { get rid of trailing quote }
           lgth := lgth - 1;   (*now lgth = nr of chars in string*)
-          if lgth = 1 then val.ival := ord(string[1])
+          if lgth = 1 then val.ival := ord(passtr[1])
           else
             begin
               if lgth = 0 then error(205);
-              new(lvp,strg); pshcst(lvp);
+              new(lvp); pshcst(lvp);
               lvp^.cclass:=strg;
               if lgth > strglgth then
                 begin error(399); lgth := strglgth end;
               with lvp^ do
-                begin slgth := lgth; strassvc(sval, string, strglgth) end;
+                begin slgth := lgth; strassvc(sval, passtr, strglgth) end;
               val.valp := lvp
             end
         end;
@@ -1405,7 +1438,8 @@ var
         end;
       chperiod:
         begin op := noop; nextch;
-          if ch = '.' then begin sy := range; nextch end
+          if Eof(Prd) then sy := period
+          else if ch = '.' then begin sy := range; nextch end
           else if ch = ')' then begin sy := rbrack; nextch end
           else sy := period
         end;
@@ -1460,7 +1494,7 @@ var
       writeln;
       write('symbol: ');
       case sy of
-         ident:       write('ident: ', id:10);
+         ident:       write('ident: ', string(id):10);
          intconst:    write('int const: ', val.ival:1);
          realconst:   begin write('real const: ');
                             writev(output, val.valp^.rval, 9) end;
@@ -1653,7 +1687,7 @@ var
   begin
     k := alignquot(fsp);
     l := flc-1;
-    flc := l + k  -  (k+l) mod k
+    flc := l + k  -  Mod2(k+l, k)
   end (*align*);
   
   procedure alignd(fsp: stp; var flc: stkoff);
@@ -1661,7 +1695,7 @@ var
   begin
     k := alignquot(fsp);
     l := flc+1;
-    flc := l - k  +  (k-l) mod k;
+    flc := l - k  +  Mod2(k-l, k);
   end (*align*);
   
   { align for stack }
@@ -1669,7 +1703,7 @@ var
     var l: integer;
   begin
     l := flc+1;
-    flc := l - stackal  +  (stackal-l) mod stackal;
+    flc := l - stackal  +  Mod2(stackal-l, stackal);
     aligns := flc
   end (*aligns*);
 
@@ -1941,7 +1975,7 @@ var
               if lgth = 1 then lsp := charptr
               else
                 begin
-                  new(lsp,arrays); pshstc(lsp);
+                  new(lsp); pshstc(lsp);
                   with lsp^ do
                     begin aeltype := charptr; inxtype := nil;
                        size := lgth*charsize; form := arrays;
@@ -1968,7 +2002,7 @@ var
                       if lsp = realptr then
                         begin
                           if sign = neg then
-                            begin new(lvp,reel); pshcst(lvp); lvp^.rval := nil;
+                            begin new(lvp); pshcst(lvp); lvp^.rval := nil;
                               if strchr(fvalu.valp^.rval, 1) = '-' then
                                 strchrass(lvp^.rval, 1, '+')
                               else strchrass(lvp^.rval, 1, '-');
@@ -1999,7 +2033,7 @@ var
       fsp := lsp
     end (*constant*) ;
 
-    function string(fsp: stp) : boolean; forward;
+    function _string(fsp: stp) : boolean; forward;
 
     function comptypes(fsp1,fsp2: stp) : boolean;
       (*decide whether structures pointed at by fsp1 and fsp2 are compatible*)
@@ -2032,7 +2066,7 @@ var
                                      not fsp2^.matchpack)) or
                                   (fsp1^.elset = nil) or (fsp2^.elset = nil);
               { Arrays are compatible if they are string types and equal in size }
-              arrays: comptypes := string(fsp1) and string(fsp2) and
+              arrays: comptypes := _string(fsp1) and _string(fsp2) and
                                    (fsp1^.size = fsp2^.size );
               { Pointers, must either be the same type or aliases of the same
                 type, or one must be nil. The nil pointer is indicated by a nil
@@ -2086,9 +2120,9 @@ var
       filecomponent := f
     end;
 
-    function string;
+    function _string;
     var fmin, fmax: integer;
-    begin string := false;
+    begin _string := false;
       if fsp <> nil then
         if fsp^.form = arrays then
           if fsp^.packing then begin
@@ -2096,7 +2130,7 @@ var
             index type was in error. Either way, we call it a string }
           if fsp^.inxtype = nil then fmin := 1
           else getbounds(fsp^.inxtype,fmin,fmax);
-          if comptypes(fsp^.aeltype,charptr) and (fmin = 1) then string := true
+          if comptypes(fsp^.aeltype,charptr) and (fmin = 1) then _string := true
         end
     end (*string*) ;
 
@@ -2141,7 +2175,7 @@ var
             if sy = lparent then
               begin ttop := top;   (*decl. consts local to innermost block*)
                 while display[top].occur <> blck do top := top - 1;
-                new(lsp,scalar,declared); pshstc(lsp);
+                new(lsp); pshstc(lsp);
                 with lsp^ do
                   begin size := intsize; form := scalar;
                     scalkind := declared; packing := false
@@ -2149,7 +2183,7 @@ var
                 lcp1 := nil; lcnt := 0;
                 repeat insymbol;
                   if sy = ident then
-                    begin new(lcp,konst); ininam(lcp);
+                    begin new(lcp); ininam(lcp);
                       with lcp^ do
                         begin strassvf(name, id); idtype := lsp; next := lcp1;
                           values.ival := lcnt; klass := konst
@@ -2174,10 +2208,10 @@ var
                   begin searchid([types,konst],lcp);
                     insymbol;
                     if lcp^.klass = konst then
-                      begin new(lsp,subrange); pshstc(lsp);
+                      begin new(lsp); pshstc(lsp);
                         with lsp^, lcp^ do
                           begin form := subrange; rangetype := idtype; 
-                            if string(rangetype) then
+                            if _string(rangetype) then
                               begin error(148); rangetype := nil end;
                             min := values; size := intsize; packing := false
                           end;
@@ -2193,10 +2227,10 @@ var
                       end
                   end (*sy = ident*)
                 else
-                  begin new(lsp,subrange); pshstc(lsp);
+                  begin new(lsp); pshstc(lsp);
                     lsp^.form := subrange; lsp^.packing := false;
                     constant(fsys + [range],lsp1,lvalu);
-                    if string(lsp1) then
+                    if _string(lsp1) then
                       begin error(148); lsp1 := nil end;
                     with lsp^ do
                       begin rangetype:=lsp1; min:=lvalu; size:=intsize end;
@@ -2228,13 +2262,14 @@ var
             minsize,maxsize,lsize: addrrange; lvalu: valu;
             test: boolean; mm: boolean;
       begin nxt1 := nil; lsp := nil;
+      lcp := nil;
         if not (sy in (fsys+[ident,casesy])) then
           begin error(19); skip(fsys + [ident,casesy]) end;
         while sy = ident do
           begin nxt := nxt1;
             repeat
               if sy = ident then
-                begin new(lcp,field); ininam(lcp);
+                begin new(lcp); ininam(lcp);
                   with lcp^ do
                     begin strassvf(name, id); idtype := nil; next := nxt;
                       klass := field; varnt := vartyp; varlb := varlab;
@@ -2272,7 +2307,7 @@ var
           with nxt1^ do
             begin lcp := next; next := nxt; nxt := nxt1; nxt1 := lcp end;
         if sy = casesy then
-          begin new(lsp,tagfld); pshstc(lsp);
+          begin new(lsp); pshstc(lsp);
             with lsp^ do
               begin tagfieldp := nil; fstvar := nil; form:=tagfld; 
                     packing := false end;
@@ -2283,7 +2318,7 @@ var
                 { find possible type first }
                 searchidnenm([types],lcp1,mm);
                 { now set up as field id }
-                new(lcp,field); ininam(lcp);
+                new(lcp); ininam(lcp);
                 with lcp^ do
                   begin strassvf(name, id); idtype := nil; klass:=field;
                     next := nil; fldaddr := displ; varnt := vartyp;
@@ -2311,9 +2346,9 @@ var
                         tagfield checks are on }
                       if (lcp^.name <> nil) or chkudtf then
                         displ := displ+lsp1^.size;
-                      if (lsp1^.form <= subrange) or string(lsp1) then
+                      if (lsp1^.form <= subrange) or _string(lsp1) then
                         begin if comptypes(realptr,lsp1) then error(109)
-                          else if string(lsp1) then error(399);
+                          else if _string(lsp1) then error(399);
                           lcp^.idtype := lsp1; lsp^.tagfieldp := lcp;
                         end
                       else error(110);
@@ -2330,7 +2365,7 @@ var
                 repeat constant(fsys + [comma,colon,lparent],lsp3,lvalu);
                   if lsp^.tagfieldp <> nil then
                    if not comptypes(lsp^.tagfieldp^.idtype,lsp3)then error(111);
-                  new(lsp3,variant); pshstc(lsp3);
+                  new(lsp3); pshstc(lsp3);
                   with lsp3^ do
                     begin nxtvar := lsp1; subvar := lsp2; varval := lvalu;
                           caslst := lsp2; form := variant; packing := false
@@ -2385,14 +2420,14 @@ var
           if sy in simptypebegsys then simpletype(fsys,fsp,fsize)
           else
     (*^*)     if sy = arrow then
-              begin new(lsp,pointer); pshstc(lsp); fsp := lsp;
+              begin new(lsp); pshstc(lsp); fsp := lsp;
                 with lsp^ do
                   begin eltype := nil; size := ptrsize; form:=pointer; 
                         packing := false end;
                 insymbol;
                 if sy = ident then
                   begin { forward reference everything }
-                    new(lcp,types); ininam(lcp);
+                    new(lcp); ininam(lcp);
                     with lcp^ do
                       begin strassvf(name,id); idtype := lsp;
                         next := fwptr; klass := types
@@ -2416,7 +2451,7 @@ var
                   begin insymbol;
                     if sy = lbrack then insymbol else error(11);
                     lsp1 := nil;
-                    repeat new(lsp,arrays); pshstc(lsp);
+                    repeat new(lsp); pshstc(lsp);
                       with lsp^ do
                         begin aeltype := lsp1; inxtype := nil; form:=arrays;
                               packing := ispacked end;
@@ -2471,7 +2506,7 @@ var
                       else error(250);
                       displ := 0;
                       fieldlist(fsys-[semicolon]+[endsy],lsp1,nil,nil,1);
-                      new(lsp,records);
+                      new(lsp);
                       with lsp^ do
                         begin fstfld := display[top].fname;
                           display[top].fname := nil;
@@ -2503,7 +2538,7 @@ var
                                 if (lmin < setlow) or (lmax > sethigh)
                                   then error(169);
                               end;
-                        new(lsp,power); pshstc(lsp);
+                        new(lsp); pshstc(lsp);
                         with lsp^ do
                           begin elset:=lsp1; size:=setsize; form:=power;
                                 packing := ispacked; matchpack := true end;
@@ -2514,7 +2549,7 @@ var
                             if sy = ofsy then insymbol else error(8);
                             typ(fsys,lsp1,lsize);
                             if filecomponent(lsp1) then error(190);
-                            new(lsp,files); pshstc(lsp);
+                            new(lsp); pshstc(lsp);
                             with lsp^ do
                               begin filtype := lsp1; size := filesize+lsize;
                                 form := files; packing := ispacked
@@ -2555,7 +2590,7 @@ var
       if sy <> ident then
         begin error(2); skip(fsys + [ident]) end;
       while sy = ident do
-        begin new(lcp,konst); ininam(lcp);
+        begin new(lcp); ininam(lcp);
           with lcp^ do
             begin strassvf(name, id); idtype := nil; next := nil; klass:=konst;
               refer := false
@@ -2580,7 +2615,7 @@ var
       if sy <> ident then
         begin error(2); skip(fsys + [ident]) end;
       while sy = ident do
-        begin new(lcp,types); ininam(lcp);
+        begin new(lcp); ininam(lcp);
           with lcp^ do
             begin strassvf(name, id); idtype := nil; klass := types;
               refer := false
@@ -2607,7 +2642,7 @@ var
       repeat
         repeat
           if sy = ident then
-            begin new(lcp,vars); ininam(lcp);
+            begin new(lcp); ininam(lcp);
               with lcp^ do
                begin strassvf(name, id); next := nxt; klass := vars;
                   idtype := nil; vkind := actual; vlev := level;
@@ -2688,7 +2723,7 @@ var
                   begin
                     insymbol; lcp := nil;
                     if sy = ident then
-                      begin new(lcp,proc,declared,formal); ininam(lcp);
+                      begin new(lcp); ininam(lcp);
                         lc := lc-ptrsize*2; { mp and addr }
                         alignd(parmptr,lc);
                         with lcp^ do
@@ -2715,7 +2750,7 @@ var
                       begin lcp2 := nil;
                         insymbol;
                         if sy = ident then
-                          begin new(lcp,func,declared,formal); ininam(lcp);
+                          begin new(lcp); ininam(lcp);
                             lc := lc-ptrsize*2; { mp and addr }
                             alignd(parmptr,lc);
                             with lcp^ do
@@ -2742,7 +2777,7 @@ var
                                 lcp^.idtype := lsp;
                                 if lsp <> nil then
                                  if not(lsp^.form in[scalar,subrange,pointer])
-                                    then begin error(120); lsp := nil end;
+                                    then begin error(120) end;
                                 insymbol
                               end
                             else error(2);
@@ -2761,7 +2796,7 @@ var
                         count := 0;
                         repeat
                           if sy = ident then
-                            begin new(lcp,vars); ininam(lcp);
+                            begin new(lcp); ininam(lcp);
                               with lcp^ do
                                 begin strassvf(name,id); idtype:=nil; klass:=vars;
                                   vkind := lkind; next := lcp2; vlev := level;
@@ -2871,8 +2906,8 @@ var
             end;
           if not forw then
             begin
-              if fsy = procsy then new(lcp,proc,declared,actual)
-              else new(lcp,func,declared,actual); ininam(lcp);
+              if fsy = procsy then new(lcp)
+              else new(lcp); ininam(lcp);
               with lcp^ do
                 begin strassvf(name, id); idtype := nil;
                   externl := false; pflev := level; genlabel(lbname);
@@ -3039,11 +3074,11 @@ var
       end (*mest*);
 
       procedure putic;
-      begin if ic mod 10 = 0 then writeln(prr,'i',ic:5) end;
+      begin if Mod2(ic, 10) = 0 then writeln(prr,'i',ic:5) end;
 
       procedure gen0(fop: oprange);
       begin
-        if prcode then begin putic; writeln(prr,mn[fop]:4) end;
+        if prcode then begin putic; writeln(prr,string(mn[fop]):4) end;
         ic := ic + 1; mes(fop)
       end (*gen0*) ;
 
@@ -3051,9 +3086,9 @@ var
         var k, j: integer; p: strvsp;
       begin
         if prcode then
-          begin putic; write(prr,mn[fop]:4);
+          begin putic; write(prr,string(mn[fop]):4);
             if fop = 30 then
-              begin writeln(prr,sna[fp2]:12);
+              begin writeln(prr,string(sna[fp2]):12);
                 mesl(pdx[fp2]);
               end
             else
@@ -3085,7 +3120,7 @@ var
         var k : integer;
       begin
         if prcode then
-          begin putic; write(prr,mn[fop]:4);
+          begin putic; write(prr,string(mn[fop]):4);
             case fop of
               45,50,54,56,74,62,63,81,82: 
                 begin
@@ -3175,7 +3210,7 @@ var
       begin
         if prcode then
           begin putic;
-            write(prr,mn[fop]:4);
+            write(prr,string(mn[fop]):4);
             gentypindicator(fsp);
             writeln(prr);
           end;
@@ -3186,7 +3221,7 @@ var
       begin
         if prcode then
           begin putic;
-            write(prr,mn[fop]:4);
+            write(prr,string(mn[fop]):4);
             gentypindicator(fsp);
             writeln(prr,' ',fp2:11)
           end;
@@ -3197,7 +3232,7 @@ var
       begin
         if prcode then
           begin putic;
-            write(prr,mn[fop]: 4);
+            write(prr,string(mn[fop]): 4);
             gentypindicator(fsp);
             writeln(prr,' ', fp1:3+5*ord(abs(fp1)>99),fp2:11);
           end;
@@ -3262,7 +3297,7 @@ var
           if typtr <> nil then
             begin
               case kind of
-                cst:   if string(typtr) then
+                cst:   if _string(typtr) then
                          if cstptrix >= cstoccmax then error(254)
                          else
                            begin cstptrix := cstptrix + 1;
@@ -3287,21 +3322,21 @@ var
       begin load;
         if gattr.typtr <> nil then
           if gattr.typtr <> boolptr then error(144);
-        if prcode then begin putic; writeln(prr,mn[33]:4,' l':8,faddr:4) end;
+        if prcode then begin putic; writeln(prr,string(mn[33]):4,' l':8,faddr:4) end;
         ic := ic + 1; mes(33)
       end (*genfjp*) ;
 
       procedure genujpxjp(fop: oprange; fp2: integer);
       begin
        if prcode then
-          begin putic; writeln(prr, mn[fop]:4, ' l':8,fp2:4) end;
+          begin putic; writeln(prr, string(mn[fop]):4, ' l':8,fp2:4) end;
         ic := ic + 1; mes(fop)
       end (*genujpxjp*);
 
       procedure genipj(fop: oprange; fp1, fp2: integer);
       begin
        if prcode then
-          begin putic; writeln(prr, mn[fop]:4,fp1:4,' l':8,fp2:4) end;
+          begin putic; writeln(prr, string(mn[fop]):4,fp1:4,' l':8,fp2:4) end;
         ic := ic + 1; mes(fop)
       end (*genujpxjp*);
 
@@ -3310,11 +3345,11 @@ var
         if prcode then
           begin putic;
             if fop = 32 then begin { create ents or ente instructions }
-              if fp1 = 1 then writeln(prr,mn[fop]:4,'s','l':8,fp2:4)
-              else writeln(prr,mn[fop]:4,'e','l':8,fp2:4);
+              if fp1 = 1 then writeln(prr,string(mn[fop]):4,'s','l':8,fp2:4)
+              else writeln(prr,string(mn[fop]):4,'e','l':8,fp2:4);
               mes(fop)
             end else begin
-              writeln(prr,mn[fop]:4,fp1:4,'l':4,fp2:4);
+              writeln(prr,string(mn[fop]):4,fp1:4,'l':4,fp2:4);
               mesl(fp1)
             end
           end;
@@ -3325,7 +3360,7 @@ var
       begin
         if prcode then
           begin putic;
-            writeln(prr,mn[68]:4,fp2:4,'l':4,fp1:4)
+            writeln(prr,string(mn[68]):4,fp2:4,'l':4,fp1:4)
           end;
         ic := ic + 1; mes(68)
       end (*genlpa*);
@@ -3754,6 +3789,7 @@ var
                 deffil: boolean; { default file was loaded }
                 test: boolean;
           begin llkey := lkey; txt := true; deffil := true; byt := false;
+            lsp1 := nil;
             if sy = lparent then
             begin insymbol;
             expression(fsys + [comma,colon,rparent], false);
@@ -3848,7 +3884,7 @@ var
                           begin
                             if lsp^.form = scalar then error(399)
                             else
-                              if string(lsp) then
+                              if _string(lsp) then
                                 begin len := lsp^.size div charmax;
                                   if default then
                                         gen2(51(*ldc*),1,len);
@@ -3969,7 +4005,7 @@ var
 
           procedure newdisposeprocedure(disp: boolean);
             label 1;
-            var lsp,lsp1,lsp2: stp; varts: integer;
+            var lsp,lsp1,lsp2: stp;
                 lsize: addrrange; lval: valu; tagc: integer; tagrec: boolean;
           begin
             if disp then begin 
@@ -3979,7 +4015,7 @@ var
               variable(fsys + [comma,rparent], false); 
               loadaddress
             end;
-            lsp := nil; varts := 0; lsize := 0; tagc := 0; tagrec := false;
+            lsp := nil; lsize := 0; tagc := 0;
             if gattr.typtr <> nil then
               with gattr.typtr^ do
                 if form = pointer then
@@ -3993,14 +4029,14 @@ var
             tagrec := taggedrec(lsp);
             while sy = comma do
               begin insymbol;constant(fsys + [comma,rparent],lsp1,lval);
-                varts := varts + 1; lsp2 := lsp1;
+                lsp2 := lsp1;
                 (*check to insert here: is constant in tagfieldtype range*)
                 if lsp = nil then error(158)
                 else
                   if lsp^.form <> tagfld then error(162)
                   else
                     if lsp^.tagfieldp <> nil then
-                      if string(lsp1) or (lsp1 = realptr) then error(159)
+                      if _string(lsp1) or (lsp1 = realptr) then error(159)
                       else
                         if comptypes(lsp^.tagfieldp^.idtype,lsp1) then
                           begin
@@ -4373,7 +4409,7 @@ var
                             begin
                               if lgth = 1 then typtr := charptr
                               else
-                                begin new(lsp,arrays); pshstc(lsp);
+                                begin new(lsp); pshstc(lsp);
                                   with lsp^ do
                                     begin aeltype := charptr; form:=arrays;
                                       packing := true;
@@ -4398,7 +4434,7 @@ var
                         end;
               (*[*)     lbrack:
                         begin insymbol; cstpart := [ ]; varpart := false;
-                          new(lsp,power); pshstc(lsp);
+                          new(lsp); pshstc(lsp);
                           with lsp^ do
                             begin elset:=nil;size:=setsize;form:=power;
                                   packing := false; matchpack := false end;
@@ -4499,7 +4535,7 @@ var
                           if varpart then
                             begin
                               if cstpart <> [ ] then
-                                begin new(lvp,pset); pshcst(lvp);
+                                begin new(lvp); pshcst(lvp);
                                   lvp^.pval := cstpart;
                                   lvp^.cclass := pset;
                                   if cstptrix = cstoccmax then error(254)
@@ -4512,7 +4548,7 @@ var
                                 end
                             end
                           else
-                            begin new(lvp,pset); pshcst(lvp);
+                            begin new(lvp); pshcst(lvp);
                               lvp^.cclass := pset;
                               lvp^.pval := cstpart;
                               gattr.cval.valp := lvp
@@ -4654,6 +4690,7 @@ var
           end (*simpleexpression*) ;
 
         begin (*expression*)
+          typind := ' ';
           simpleexpression(fsys + [relop], threaten);
           if sy = relop then
             begin
@@ -4708,7 +4745,7 @@ var
                             end;
                           arrays:
                             begin
-                              if not string(lattr.typtr)
+                              if not _string(lattr.typtr)
                                 then error(134);
                               typind := 'm'
                             end;
@@ -5018,6 +5055,7 @@ var
               typind: char; (* added for typing [sam] *)
               typ: stp;
         begin lcp := nil; llc := lc;
+          lsy := othersy; lcs := 0;
           with lattr do
             begin typtr := nil; kind := varbl;
               access := drct; vlevel := level; dplmt := 0; packing := false
@@ -5315,7 +5353,7 @@ var
                        { output general error for undefined external file }
                        writeln(output);
                        writeln(output,'**** Error: external file unknown ''',
-                                      fextfilep^.filename:8, '''');
+                                      string(fextfilep^.filename):8, '''');
                        toterr := toterr+1;
                        { hold the error in case not found, since this error
                          occurs far from the original symbol }
@@ -5324,7 +5362,7 @@ var
                          { a header file was never defined in a var statement }
                          writeln(output);
                          writeln(output,'**** Error: Undeclared external file ''',
-                                        fextfilep^.filename:8, '''');
+                                        string(fextfilep^.filename):8, '''');
                          toterr := toterr+1;
                          llcp := uvarptr
                        end;
@@ -5332,7 +5370,7 @@ var
                          if llcp^.idtype^.form<>files then
                            begin writeln(output);
                              writeln(output,'**** Error: Undeclared external file ''',
-                                            fextfilep^.filename:8, '''');
+                                            string(fextfilep^.filename):8, '''');
                              toterr := toterr+1
                            end
                      end;
@@ -5433,32 +5471,32 @@ var
   begin                                                 (*type underlying:*)
                                                         (******************)
 
-    new(intptr,scalar,standard); pshstc(intptr);               (*integer*)
+    new(intptr); pshstc(intptr);               (*integer*)
     with intptr^ do
-      begin size := intsize; form := scalar; scalkind := standard; 
+      begin size := intsize; form := scalar; scalkind := standard;
             packing := false end;
-    new(realptr,scalar,standard); pshstc(realptr);             (*real*)
+    new(realptr); pshstc(realptr);             (*real*)
     with realptr^ do
-      begin size := realsize; form := scalar; scalkind := standard; 
+      begin size := realsize; form := scalar; scalkind := standard;
             packing := false end;
-    new(charptr,scalar,standard); pshstc(charptr);             (*char*)
+    new(charptr); pshstc(charptr);             (*char*)
     with charptr^ do
       begin size := charsize; form := scalar; scalkind := standard;
             packing := false end;
-    new(boolptr,scalar,declared); pshstc(boolptr);             (*boolean*)
+    new(boolptr); pshstc(boolptr);             (*boolean*)
     with boolptr^ do
       begin size := boolsize; form := scalar; scalkind := declared;
             packing := false end;
-    new(nilptr,pointer); pshstc(nilptr);                       (*nil*)
+    new(nilptr); pshstc(nilptr);                       (*nil*)
     with nilptr^ do
       begin eltype := nil; size := ptrsize; form := pointer;
             packing := false end;
     (*for alignment of parameters*)
-    new(parmptr,scalar,standard); pshstc(parmptr);
+    new(parmptr); pshstc(parmptr);
     with parmptr^ do
       begin size := parmsize; form := scalar; scalkind := standard;
             packing := false end ;
-    new(textptr,files); pshstc(textptr);                       (*text*)
+    new(textptr); pshstc(textptr);                       (*text*)
     with textptr^ do
       begin filtype := charptr; size := filesize+charsize; form := files;
             packing := false end
@@ -5470,30 +5508,30 @@ var
   begin                                                       (*name:*)
                                                               (*******)
 
-    new(cp,types); ininam(cp);                                (*integer*)
+    new(cp); ininam(cp);                                (*integer*)
     with cp^ do
       begin strassvr(name, 'integer  '); idtype := intptr; klass := types end;
     enterid(cp);
-    new(cp,types); ininam(cp);                                (*real*)
+    new(cp); ininam(cp);                                (*real*)
     with cp^ do
       begin strassvr(name, 'real     '); idtype := realptr; klass := types end;
     enterid(cp);
-    new(cp,types); ininam(cp);                                (*char*)
+    new(cp); ininam(cp);                                (*char*)
     with cp^ do
       begin strassvr(name, 'char     '); idtype := charptr; klass := types end;
     enterid(cp);
-    new(cp,types); ininam(cp);                                (*boolean*)
+    new(cp); ininam(cp);                                (*boolean*)
     with cp^ do
       begin strassvr(name, 'boolean  '); idtype := boolptr; klass := types end;
     usclrptr := cp; { save to satisfy broken tags }
     enterid(cp);
-    new(cp,types); ininam(cp);                                (*text*)
+    new(cp); ininam(cp);                                (*text*)
     with cp^ do
       begin strassvr(name, 'text     '); idtype := textptr; klass := types end;
     enterid(cp);
     cp1 := nil;
     for i := 1 to 2 do
-      begin new(cp,konst); ininam(cp);                        (*false,true*)
+      begin new(cp); ininam(cp);                        (*false,true*)
         with cp^ do
           begin strassvr(name, na[i]); idtype := boolptr;
             next := cp1; values.ival := i - 1; klass := konst
@@ -5502,7 +5540,7 @@ var
       end;
     boolptr^.fconst := cp;
     for i := 3 to 4 do
-      begin new(cp,vars); ininam(cp);                         (*input,output*)
+      begin new(cp); ininam(cp);                         (*input,output*)
         with cp^ do
           begin strassvr(name, na[i]); idtype := textptr; klass := vars;
             vkind := actual; next := nil; vlev := 1;
@@ -5513,7 +5551,7 @@ var
         if i = 3 then inputptr := cp else outputptr := cp
       end;
     for i:=33 to 34 do
-      begin new(cp,vars); ininam(cp);                         (*prd,prr files*)
+      begin new(cp); ininam(cp);                         (*prd,prr files*)
          with cp^ do
            begin strassvr(name, na[i]); idtype := textptr; klass := vars;
               vkind := actual; next := nil; vlev := 1;
@@ -5523,7 +5561,7 @@ var
          enterid(cp)
       end;
     for i := 5 to 16 do if i <> 14 then { no longer doing release }
-      begin new(cp,proc,standard); ininam(cp);                 (*get,put,reset*)
+      begin new(cp); ininam(cp);                 (*get,put,reset*)
         with cp^ do                                            (*rewrite,read*)
           begin strassvr(name, na[i]); idtype := nil;          (*write,pack*)
             pflist := nil; next := nil; key := i - 4;          (*unpack,new*)
@@ -5532,7 +5570,7 @@ var
         enterid(cp)
       end;
     for i := 17 to 26 do
-      begin new(cp,func,standard); ininam(cp);                 (*abs,sqr,trunc*)
+      begin new(cp); ininam(cp);                 (*abs,sqr,trunc*)
         with cp^ do                                            (*odd,ord,chr*)
           begin strassvr(name, na[i]); idtype := nil;          (*pred,succ,eof*)
             pflist := nil; next := nil; key := i - 16;
@@ -5542,13 +5580,13 @@ var
       end;
     for i := 27 to 32 do
       begin
-        new(cp,vars); ininam(cp);                                (*parameter of predeclared functions*)
+        new(cp); ininam(cp);                                (*parameter of predeclared functions*)
         with cp^ do
           begin strassvr(name, '         '); idtype := realptr; klass := vars;
             vkind := actual; next := nil; vlev := 1; vaddr := 0;
             threat := false; forcnt := 0
           end;
-        new(cp1,func,declared,actual); ininam(cp1);            (*sin,cos,exp*)
+        new(cp1); ininam(cp1);            (*sin,cos,exp*)
         with cp1^ do                                           (*sqrt,ln,arctan*)
           begin strassvr(name, na[i]); idtype := realptr; pflist := cp;
             forwdecl := false; externl := true; pflev := 0; pfname := i - 12;
@@ -5556,24 +5594,24 @@ var
           end;
         enterid(cp1)
       end;
-    new(cp,konst); ininam(cp);                                 (*maxint*)
+    new(cp); ininam(cp);                                 (*maxint*)
     with cp^ do
       begin strassvr(name, na[36]); idtype := intptr;
         next := nil; values.ival := maxint; klass := konst
       end; enterid(cp);
-    new(cp,func,standard); ininam(cp);                         (*round*)
+    new(cp); ininam(cp);                         (*round*)
     with cp^ do
       begin strassvr(name, na[37]); idtype := nil;
         pflist := nil; next := nil; key := 16;
         klass := func; pfdeckind := standard
       end; enterid(cp);
-    new(cp,proc,standard); ininam(cp);                         (*page*)
+    new(cp); ininam(cp);                         (*page*)
     with cp^ do
       begin strassvr(name, na[38]); idtype := nil;
         pflist := nil; next := nil; key := 17;
         klass := proc; pfdeckind := standard
       end; enterid(cp);
-    new(cp,proc,standard); ininam(cp);                         (*dispose*)
+    new(cp); ininam(cp);                         (*dispose*)
     with cp^ do
       begin strassvr(name, na[39]); idtype := nil;
         pflist := nil; next := nil; key := 18;
@@ -5583,32 +5621,32 @@ var
 
   procedure enterundecl;
   begin
-    new(utypptr,types); ininam(utypptr);
+    new(utypptr); ininam(utypptr);
     with utypptr^ do
       begin strassvr(name, '         '); idtype := nil; klass := types end;
-    new(ucstptr,konst); ininam(ucstptr);
+    new(ucstptr); ininam(ucstptr);
     with ucstptr^ do
       begin strassvr(name, '         '); idtype := nil; next := nil;
         klass := konst; values.ival := 0
       end;
-    new(uvarptr,vars); ininam(uvarptr);
+    new(uvarptr); ininam(uvarptr);
     with uvarptr^ do
       begin strassvr(name, '         '); idtype := nil; vkind := actual;
         next := nil; vlev := 0; vaddr := 0; klass := vars;
         threat := false; forcnt := 0
       end;
-    new(ufldptr,field); ininam(ufldptr);
+    new(ufldptr); ininam(ufldptr);
     with ufldptr^ do
       begin strassvr(name, '         '); idtype := nil; next := nil; fldaddr := 0;
         klass := field
       end;
-    new(uprcptr,proc,declared,actual); ininam(uprcptr);
+    new(uprcptr); ininam(uprcptr);
     with uprcptr^ do
       begin strassvr(name, '         '); idtype := nil; forwdecl := false;
         next := nil; externl := false; pflev := 0; genlabel(pfname);
         klass := proc; pflist := nil; pfdeckind := declared; pfkind := actual
       end;
-    new(ufctptr,func,declared,actual); ininam(ufctptr);
+    new(ufctptr); ininam(ufctptr);
     with ufctptr^ do
       begin strassvr(name, '         '); idtype := nil; next := nil;
         forwdecl := false; externl := false; pflev := 0; genlabel(pfname);
@@ -5959,131 +5997,137 @@ var
   end (*inittables*) ;
 
 begin
+  AssignFile(prd, 'prd');
+  AssignFile(prr, 'prr');
+  try
+    { Suppress unreferenced errors. These are all MPB (machine parameter
+      block) equations that need to stay the same between front end and backend. }
+    if begincode = 0 then;
+    if heapal = 0 then;
+    if inthex = 0 then;
+    if market = 0 then;
+    if markep = 0 then;
+    if markdl = 0 then;
+    if markra = 0 then;
+    if marksb = 0 then;
+    if markfv = 0 then;
+    if marksl = 0 then;
+    if maxresult = 0 then;
+    if maxsize = 0 then;
   
-  { Suppress unreferenced errors. These are all MPB (machine parameter
-    block) equations that need to stay the same between front end and backend. }
-  if begincode = 0 then;
-  if heapal = 0 then;    
-  if inthex = 0 then;    
-  if market = 0 then;    
-  if markep = 0 then;    
-  if markdl = 0 then;    
-  if markra = 0 then;    
-  if marksb = 0 then;    
-  if markfv = 0 then;    
-  if marksl = 0 then;    
-  if maxresult = 0 then; 
-  if maxsize = 0 then;   
-  
-  write('P5 Pascal compiler vs. ', majorver:1, '.', minorver:1);
-  if experiment then write('.x');
-  writeln;
-  writeln('Pascal-P5 complies with the requirements of level 0 of ISO/IEC 7185.');
-  writeln;
+    write('P5 Pascal compiler vs. ', majorver:1, '.', minorver:1);
+    if experiment then write('.x');
+    writeln;
+    writeln('Pascal-P5 complies with the requirements of level 0 of ISO/IEC 7185.');
+    writeln;
 
-  (*initialize*)
-  (************)
-  initscalars; initsets; inittables;
+    (*initialize*)
+    (************)
+    initscalars; initsets; inittables;
 
-  (*enter standard names and standard types:*)
-  (******************************************)
-  level := 0; top := 0;
-  with display[0] do
-    begin fname := nil; flabel := nil; fconst := nil; fstruct := nil;
-          packing := false; occur := blck; bname := nil end;
-  enterstdtypes;   stdnames; entstdnames;   enterundecl;
-  top := 1; level := 1;
-  with display[1] do
-    begin fname := nil; flabel := nil; fconst := nil; fstruct := nil;
-          packing := false; occur := blck; bname := nil end;
+    (*enter standard names and standard types:*)
+    (******************************************)
+    level := 0; top := 0;
+    with display[0] do
+      begin fname := nil; flabel := nil; fconst := nil; fstruct := nil;
+            packing := false; occur := blck; bname := nil end;
+    enterstdtypes;   stdnames; entstdnames;   enterundecl;
+    top := 1; level := 1;
+    with display[1] do
+      begin fname := nil; flabel := nil; fconst := nil; fstruct := nil;
+            packing := false; occur := blck; bname := nil end;
 
-  (*compile:*)
-  (**********)
+    (*compile:*)
+    (**********)
 
-  { !!! remove these statements for self compile }
-  {elide}reset(prd); rewrite(prr);{noelide} { open output file }
+    { !!! remove these statements for self compile }
+    {elide}reset(prd); rewrite(prr);{noelide} { open output file }
  
-  { write generator comment }
-  writeln(prr, 'i');
-  writeln(prr, 'i Pascal intermediate file Generated by P5 Pascal compiler vs. ',
-          majorver:1, '.', minorver:1);
-  writeln(prr, 'i');
+    { write generator comment }
+    writeln(prr, 'i');
+    writeln(prr, 'i Pascal intermediate file Generated by P5 Pascal compiler vs. ',
+            majorver:1, '.', minorver:1);
+    writeln(prr, 'i');
   
-  { write initial option values }
-  write(prr, 'o '); 
-  for c := 'a' to 'z' do begin write(prr, c); 
-    if option[c] then write(prr, '+') else write(prr, '-')
-  end;
-  writeln(prr);
-  
-  insymbol;
-  programme(blockbegsys+statbegsys-[casesy]);
-
-  { dispose of levels 0 and 1 }
-  putdsp(1);
-  putdsp(0);
-
-  { remove undeclared ids }
-  exitundecl;
-
-  writeln;
-  writeln('Errors in program: ', toterr:1);
-  { output error report as required }
-  f := true;
-  for i := 1 to 500 do if errtbl[i] then begin
-    if f then begin
-      writeln;
-      writeln('Error numbers in listing:');
-      writeln('-------------------------');
-      f := false
+    { write initial option values }
+    write(prr, 'o ');
+    for c := 'a' to 'z' do begin write(prr, c);
+      if option[c] then write(prr, '+') else write(prr, '-')
     end;
-    write(i:3, '  '); errmsg(i); writeln
-  end;
-  if not f then writeln;
-
-  if doprtryc then begin { print recyling tracking counts }
-
-    writeln;
-    writeln('Recycling tracking counts:');
-    writeln;
-    writeln('string quants:              ', strcnt:1);
-    writeln('constants:                  ', cspcnt:1);
-    writeln('structures:                 ', stpcnt:1);
-    writeln('identifiers:                ', ctpcnt:1);
-    writeln('label counts:               ', lbpcnt:1);
-    writeln('file tracking counts:       ', filcnt:1);
-    writeln('case entry tracking counts: ', cipcnt:1);
-    writeln;
-
-  end;
-
-  if doprtlab then prtlabels; { dump labels}
-  if dodmpdsp then prtdsp; { dump display }
+    writeln(prr);
   
-  { perform errors for recycling balance }
+    insymbol;
+    programme(blockbegsys+statbegsys-[casesy]);
 
-  if strcnt <> 0 then
-     writeln('*** Error: Compiler internal error: string recycle balance: ',
-             strcnt:1);
-  if cspcnt <> 0 then
-     writeln('*** Error: Compiler internal error: constant recycle balance: ',
-             cspcnt:1);
-  if stpcnt <> 0 then
-     writeln('*** Error: Compiler internal error: structure recycle balance: ',
-             stpcnt:1);
-  if ctpcnt <> 0 then
-     writeln('*** Error: Compiler internal error: identifier recycle balance: ',
-             ctpcnt:1);
-  if lbpcnt <> 0 then
-     writeln('*** Error: Compiler internal error: label recycle balance: ',
-             lbpcnt:1);
-  if filcnt <> 0 then
-     writeln('*** Error: Compiler internal error: file recycle balance: ',
-             filcnt:1);
-  if cipcnt <> 0 then
-     writeln('*** Error: Compiler internal error: case recycle balance: ',
-             cipcnt:1);
+    { dispose of levels 0 and 1 }
+    putdsp(1);
+    putdsp(0);
 
-  99:
+    { remove undeclared ids }
+    exitundecl;
 
+    writeln;
+    writeln('Errors in program: ', toterr:1);
+    { output error report as required }
+    f := true;
+    for i := 1 to 500 do if errtbl[i] then begin
+      if f then begin
+        writeln;
+        writeln('Error numbers in listing:');
+        writeln('-------------------------');
+        f := false
+      end;
+      write(i:3, '  '); errmsg(i); writeln
+    end;
+    if not f then writeln;
+
+    if doprtryc then begin { print recyling tracking counts }
+
+      writeln;
+      writeln('Recycling tracking counts:');
+      writeln;
+      writeln('string quants:              ', strcnt:1);
+      writeln('constants:                  ', cspcnt:1);
+      writeln('structures:                 ', stpcnt:1);
+      writeln('identifiers:                ', ctpcnt:1);
+      writeln('label counts:               ', lbpcnt:1);
+      writeln('file tracking counts:       ', filcnt:1);
+      writeln('case entry tracking counts: ', cipcnt:1);
+      writeln;
+
+    end;
+
+    if doprtlab then prtlabels; { dump labels}
+    if dodmpdsp then prtdsp; { dump display }
+  
+    { perform errors for recycling balance }
+
+    if strcnt <> 0 then
+       writeln('*** Error: Compiler internal error: string recycle balance: ',
+               strcnt:1);
+    if cspcnt <> 0 then
+       writeln('*** Error: Compiler internal error: constant recycle balance: ',
+               cspcnt:1);
+    if stpcnt <> 0 then
+       writeln('*** Error: Compiler internal error: structure recycle balance: ',
+               stpcnt:1);
+    if ctpcnt <> 0 then
+       writeln('*** Error: Compiler internal error: identifier recycle balance: ',
+               ctpcnt:1);
+    if lbpcnt <> 0 then
+       writeln('*** Error: Compiler internal error: label recycle balance: ',
+               lbpcnt:1);
+    if filcnt <> 0 then
+       writeln('*** Error: Compiler internal error: file recycle balance: ',
+               filcnt:1);
+    if cipcnt <> 0 then
+       writeln('*** Error: Compiler internal error: case recycle balance: ',
+               cipcnt:1);
+  except
+    on E: EAbort do
+      ;
+  end;
+  CloseFile(prd);
+  Flush(prr);
+  CloseFile(prr);
 end.
