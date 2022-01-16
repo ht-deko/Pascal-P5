@@ -102,6 +102,18 @@
 *                                                                              *
 *******************************************************************************}
 
+{ Set default configuration flags. This gives proper behavior even if no
+  preprocessor flags are passed in.
+
+  The defaults are:
+  WRDSIZ32       - 32 bit compiler.
+}
+{$IFDEF CPU64BITS}
+  {$DEFINE WRDSIZ64}
+{$ELSE}
+  {$DEFINE WRDSIZ32}
+{$ENDIF}
+
 program pcode(input,output,prd,prr);
 {$APPTYPE Console}
 {$WEAKLINKRTTI ON}
@@ -138,74 +150,12 @@ const
 
       }
 
-      { type               #32 #64 }
-      intsize     =        4   {8};  { size of integer }
-      intal       =        4;        { alignment of integer }
-      intdig      =        11  {20}; { number of decimal digits in integer }
-      inthex      =        8   {16}; { number of hex digits of integer }
-      realsize    =        8;        { size of real }
-      realal      =        4;        { alignment of real }
-      charsize    =        1;        { size of char }
-      charal      =        1;        { alignment of char }
-      charmax     =        1;
-      boolsize    =        1;        { size of boolean }
-      boolal      =        1;        { alignment of boolean }
-      ptrsize     =        4   {8};  { size of pointer }
-      adrsize     =        4   {8};  { size of address }
-      adral       =        4;        { alignment of address }
-      setsize     =       32;        { size of set }
-      setal       =        1;        { alignment of set }
-      filesize    =        1;        { required runtime space for file (lfn) }
-      fileidsize  =        1;        { size of the lfn only }
-      stackal     =        4;        { alignment of stack }
-      stackelsize =        4   {8};  { stack element size }
-      maxsize     =       32;        { this is the largest type that can be on
-                                       the stack }
-      { Heap alignment should be either the natural word alignment of the
-        machine, or the largest object needing alignment that will be allocated.
-        It can also be used to enforce minimum block allocation policy. }
-      heapal      =        4;        { alignment for each heap arena }
-      gbsal       =        4;        { globals area alignment }
-      sethigh     =      255;        { Sets are 256 values }
-      setlow      =        0;
-      ordmaxchar  =      255;        { Characters are 8 bit ISO/IEC 8859-1 }
-      ordminchar  =        0;
-      maxresult   = realsize;        { maximum size of function result }
-      marksize    =       32   {56}; { maxresult+6*ptrsize }
-      { Value of nil is 1 because this allows checks for pointers that were
-        initialized, which would be zero (since we clear all space to zero).
-        In the new unified code/data space scheme, 0 and 1 are always invalid
-        addresses, since the startup code is at least that long. }
-      nilval      =        1;  { value of 'nil' }
-      { beginning of code, offset by program preamble:
-
-        2:    mst
-        6/10: cup
-        1:    stp
-
-      }
-      begincode   =        9   {13};
-
-      { Mark element offsets
-
-        Mark format is:
-
-        -8:  Function return value, 64 bits, enables a full real result.
-        -12:  Static link.
-        -16: Dynamic link.
-        -20: Saved EP from previous frame.
-        -24: Stack bottom after locals allocate. Used for interprocdural gotos.
-        -28: EP from current frame. Used for interprocedural gotos.
-        -32: Return address
-
-      }
-      markfv      =        -8   {0};  { function value }
-      marksl      =        -12  {8};  { static link }
-      markdl      =        -16  {16}; { dynamic link }
-      markep      =        -20  {24}; { (old) maximum frame size }
-      marksb      =        -24  {32}; { stack bottom }
-      market      =        -28  {40}; { current ep }
-      markra      =        -32  {48}; { return address }
+{$IFDEF WRDSIZ32}
+  {$I 'mpb32.inc'}
+{$ENDIF}
+{$IFDEF WRDSIZ64}
+  {$I 'mpb64.inc'}
+{$ENDIF}
 
       { ******************* end of pcom and pint common parameters *********** }
 
@@ -213,9 +163,16 @@ const
 
       { !!! Need to use the small size memory to self compile, otherwise, by
         definition, pint cannot fit into its own memory. }
-      {elide}maxstr      = 16777215;{noelide}  { maximum size of addressing for program/var }
-      {remove maxstr     =  2000000; remove}  { maximum size of addressing for program/var }
-      maxdef      = 2097152; { maxstr / 8 for defined bits }
+{$IFNDEF SELF_COMPILE}
+      maxstr      = 16777215;  { maximum size of addressing for program/var }
+      maxtop      = 16777216;  { maximum size of addressing for program/var+1 }
+      maxdef      = 2097152;   { maxstr / 8 for defined bits }
+{$ELSE}
+      maxstr     =  2000000;   { maximum size of addressing for program/var }
+      maxtop     =  2000001;   { maximum size of addressing for program/var+1 }
+      maxdef      = 250000;    { maxstr /8 for defined bits }
+{$ENDIF}
+
       maxdigh     = 6;       { number of digits in hex representation of maxstr }
       maxdigd     = 8;       { number of digits in decimal representation of maxstr }
 
@@ -226,7 +183,7 @@ const
 
       { locations of header files after program block mark, each header
         file is two values, a file number and a single character buffer }
-      filres    = 2;         { space reserved for file }  
+      filres    = 2;         { space reserved for file }
       inputoff  = 0;         { 'input' file address }
       outputoff = 2;         { 'output' file address }
       prdoff    = 4;         { 'prd' file address }
@@ -239,39 +196,15 @@ const
       prrfn      = 4;        { 'prr' file no. }
 
       stringlgth  = 1000;    { longest string length we can buffer }
-      maxsp       = 45;      { number of predefined procedures/functions }
+      maxsp       = 46;      { number of predefined procedures/functions }
       maxins      = 255;     { maximum instruction code, 0-255 or byte }
       maxfil      = 100;     { maximum number of general (temp) files }
       maxalfa     = 10;      { maximum number of characters in alfa type }
-      ujplen      = 5;       { length of ujp instruction (used for case jumps) }
-
-      { check flags: these turn on runtime checks }
-      dochkovf    = true;    { check arithmetic overflow }
-
-      { debug flags: turn these on for various dumps and traces }
-
-      dodmpins    = false;    { dump instructions after assembly }
-      dodmplab    = false;    { dump label definitions }
-      dodmpsto    = false;    { dump storage area specs }
-      dotrcrot    = false;    { trace routine executions }
-      dotrcins    = false;    { trace instruction executions }
-      dopmd       = false;    { perform post-mortem dump on error }
-      dosrclin    = true;     { add source line sets to code }
-      dotrcsrc    = false;    { trace source line executions (requires dosrclin) }
-      dodmpspc    = false;    { dump heap space after execution }
-      dorecycl    = true;     { obey heap space recycle requests }
-      { invoke a special recycle mode that creates single word entries on
-        recycle of any object, breaking off and recycling the rest. Once
-        allocated, each entry exists forever, and accesses to it can be
-        checked. }
-      dochkrpt    = false;    { check reuse of freed entry (automatically
-                                invokes dorecycl = false }
-      dochkdef    = true;     { check undefined accesses }
 
       { version numbers }
 
       majorver   = 1; { major version number }
-      minorver   = 3; { minor version number }
+      minorver   = 4; { minor version number }
       experiment = false; { is version experimental? }
 
 type
@@ -287,7 +220,7 @@ type
         need for negatives. }
       lvltyp      = 0..255;     { procedure/function level }
       instyp      = 0..maxins;  { instruction }
-      address     = -maxstr..maxstr; { address }
+      address     = -maxstr..maxtop; { address }
 
       beta        = packed array[1..25] of char; (*error message*)
       settype     = set of setlow..sethigh;
@@ -296,13 +229,25 @@ type
       byte        = 0..255; { 8-bit byte }
       bytfil      = packed file of byte; { untyped file of bytes }
       fileno      = 0..maxfil; { logical file number }
+      { VAR reference block }
+      varptr       = ^varblk;
+      varblk       = record
+                       next: varptr; { next entry }
+                       s, e: address { start and end address of block }
+                     end;
+      { with reference block }
+      wthptr       = ^wthblk;
+      wthblk       = record
+                       next: wthptr; { next entry }
+                       b: address    { address of block }
+                     end;
 
 var   pc          : address;   (*program address register*)
       pctop,lsttop: address;   { top of code store }
       gbtop, gbsiz: address;   { top of globals, size of globals }
       gbset       : boolean;   { global size was set }
-      op : instyp; p : lvltyp; q : address;  (*instruction register*)
-      q1: address; { extra parameter }
+      op : instyp; p : lvltyp; q : integer;  (*instruction register*)
+      q1, q2: integer; { extra parameters }
       store       : packed array [0..maxstr] of byte; { complete program storage }
       storedef    : packed array [0..maxdef] of byte; { defined bits }
       sdi         : 0..maxdef; { index for that }
@@ -317,14 +262,38 @@ var   pc          : address;   (*program address register*)
       interpreting: boolean;
 
       { !!! remove this next statement for self compile }
-      {elide}prd,prr     : text;{noelide}(*prd for read only, prr for write only *)
+{$IFNDEF SELF_COMPILE}
+      prd,prr     : text; (*prd for read only, prr for write only *)
+{$ENDIF}
 
       instr       : array[instyp] of alfa; (* mnemonic instruction codes *)
       sptable     : array[0..maxsp] of alfa; (*standard functions and procedures*)
       insp        : array[instyp] of boolean; { instruction includes a p parameter }
-      insq        : array[instyp] of 0..16; { length of q parameter }
+      insq        : array[instyp] of 0..32; { length of q parameter }
       srclin      : integer; { current source line executing }
       option      : array ['a'..'z'] of boolean; { option array }
+
+      { check flags: these turn on runtime checks }
+      dochkovf    : boolean;    { check arithmetic overflow }
+
+      { debug flags: turn these on for various dumps and traces }
+      dodmpins    : boolean;    { dump instructions after assembly }
+      dodmplab    : boolean;    { dump label definitions }
+      dodmpsto    : boolean;    { dump storage area specs }
+      dotrcrot    : boolean;    { trace routine executions }
+      dotrcins    : boolean;    { trace instruction executions }
+      dopmd       : boolean;    { perform post-mortem dump on error }
+      dosrclin    : boolean;    { add source line sets to code }
+      dotrcsrc    : boolean;    { trace source line executions (requires dosrclin) }
+      dodmpspc    : boolean;    { dump heap space after execution }
+      dorecycl    : boolean;    { obey heap space recycle requests }
+      { invoke a special recycle mode that creates single word entries on
+        recycle of any object, breaking off and recycling the rest. Once
+        allocated, each entry exists forever, and accesses to it can be
+        checked. }
+      dochkrpt    : boolean;    { check reuse of freed entry (automatically
+                                  invokes dorecycl = false }
+      dochkdef    : boolean;    { check undefined accesses }
 
       filtable    : array [1..maxfil] of text; { general (temp) text file holders }
       { general (temp) binary file holders }
@@ -333,6 +302,14 @@ var   pc          : address;   (*program address register*)
       filstate    : array [1..maxfil] of (fclosed, fread, fwrite);
       { file buffer full status }
       filbuff     : array [1..maxfil] of boolean;
+      varlst      : varptr; { active var block pushdown stack }
+      varfre      : varptr; { free var block entries }
+      wthlst      : wthptr; { active with block pushdown stack }
+      wthcnt      : integer; { number of outstanding with levels }
+      wthfre      : wthptr; { free with block entries }
+      errsinprg   : integer; { errors in source program }
+      maxpow16    : integer; { maximum power of 16 }
+      hexdig      : integer; { digits in unsigned hex }
 
       (*locally used for interpreting one instruction*)
       ad,ad1,ad2  : address;
@@ -389,7 +366,7 @@ var   pc          : address;   (*program address register*)
 
 procedure wrthex(v: integer; { value } f: integer { field });
 var p,i,d,t,n: integer;
-    digits: packed array [1..8] of char;
+    digits: packed array [1..inthex] of char;
 function digit(d: integer): char;
 begin
   if d < 10 then c := chr(d+ord('0'))
@@ -397,19 +374,19 @@ begin
   digit := c
 end;
 begin
-   n := 8; { number of digits }
+   n := inthex; { number of digits }
    if v < 0 then begin { signed }
      v := v+1+maxint; { convert number to 31 bit unsigned }
-     t := v div 268435456+8; { extract high digit }
-     digits[8] := digit(t); { place high digit }
-     v := Mod2(v, 268435456); { remove digit }
-     n := 7 { set number of digits-1 }
+     t := v div maxpow16+8; { extract high digit }
+     digits[inthex] := digit(t); { place high digit }
+     v := Mod2(v, maxpow16); { remove digit }
+     n := inthex-1 { set number of digits-1 }
    end;
    p := 1;
    for i := 1 to n do begin
-      d := v div Mod2(p, 16); { extract digit }
+      d := Mod2(v div p, 16); { extract digit }
       digits[i] := digit(d); { place }
-      if i < 8 then p := p*16
+      if i < inthex then p := p*16
    end;
    for i := f downto 1 do write(digits[i]) { output }
 end;
@@ -422,9 +399,9 @@ procedure dmpmem(s, e: address);
 begin l := false; for i := 1 to 16 do bs[i] := 0;
    while s <= e do begin
      ba := s; i := 1; f := true;
-     while (s <= e) and (i <= 16) do begin  
+     while (s <= e) and (i <= 16) do begin
        if bs[i] <> store[s] then f := false;
-       bs[i] := store[s]; s := s+1; i := i+1 
+       bs[i] := store[s]; s := s+1; i := i+1
      end;
      if not f or (i < 16) then begin
        if l then begin
@@ -443,8 +420,8 @@ procedure pmd;
 begin
    if dopmd then begin
       writeln;
-      write('pc = '); wrthex(pc-1, maxdigh);
-      write(' op = ',op:3);
+      write('pc = ');  wrthex(pcs, maxdigh);
+      write(' op = '); wrthex(op, 2);
       write(' sp = '); wrthex(sp, maxdigh);
       write(' mp = '); wrthex(mp, maxdigh);
       write(' np = '); wrthex(np, maxdigh);
@@ -758,14 +735,14 @@ begin
    { load up the second on stack }
    for i := 1 to l do sb[i] := store[sp+adrsize+i-1];
    putadr(sp+l, p); { place pointer at bottom }
-   for i := 1 to l do begin 
+   for i := 1 to l do begin
      store[sp+i-1] := sb[i]; { place second as new top }
      putdef(sp+i-1, true)
    end
 
 end;
 
-{ end of accessor functions }
+{ end of accessor functions
 
 (*--------------------------------------------------------------------*)
 
@@ -788,19 +765,22 @@ procedure pshadr(a: address); begin sp := sp-adrsize; putadr(sp, a) end;
 
 procedure lstins(var ad: address);
 
-var op: instyp; p : lvltyp; q, q1 : address;  (*instruction register*)
+var op: instyp; p : lvltyp; q, q1,q2 : integer;  (*instruction register*)
 
 begin
 
    { fetch instruction from byte store }
    op := store[ad]; ad := ad+1;
-   p := 0; q := 0; q1 := 0;
+   p := 0; q := 0; q1 := 0; q2 := 0;
    if insp[op] then begin p := store[ad]; ad := ad+1 end;
    if insq[op] > 0 then begin
 
       if insq[op] = 1 then q := store[ad]
-      else if insq[op] = intsize then q := getint(ad)
-      else begin q := getint(ad); q1 := getint(ad+intsize) end;
+      else begin
+        q := getint(ad);
+        if insq[op] > intsize then q1 := getint(ad+intsize);
+        if insq[op] > intsize*2 then q2 := getint(ad+intsize*2);
+      end;
       ad := ad+insq[op]
 
    end;
@@ -811,12 +791,14 @@ begin
 
       wrthex(p, 2);
       if insq[op] > 0 then begin write(','); wrthex(q, inthex) end;
-      if insq[op] > intsize then  begin write(','); wrthex(q1, inthex) end
+      if insq[op] > intsize then  begin write(','); wrthex(q1, inthex) end;
+      if insq[op] > intsize*2 then begin write(','); wrthex(q2, inthex) end
 
    end else if insq[op] > 0 then begin
 
       write('   '); wrthex(q, inthex);
-      if insq[op] > intsize then begin write(','); wrthex(q1, inthex) end
+      if insq[op] > intsize then begin write(','); wrthex(q1, inthex) end;
+      if insq[op] > intsize*2 then begin write(','); wrthex(q2, inthex) end
 
    end
 
@@ -893,9 +875,7 @@ procedure load;
               their use in the intermediate file, since only alpha
               characters are allowed as opcode labels.
 
-           2. "---" entries are no longer used, but left here to keep the
-              original instruction numbers from P4. They could be safely
-              assigned to other instructions if the space is needed.
+           2. "---" entries are unused.
 
          }
          instr[  0]:='lodi      '; insp[  0] := true;  insq[  0] := intsize;
@@ -906,10 +886,10 @@ procedure load;
          instr[  5]:='lao       '; insp[  5] := false; insq[  5] := intsize;
          instr[  6]:='stoi      '; insp[  6] := false; insq[  6] := 0;
          instr[  7]:='ldcs      '; insp[  7] := false; insq[  7] := intsize;
-         instr[  8]:='---       '; insp[  8] := false; insq[  8] := 0;
+         instr[  8]:='cvbi      '; insp[  8] := false; insq[  8] := intsize*3;
          instr[  9]:='indi      '; insp[  9] := false; insq[  9] := intsize;
          instr[ 10]:='inci      '; insp[ 10] := false; insq[ 10] := intsize;
-         instr[ 11]:='mst       '; insp[ 11] := true;  insq[ 11] := 0;
+         instr[ 11]:='mst       '; insp[ 11] := true;  insq[ 11] := intsize;
          instr[ 12]:='cup       '; insp[ 12] := true;  insq[ 12] := intsize;
          instr[ 13]:='ents      '; insp[ 13] := false; insq[ 13] := intsize;
          instr[ 14]:='retp      '; insp[ 14] := false; insq[ 14] := 0;
@@ -917,15 +897,15 @@ procedure load;
          instr[ 16]:='ixa       '; insp[ 16] := false; insq[ 16] := intsize;
          instr[ 17]:='equa      '; insp[ 17] := false; insq[ 17] := 0;
          instr[ 18]:='neqa      '; insp[ 18] := false; insq[ 18] := 0;
-         instr[ 19]:='---       '; insp[ 19] := false; insq[ 19] := 0;
-         instr[ 20]:='---       '; insp[ 20] := false; insq[ 20] := 0;
-         instr[ 21]:='---       '; insp[ 21] := false; insq[ 21] := 0;
-         instr[ 22]:='---       '; insp[ 22] := false; insq[ 22] := 0;
+         instr[ 19]:='vbs       '; insp[ 19] := false; insq[ 19] := intsize;
+         instr[ 20]:='vbe       '; insp[ 20] := false; insq[ 20] := 0;
+         instr[ 21]:='cvbx      '; insp[ 21] := false; insq[ 21] := intsize*3;
+         instr[ 22]:='cvbb      '; insp[ 22] := false; insq[ 22] := intsize*3;
          instr[ 23]:='ujp       '; insp[ 23] := false; insq[ 23] := intsize;
          instr[ 24]:='fjp       '; insp[ 24] := false; insq[ 24] := intsize;
          instr[ 25]:='xjp       '; insp[ 25] := false; insq[ 25] := intsize;
          instr[ 26]:='chki      '; insp[ 26] := false; insq[ 26] := intsize;
-         instr[ 27]:='---       '; insp[ 27] := false; insq[ 27] := 0;
+         instr[ 27]:='cvbc      '; insp[ 27] := false; insq[ 27] := intsize*3;
          instr[ 28]:='adi       '; insp[ 28] := false; insq[ 28] := 0;
          instr[ 29]:='adr       '; insp[ 29] := false; insq[ 29] := 0;
          instr[ 30]:='sbi       '; insp[ 30] := false; insq[ 30] := 0;
@@ -989,18 +969,18 @@ procedure load;
          instr[ 88]:='indb      '; insp[ 88] := false; insq[ 88] := intsize;
          instr[ 89]:='indc      '; insp[ 89] := false; insq[ 89] := intsize;
          instr[ 90]:='inca      '; insp[ 90] := false; insq[ 90] := intsize;
-         instr[ 91]:='---       '; insp[ 91] := false; insq[ 91] := intsize;
-         instr[ 92]:='---       '; insp[ 92] := false; insq[ 92] := intsize;
+         instr[ 91]:='ivtx      '; insp[ 91] := false; insq[ 91] := intsize*3;
+         instr[ 92]:='ivtb      '; insp[ 92] := false; insq[ 92] := intsize*3;
          instr[ 93]:='incb      '; insp[ 93] := false; insq[ 93] := intsize;
          instr[ 94]:='incc      '; insp[ 94] := false; insq[ 94] := intsize;
          instr[ 95]:='chka      '; insp[ 95] := false; insq[ 95] := intsize;
-         instr[ 96]:='---       '; insp[ 96] := false; insq[ 96] := intsize;
+         instr[ 96]:='ivtc      '; insp[ 96] := false; insq[ 96] := intsize*3;
          instr[ 97]:='chks      '; insp[ 97] := false; insq[ 97] := intsize;
          instr[ 98]:='chkb      '; insp[ 98] := false; insq[ 98] := intsize;
          instr[ 99]:='chkc      '; insp[ 99] := false; insq[ 99] := intsize;
-         instr[100]:='---       '; insp[100] := false; insq[100] := intsize;
-         instr[101]:='---       '; insp[101] := false; insq[101] := intsize;
-         instr[102]:='---       '; insp[102] := false; insq[102] := intsize;
+         instr[100]:='ctp       '; insp[100] := false; insq[100] := intsize;
+         instr[101]:='wbs       '; insp[101] := false; insq[101] := intsize;
+         instr[102]:='wbe       '; insp[102] := false; insq[102] := intsize;
          instr[103]:='decb      '; insp[103] := false; insq[103] := intsize;
          instr[104]:='decc      '; insp[104] := false; insq[104] := intsize;
          instr[105]:='loda      '; insp[105] := true;  insq[105] := intsize;
@@ -1089,8 +1069,8 @@ procedure load;
          instr[188]:='cke       '; insp[188] := false; insq[188] := 0;
          instr[189]:='inv       '; insp[189] := false; insq[189] := 0;
          instr[190]:='ckla      '; insp[190] := false; insq[190] := intsize;
-         instr[191]:='cta       '; insp[191] := false; insq[191] := intsize*2;
-         instr[192]:='ivt       '; insp[192] := false; insq[192] := intsize*2;
+         instr[191]:='cta       '; insp[191] := false; insq[191] := intsize*3;
+         instr[192]:='ivti      '; insp[192] := false; insq[192] := intsize*3;
          instr[193]:='lodx      '; insp[193] := true;  insq[193] := intsize;
          instr[194]:='ldox      '; insp[194] := false; insq[194] := intsize;
          instr[195]:='strx      '; insp[195] := true;  insq[195] := intsize;
@@ -1128,6 +1108,8 @@ procedure load;
          sptable[40]:='dsl       ';     sptable[41]:='eof       ';
          sptable[42]:='efb       ';     sptable[43]:='fbv       ';
          sptable[44]:='fvb       ';     sptable[45]:='wbx       ';
+         sptable[46]:='rbr       ';
+
 
          pc := begincode;
          cp := maxstr; { set constants pointer to top of storage }
@@ -1135,15 +1117,16 @@ procedure load;
          for i:= 0 to maxlabel do
              with labeltab[i] do begin val:=-1; st:= entered end;
          { initalize file state }
-         for i := 1 to maxfil do filstate[i] := fclosed;
+         for i := 1 to maxfil do begin filstate[i] := fclosed; filbuff[i] := false end;
 
          { !!! remove this next statement for self compile }
-         {elide}reset(prd);{noelide}
-
+{$IFNDEF SELF_COMPILE}
+  reset(prd);
+{$ENDIF}
          iline := 1; { set 1st line of intermediate }
-         
+
          gbset := false { global size not set }
-         
+
    end;(*init*)
 
    procedure errorl(passtr: beta); (*error in loading*)
@@ -1176,7 +1159,7 @@ procedure load;
       var curr,succ,ad: address; (*resp. current element and successor element
                                of a list of future references*)
           endlist: boolean;
-          op: instyp; q : address;  (*instruction register*)
+          q : address;  (*instruction register*)
    begin
       if labeltab[x].st=defined then errorl('duplicated label         ')
       else begin
@@ -1184,12 +1167,11 @@ procedure load;
              begin curr:= labeltab[x].val; endlist:= false;
                 while not endlist do begin
                       ad := curr;
-                      op := store[ad]; { get instruction }
-                      q := getadr(ad+1+ord(insp[op]));
+                      q := getadr(ad);
                       succ:= q; { get target address from that }
                       q:= labelvalue; { place new target address }
                       ad := curr;
-                      putadr(ad+1+ord(insp[op]), q);
+                      putadr(ad, q);
                       if succ=-1 then endlist:= true
                                  else curr:= succ
                  end
@@ -1220,8 +1202,10 @@ procedure load;
 
    procedure generate;(*generate segment of code*)
       var x: integer; (* label number *)
+          l: integer;
           again: boolean;
           ch1: char;
+          ad: address;
      function GetNum(var F: Text): Integer;
      var
        IsNegative: Boolean;
@@ -1245,21 +1229,21 @@ procedure load;
       while again do
             begin if eof(prd) then errorl('unexpected eof on input  ');
                   getnxt;(* first character of line*)
-                  if not CharInSet(ch, ['i', 'l', 'q', ' ', ':', 'o', 'g']) then
+                  if not CharInSet(ch, ['!', 'l', 'q', ' ', ':', 'o', 'g','v', 'f']) then
                     errorl('unexpected line start    ');
                   case ch of
-                       'i': getlin; { comment }
-                       'l': begin x := GetNum(prd);
+                       '!': getlin; { comment }
+                       'l': begin read(prd,x);
                                   getnxt;
                                   if ch='=' then read(prd,labelvalue)
                                             else labelvalue:= pc;
                                   update(x); getlin
                             end;
                        'q': begin again := false; getlin end;
-                       ' ': begin getnxt; 
+                       ' ': begin getnxt;
                                   while not eoln(prd) and (ch = ' ') do getnxt;
                                   if not eoln(prd) and (ch <> ' ') then assemble
-                                  else getlin 
+                                  else getlin
                             end;
                        ':': begin { source line }
                                read(prd,x); { get source line number }
@@ -1281,11 +1265,51 @@ procedure load;
                                 if not CharInSet(ch, ['a'..'z']) then
                                   errorl('No valid option found    ');
                                 ch1 := ch; getnxt;
-                                option[ch1] := ch = '+'; getnxt
+                                option[ch1] := ch = '+'; getnxt;
+                                case ch1 of
+                                  'o': dochkovf := option[ch1];
+                                  'e': dodmpins := option[ch1];
+                                  'g': dodmplab := option[ch1];
+                                  'a': dodmpsto := option[ch1];
+                                  'f': dotrcrot := option[ch1];
+                                  'm': dotrcins := option[ch1];
+                                  'j': dopmd    := option[ch1];
+                                  'h': dosrclin := option[ch1];
+                                  'k': dotrcsrc := option[ch1];
+                                  'w': dodmpspc := option[ch1];
+                                  'n': dorecycl := option[ch1];
+                                  'p': dochkrpt := option[ch1];
+                                  'q': dochkdef := option[ch1];
+                                  { these options are free }
+
+                                  { these options are used in pcom.pas }
+                                  'b':; 'd':; 'c':; 'l':; 'v':; 'r':; 't':;
+                                  'u':; 'x':; 'y':; 'z':; 'i':;
+                                  { reserved options }
+                                  's':; { ISO 7185 standard }
+                                end
                               until not CharInSet(ch, ['a'..'z']);
-                              getlin 
+                              getlin
                             end;
                        'g': begin read(prd,gbsiz); gbset := true; getlin end;
+                       'v': begin { variant logical table }
+                              getnxt; skpspc;
+                              if ch <> 'l' then
+                                errorl('Label format error       ');
+                              getnxt; read(prd, x);
+                              getnxt;
+                              read(prd,l); cp := cp-(l*intsize+intsize+intsize);
+                              ad := cp; putint(ad, l); ad := ad+intsize;
+                              while not eoln(prd) do begin
+                                read(prd,i); putint(ad, i); ad := ad+intsize;
+                              end;
+                              labelvalue:=cp;
+                              update(x);
+                              getlin
+                            end;
+                       'f': begin { faults (errors) }
+                              read(prd,i); errsinprg := errsinprg+i; getlin
+                            end;
                   end;
             end
    end; (*generate*)
@@ -1294,7 +1318,6 @@ procedure load;
       var name :alfa; r :real; s :settype;
           i,x,s1,lb,ub,l:integer; c: char;
           str: packed array [1..stringlgth] of char; { buffer for string constants }
-          t: integer; { [sam] temp for compiler bug }
 
       procedure lookup(x: labelrg); (* search in label table*)
       begin case labeltab[x].st of
@@ -1324,7 +1347,7 @@ procedure load;
           i := i+1; ch := ' ';
           if not eoln(prd) then read(prd,ch); { next character }
         end;
-        Move(word, name, SizeOf(name))
+        Move(word, name, SizeOf(name));
       end; (*getname*)
 
       procedure storeop;
@@ -1342,13 +1365,13 @@ procedure load;
       procedure storeq;
       begin
         if pc+adrsize > cp then errorl('Program code overflow    ');
-         putadr(pc, q); pc := pc+adrsize
+         putint(pc, q); pc := pc+intsize
       end;
 
       procedure storeq1;
       begin
         if pc+adrsize > cp then errorl('Program code overflow    ');
-         putadr(pc, q1); pc := pc+adrsize
+         putint(pc, q1); pc := pc+intsize
       end;
 
    begin  p := 0;  q := 0;  op := 0;
@@ -1356,7 +1379,7 @@ procedure load;
       { note this search removes the top instruction from use }
       while (instr[op]<>name) and (op < maxins) do op := op+1;
       if op = maxins then errorl('illegal instruction      ');
-       
+
       case op of  (* get parameters p,q *)
 
           (*lod,str,lda,lip*)
@@ -1365,13 +1388,10 @@ procedure load;
                                              storeq
                                        end;
 
-          { [sam] There is a compiler bug with reads to restricted range
-            variables in IP Pascal here. }
-          12(*cup*): begin read(prd,t{p}); p := t; labelsearch; storeop;
-                           storep; storeq
-                     end;
+          12,11(*cup,mst*): begin read(prd,p); storeop; storep; labelsearch;
+                                  storeq end;
 
-          11,113(*mst,cip*): begin read(prd,p); storeop; storep end;
+          113(*cip*): begin read(prd,p); storeop; storep end;
 
           { equm,neqm,geqm,grtm,leqm,lesm take a parameter }
           142, 148, 154, 160, 166, 172,
@@ -1379,27 +1399,28 @@ procedure load;
           (*lao,ixa,mov,dmp,swp*)
           5,16,55,117,118,
 
-          (*ldo,sro,ind,inc,dec,ckv*)
-          1, 194, 196, 198, 65, 66, 67, 68, 69,
-          3, 75, 76, 77, 78, 79,
-          9, 85, 86, 87, 88, 89,
-          10, 90, 91, 92, 93, 94,
-          57, 100, 101, 102, 103, 104,
-          175, 176, 177, 178, 179, 180, 201, 202, 
-          203: begin read(prd,q); storeop; storeq end;
+          (*ldo,sro,ind,inc,dec,ckv,vbs*)
+          1, 194, 196, 198, 65, 66, 67, 68, 69, 3, 75, 76, 77, 78, 79, 9, 85,
+          86, 87, 88, 89, 10, 90, 93, 94, 57, 103, 104, 175, 176, 177, 178,
+          179, 180, 201, 202, 203, 19: begin read(prd,q); storeop; storeq end;
 
-          (*pck,upk,cta,ivt*)
-          63, 64, 191, 192: begin read(prd,q); read(prd,q1); storeop; storeq;
-                                  storeq1 end;
+          (*pck,upk*)
+          63, 64: begin read(prd,q); read(prd,q1); storeop; storeq; storeq1 end;
+
+          (*cta,ivt,cvb*)
+          191, 91, 92, 96, 192, 8, 21, 22, 27: begin
+            read(prd,q); read(prd,q1); storeop; storeq; storeq1; labelsearch;
+            storeq
+          end;
 
           (*ujp,fjp,xjp,tjp*)
           23,24,25,119,
 
           (*ents,ente*)
-          13, 173: begin labelsearch; storeop; storeq end;
+          13, 173: begin storeop; labelsearch; storeq end;
 
           (*ipj,lpa*)
-          112,114: begin read(prd,p); labelsearch; storeop; storep; storeq end;
+          112,114: begin read(prd,p); storeop; storep; labelsearch; storeq end;
 
           15 (*csp*): begin skpspc; getname;
                            while name<>sptable[q] do
@@ -1439,7 +1460,7 @@ procedure load;
                                   if CharInSet(ch, ['0'..'9']) then begin i := 0;
                                     while CharInSet(ch, ['0'..'9']) do
                                       begin i := i*10+ord(ch)-ord('0'); getnxt end;
-                                    c := chr(i);   
+                                    c := chr(i);
                                   end else begin
                                     if ch <> '''' then
                                       errorl('illegal character        ');
@@ -1471,7 +1492,7 @@ procedure load;
                            end (*case*)
                      end;
 
-           26, 95, 96, 97, 98, 99, 190, 199 (*chk*): begin
+           26, 95, 97, 98, 99, 190, 199 (*chk*): begin
                          read(prd,lb,ub);
                          if (op = 95) or (op = 190) then q := lb
                          else
@@ -1522,10 +1543,10 @@ procedure load;
           { equ,neq,geq,grt,leq,les with no parameter }
           17, 137, 138, 139, 140, 141,
           18, 143, 144, 145, 146, 147,
-          19, 149, 150, 151, 152, 153,
-          20, 155, 156, 157, 158, 159,
-          21, 161, 162, 163, 164, 165,
-          22, 167, 168, 169, 170, 171,
+          149, 150, 151, 152, 153,
+          155, 156, 157, 158, 159,
+          161, 162, 163, 164, 165,
+          167, 168, 169, 170, 171,
 
           59, 133, 134, 135, 136, 200, (*ord*)
 
@@ -1533,16 +1554,15 @@ procedure load;
 
           { eof,adi,adr,sbi,sbr,sgs,flt,flo,trc,ngi,ngr,sqi,sqr,abi,abr,not,and,
             ior,dif,int,uni,inn,mod,odd,mpi,mpr,dvi,dvr,stp,chr,rnd,rgs,fbv,
-            fvb }
-          27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,
+            fvb,ctp }
+          28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,
           48,49,50,51,52,53,54,58,60,62,110,111,
-          115, 116,
+          115,116,100,101,102,
 
-          { dupi, dupa, dupr, dups, dupb, dupc, cks, cke, inv }
-          181, 182, 183, 184, 185, 186,187,188,189: storeop;
+          { dupi, dupa, dupr, dups, dupb, dupc, cks, cke, inv, vbe }
+          181,182,183,184,185,186,187,188,189,20: storeop;
 
-                      (*ujc must have same length as ujp, so we output a dummy
-                        q argument*)
+          (*ujc must have same length as ujp, so we output a dummy q argument*)
           61 (*ujc*): begin storeop; q := 0; storeq end
 
       end; (*case*)
@@ -1558,7 +1578,7 @@ procedure load;
      if b+1 > a then wrthex(b, maxdigh) else for i := 1 to maxdigh do write('*');
      writeln(' (',b+1-a:maxdigd,')')
    end;
-   
+
 begin (*load*)
 
    init;
@@ -1594,6 +1614,60 @@ end; (*load*)
 (*------------------------------------------------------------------------*)
 
 { runtime handlers }
+
+procedure varenter(s, e: address);
+var vp: varptr;
+begin
+  if varfre <> nil then begin vp := varfre; varfre := vp^.next end
+  else new(vp);
+  vp^.s := s; vp^.e := e; vp^.next := varlst; varlst := vp
+end;
+
+procedure varexit;
+var vp: varptr;
+begin
+  if varlst = nil then errori('VAR block list empty     ');
+  vp := varlst; varlst := vp^.next; vp^.next := varfre; varfre := vp
+end;
+
+function varlap(s, e: address): boolean;
+var vp: varptr; f: boolean;
+begin
+  vp := varlst; f := false;
+  while (vp <> nil) and not f do begin
+    f := (vp^.e >= s) and (vp^.s <= e);
+    vp := vp^.next
+  end;
+  varlap := f
+end;
+
+procedure withenter(b: address);
+var wp: wthptr;
+begin
+  if wthfre <> nil then begin wp := wthfre; wthfre := wp^.next end
+  else new(wp);
+  wp^.b := b; wp^.next := wthlst; wthlst := wp;
+  wthcnt := wthcnt+1
+end;
+
+procedure withexit;
+var wp: wthptr;
+begin
+  if wthlst = nil then errori('With base list empty     ');
+  wp := wthlst; wthlst := wp^.next; wp^.next := wthfre; wthfre := wp;
+  wthcnt := wthcnt-1
+end;
+
+function withsch(b: address): boolean;
+var wp: wthptr; f: boolean;
+begin
+  wp := wthlst; f := false;
+  while (wp <> nil) and not f do begin
+    f := wp^.b = b;
+    wp := wp^.next
+  end;
+  withsch := f
+end;
 
 function base(ld :integer):address;
    var ad :address;
@@ -1669,7 +1743,7 @@ procedure getq; { get q parameter }
 
 begin
 
-   q := getadr(pc); pc := pc+adrsize
+   q := getint(pc); pc := pc+intsize
 
 end;
 
@@ -1677,7 +1751,15 @@ procedure getq1; { get q1 parameter }
 
 begin
 
-   q1 := getadr(pc); pc := pc+adrsize
+   q1 := getint(pc); pc := pc+intsize
+
+end;
+
+procedure getq2; { get q2 parameter }
+
+begin
+
+   q2 := getint(pc); pc := pc+intsize
 
 end;
 
@@ -1839,7 +1921,8 @@ procedure callsp;
 
       s := +1; { set sign }
       { skip leading spaces }
-      while (CurrentChar(f) = ' ') and not eoln(f) do get(f);
+      while (CurrentChar(f) = ' ') and not eof(f) do get(f);
+      if eof(f) then errori('End of file              ');
       if not CharInSet(CurrentChar(f), ['+', '-', '0'..'9']) then
         errori('Invalid integer format   ');
       if CurrentChar(f) = '+' then get(f)
@@ -1895,7 +1978,8 @@ procedure callsp;
       s := false; { set sign }
       r := 0.0; { clear result }
       { skip leading spaces }
-      while (CurrentChar(f) = ' ') and not eoln(f) do get(f);
+      while (CurrentChar(f) = ' ') and not eof(f) do get(f);
+      if eof(f) then errori('End of file              ');
       { get any sign from number }
       if CurrentChar(f) = '-' then begin get(f); s := true end
       else if CurrentChar(f) = '+' then get(f);
@@ -1926,8 +2010,7 @@ procedure callsp;
          if CharInSet(CurrentChar(f), ['e', 'E']) then begin { exponent }
 
             get(f); { skip 'e' }
-            if not CharInSet(CurrentChar(f), ['0'..'9', '+', '-']) then
-               errori('Invalid real format      ');
+            if not CharInSet(CurrentChar(f), ['0'..'9', '+', '-']) then errori('Invalid real format      ');
             readi(f, i); { get exponent }
             { find with exponent }
             e := e+i
@@ -1972,6 +2055,8 @@ begin (*callsp*)
 
       case q of
            0 (*get*): begin popadr(ad); valfil(ad); fn := store[ad];
+                           if varlap(ad+fileidsize, ad+fileidsize) then
+                             errori('VAR ref file buf modified');
                            if fn <= prrfn then case fn of
                               inputfn: getfile(input);
                               outputfn: errori('Get on output file       ');
@@ -2079,7 +2164,11 @@ begin (*callsp*)
            7 (*eln*): begin popadr(ad); valfil(ad); fn := store[ad];
                            line := False;
                            if fn <= prrfn then case fn of
-                                 inputfn: line:= eoln(input);
+                                 inputfn: begin
+                                   if eof(input) then
+                                     errori('Eof on file              ');
+                                   line:= eoln(input)
+                                 end;
                                  outputfn: errori('Eoln output file         ');
                                  prdfn: line:=eoln(prd);
                                  prrfn: errori('Eoln on prr file         ')
@@ -2087,6 +2176,8 @@ begin (*callsp*)
                            else begin
                                 if filstate[fn] <> fread then
                                    errori('File not in read mode    ');
+                                if eof(filtable[fn]) then
+                                     errori('Eof on file              ');
                                 line:=eoln(filtable[fn])
                            end;
                            pshint(ord(line))
@@ -2318,7 +2409,12 @@ begin (*callsp*)
                             end
                       end;
            26(*dsp*): begin
-                           popadr(ad1); popadr(ad); dspspc(ad1, ad)
+                           popadr(ad1); popadr(ad);
+                           if varlap(ad, ad+ad1-1) then
+                             errori('Dispose of VAR ref block ');
+                           if withsch(ad) then
+                             errori('Dispose of with ref block');
+                           dspspc(ad1, ad)
                       end;
            40(*dsl*): begin
                            popadr(ad1); popint(i); { get size of record and n tags }
@@ -2329,7 +2425,7 @@ begin (*callsp*)
                              errori('Block already freed      ');
                            if i <> getint(ad-intsize)-adrsize-1 then
                              errori('New/dispose tags mismatch');
-                           ad := ad-intsize; ad2 := sp;
+                           ad := ad-intsize*2; ad2 := sp;
                            { ad = top of tags in dynamic, ad2 = top of tags in
                              stack }
                            k := i;
@@ -2339,7 +2435,12 @@ begin (*callsp*)
                                  errori('New/dispose tags mismatch');
                                ad := ad-intsize; ad2 := ad2+intsize; k := k-1
                              end;
-                           dspspc(ad1+(i+1)*intsize, ad+intsize);
+                           ad := ad+intsize; ad1 := ad1+(i+1)*intsize;
+                           if varlap(ad, ad+ad1-1) then
+                             errori('Dispose of VAR ref block ');
+                           if withsch(ad) then
+                             errori('Dispose of with ref block');
+                           dspspc(ad1, ad);
                            while i > 0 do begin popint(j); i := i-1 end;
                            popadr(ad)
                       end;
@@ -2383,14 +2484,9 @@ begin (*callsp*)
                             valfilrm(ad); fn := store[ad];
                             if filbuff[fn] then { buffer data exists }
                             for i := 1 to l do begin
-                              store[ad1+i-1] := store[ad+fileidsize+i-1]; 
+                              store[ad1+i-1] := store[ad+fileidsize+i-1];
                               putdef(ad1+i-1, true)
                             end else begin
-                              { FPC has an error where it indicates EOF 1 byte 
-                                before the end of the file. A workaround is to
-                                comment the EOF check out, but note that this
-                                is not permanent, since it compromises error
-                                checking. }
                               if eof(bfiltable[fn]) then
                                 errori('End of file              ');
                               for i := 1 to l do begin
@@ -2414,6 +2510,8 @@ begin (*callsp*)
                       end;
            35(*gbf*): begin popint(i); popadr(ad); valfilrm(ad);
                            fn := store[ad];
+                           if varlap(ad+fileidsize, ad+fileidsize+i-1) then
+                             errori('VAR ref file buf modified');
                            if filbuff[fn] then filbuff[fn] := false
                            else
                              for j := 1 to i do
@@ -2449,6 +2547,29 @@ begin (*callsp*)
                             end;
                           filbuff[fn] := true
                         end;
+           46(*rbr*): begin popint(mx); popint(mn); popint(l); popadr(ad1);
+                            popadr(ad); pshadr(ad);
+                            valfilrm(ad); fn := store[ad];
+                            if filbuff[fn] then { buffer data exists }
+                            for i := 1 to l do begin
+                              store[ad1+i-1] := store[ad+fileidsize+i-1];
+                              putdef(ad1+i-1, true)
+                            end else begin
+                              if eof(bfiltable[fn]) then
+                                errori('End of file              ');
+                              ad := ad1;
+                              for i := 1 to l do begin
+                                read(bfiltable[fn], store[ad1]);
+                                putdef(ad1, true);
+                                ad1 := ad1+1
+                              end;
+                              ad1 := ad
+                            end;
+                            { only two cases, char and byte, or integer }
+                            if l = 1 then i := getbyt(ad1) else i := getint(ad1);
+                            if (i < mn) or (i > mx) then
+                              errori('Value read out of range  ')
+                      end;
       end;(*case q*)
 end;(*callsp*)
 
@@ -2465,6 +2586,12 @@ begin
   write('ra: '); wrthex(mp+markra, 8); write(': '); if getdef(mp+markra) then wrthex(getadr(mp+markra), 8) else write('********'); writeln
 end;
 
+procedure fndpow(var m: integer; p: integer; var d: integer);
+begin
+  m := 1; d := 1;
+  while m < maxint div p do begin m := m*p; d := d+1 end
+end;
+
 begin (* main *)
   AssignFile(prd, 'prd');
   AssignFile(prr, 'prr');
@@ -2478,12 +2605,16 @@ begin (* main *)
     if charal = 0 then;
     if codemax = 0 then;
     if filesize = 0 then;
+    if fileal = 0 then;
     if intdig = 0 then;
-    if markfv = 0 then;
     if maxresult = 0 then;
     if ordminchar = 0 then;
     if ordmaxchar = 0 then;
+    if maxexp = 0 then;
     if stackelsize = 0 then;
+    if filres = 0 then;
+    if ujplen = 0 then;
+    if false then dmpdsp(0);
     {$WARN COMPARISON_FALSE ON}
 
     write('P5 Pascal interpreter vs. ', majorver:1, '.', minorver:1);
@@ -2492,19 +2623,51 @@ begin (* main *)
     writeln;
 
     { !!! remove this next statement for self compile }
-    {elide}rewrite(prr);{noelide}
+{$IFNDEF SELF_COMPILE}
+    rewrite(prr);
+{$ENDIF}
 
     { construct bit equivalence table }
     i := 1;
     for bai := 0 to 7 do begin bitmsk[bai] := i; i := i*2 end;
-  
+
     for sdi := 0 to maxdef do storedef[sdi] := 0; { clear storage defined flags }
+
+    { debug/check flags }
+    dochkovf    := true;  { check arithmetic overflow }
+    dodmpins    := false; { dump instructions after assembly }
+    dodmplab    := false; { dump label definitions }
+    dodmpsto    := false; { dump storage area specs }
+    dotrcrot    := false; { trace routine executions }
+    dotrcins    := false; { trace instruction executions }
+    dopmd       := false; { perform post-mortem dump on error }
+    dosrclin    := true;  { add source line sets to code }
+    dotrcsrc    := false; { trace source line executions }
+    dodmpspc    := false; { dump heap space after execution }
+    dorecycl    := true;  { obey heap space recycle requests }
+    dochkrpt    := false; { check reuse of freed entry }
+    dochkdef    := true;  { check undefined accesses }
+
+    errsinprg := 0; { set no source errors }
+    varlst := nil; { set no VAR block entries }
+    varfre := nil;
+    wthlst := nil; { set no with block entries }
+    wthcnt := 0;
+    wthfre := nil;
+    fndpow(maxpow16, 16, hexdig);
 
     writeln('Assembling/loading program');
     load; (* assembles and stores code *)
-  
+
+    { check and abort if source errors: this indicates a bad intermediate }
+    if errsinprg > 0 then begin
+      writeln;
+      writeln('*** Source program contains errors: ', errsinprg:1);
+      Abort
+    end;
+
     pc := 0; sp := cp; np := gbtop; mp := cp; ep := 5; srclin := 0;
-  
+
     { clear globals }
     for ad := pctop to gbtop-1 do begin store[ad] := 0; putdef(ad, false) end;
 
@@ -2599,10 +2762,10 @@ begin (* main *)
             88  (*indb*): begin getq; popadr(ad); pshint(ord(getbol(ad+q))) end;
             89  (*indc*): begin getq; popadr(ad); pshint(ord(getchr(ad+q))) end;
 
-            93 (*incb*),
-            94 (*incc*),
+            93  (*incb*),
+            94  (*incc*),
             201 (*incx*),
-            10 (*inci*): begin getq; popint(i1);
+            10  (*inci*): begin getq; popint(i1);
                            if dochkovf then if (i1<0) = (q<0) then
                               if maxint-abs(i1) < abs(q) then
                                 errori('Arithmetic overflow      ');
@@ -2614,16 +2777,23 @@ begin (* main *)
                                 procedure + 1;  set dl and sl, decrement sp*)
                          (* then length of this element is
                             max(intsize,realsize,boolsize,charsize,ptrsize *)
-                         getp;
+                         getp; getq;
+                         { allocate function result as zeros }
+                         for j := 1 to q div intsize do pshint(0);
+                         { invalidate }
+                         for j := 1 to q do putdef(sp+j-1, false);
                          ad := sp; { save mark base }
-                         { allocate mark }
+                         { allocate mark as zeros }
                          for j := 1 to marksize div intsize do pshint(0);
+
+                         { mark function result invalid }
+                         { for j := 0 to maxresult-1 do putdef(ad+markfv+j, false); }
+
                          putadr(ad+marksl, base(p)); { sl }
                          (* the length of this element is ptrsize *)
                          putadr(ad+markdl, mp); { dl }
                          (* idem *)
-                         putadr(ad+markep, ep); { ep }
-                         (* idem *)
+                         putadr(ad+markep, ep) { ep }
                         end;
 
             12 (*cup*): begin (*p=no of locations for parameters, q=entry point*)
@@ -2647,69 +2817,40 @@ begin (* main *)
 
             173 (*ente*): begin getq; ep := sp+q;
                             if ep <= np then errori('Store overflow: ente     ');
-                            putadr(mp+market, ep) { place current ep }
+                            putadr(mp+market, ep); { place current ep }
+                            putint(ad+markwb, wthcnt) { with base count }
                           end;
                           (*q = max space required on stack*)
-                        
-            14  (*retp*): begin
-                           if sp <> getadr(mp+marksb) then
-                             errori('Stack balance            ');
-                           sp := mp;
-                           pc := getadr(mp+markra); { get ra }
-                           ep := getadr(mp+markep); { get old ep }
-                           mp := getadr(mp+markdl)  { get dl }
-                         end;
+
             { For characters and booleans, need to clean 8 bit results because
               only the lower 8 bits were stored to. }
             130 (*retc*): begin
-                           if sp <> getadr(mp+marksb) then
-                             errori('Stack balance            ');
-                           putint(mp+markfv+maxresult div 2,
-                                  ord(getchr(mp+markfv+maxresult div 2)));
-                           { set stack below function result }
-                           sp := mp+markfv+maxresult div 2;
-                           pc := getadr(mp+markra);
-                           ep := getadr(mp+markep);
-                           mp := getadr(mp+markdl)
-                         end;
+                            { set stack below function result }
+                            sp := mp;
+                            putint(sp, ord(getchr(sp)));
+                            pc := getadr(mp+markra);
+                            ep := getadr(mp+markep);
+                            mp := getadr(mp+markdl)
+                          end;
             131 (*retb*): begin
-                           if sp <> getadr(mp+marksb) then
-                             errori('Stack balance            ');
-                           putint(mp+markfv+maxresult div 2,
-                                  ord(getbol(mp+markfv+maxresult div 2)));
-                           { set stack below function result }
-                           sp := mp+markfv+maxresult div 2;
-                           pc := getadr(mp+markra);
-                           ep := getadr(mp+markep);
-                           mp := getadr(mp+markdl)
-                         end;
+                            { set stack below function result }
+                            sp := mp;
+                            putint(sp, ord(getbol(sp)));
+                            pc := getadr(mp+markra);
+                            ep := getadr(mp+markep);
+                            mp := getadr(mp+markdl)
+                          end;
+            14  (*retp*),
             128 (*reti*),
-            204 (*retx*): begin
-                           if sp <> getadr(mp+marksb) then
-                             errori('Stack balance            ');
-                           { set stack below function result }
-                           sp := mp+markfv+maxresult div 2;
-                           pc := getadr(mp+markra);
-                           ep := getadr(mp+markep);
-                           mp := getadr(mp+markdl)
-                         end;
-            129 (*retr*): begin
-                           if sp <> getadr(mp+marksb) then
-                             errori('Stack balance            ');
-                           sp := mp+markfv; { set stack below function result }
-                           pc := getadr(mp+markra);
-                           ep := getadr(mp+markep);
-                           mp := getadr(mp+markdl)
-                         end;
-            132  (*reta*): begin
-                           if sp <> getadr(mp+marksb) then
-                             errori('Stack balance            ');
-                           { set stack below function result }
-                           sp := mp+markfv+maxresult div 2;
-                           pc := getadr(mp+markra);
-                           ep := getadr(mp+markep);
-                           mp := getadr(mp+markdl)
-                         end;
+            204 (*retx*),
+            129 (*retr*),
+            132 (*reta*): begin
+                            { set stack below function result, if any }
+                            sp := mp;
+                            pc := getadr(mp+markra);
+                            ep := getadr(mp+markep);
+                            mp := getadr(mp+markdl)
+                          end;
 
             15 (*csp*): begin q := store[pc]; pc := pc+1; callsp end;
 
@@ -2842,7 +2983,11 @@ begin (* main *)
                               errori('Arithmetic overflow      ');
                         pshint(i1-i2) end;
             31 (*sbr*): begin poprel(r2); poprel(r1); pshrel(r1-r2) end;
-            32 (*sgs*): begin popint(i1); pshset([i1]); end;
+            32 (*sgs*): begin popint(i1);
+                          if (i1 < setlow) or (i1 > sethigh) then
+                            errori('Set element out of range ');
+                          pshset([i1])
+                        end;
             33 (*flt*): begin popint(i1); pshrel(i1) end;
 
             { note that flo implies the tos is float as well }
@@ -2937,12 +3082,19 @@ begin (* main *)
                          end
                        end;
 
-            110 (*rgs*): begin popint(i2); popint(i1); pshset([i1..i2]) end;
+            110 (*rgs*): begin popint(i2); popint(i1);
+                           if (i1 < setlow) or (i1 > sethigh) or
+                              (i2 < setlow) or (i2 > sethigh) then
+                             errori('Set element out of range ');
+                           pshset([i1..i2])
+                         end;
             112 (*ipj*): begin getp; getq; pc := q;
                          mp := base(p); { index the mark to restore }
                          { restore marks until we reach the destination level }
                          sp := getadr(mp+marksb); { get the stack bottom }
-                         ep := getadr(mp+market) { get the mark ep }
+                         ep := getadr(mp+market); { get the mark ep }
+                         i := getint(mp+markwb); { get the with base count }
+                         while wthcnt <> i do withexit { clean the with stack }
                        end;
             113 (*cip*): begin getp; popadr(ad);
                         mp := sp+(p+marksize);
@@ -2966,23 +3118,38 @@ begin (* main *)
                            pshadr(ad2); pshadr(ad1);
                          end;
 
-            191 (*cta*): begin getq; getq1; popint(i); popadr(ad); pshadr(ad);
+            191 (*cta*): begin getq; getq1; getq2; popint(i); popadr(ad); pshadr(ad);
                                pshint(i); ad := ad-q-intsize; ad1 := getadr(ad);
                                if ad1 < intsize then
                                  errori('System error             ');
                                ad1 := ad1-adrsize-1;
+                               ad := ad-ad1*intsize;
+                               i := i-getint(q2+intsize);
                                if ad1 >= q1 then begin
-                                 ad := ad-ad1*intsize;
-                                 if getadr(ad+(q1-1)*intsize) <> i then
+                                 if (i < 0) or (i >= getint(q2)) then
+                                   errori('Value out of range       ');
+                                 if getadr(ad+(q1-1)*intsize) <>
+                                    getint(q2+(i+2)*intsize) then
                                    errori('Change to alloc tagfield ');
                                end
                          end;
 
-            192 (*ivt*): begin getq; getq1; popint(i); popadr(ad);
-                              pshadr(ad); pshint(i);
-                              if false and dochkdef then begin
+            192 (*ivti*),
+            91  (*ivtx*),
+            92  (*ivtb*),
+            96  (*ivtc*): begin getq; getq1; getq2; popint(i); popadr(ad);
+                            pshadr(ad); pshint(i);
+                            i := i-getint(q2+intsize);
+                            if (i < 0) or (i >= getint(q2)) then
+                              errori('Value out of range       ');
+                            if dochkdef then begin
                                 b := getdef(ad);
-                                if b then b := i <> getint(ad);
+                              if b then begin
+                                if op = 192 then j := getint(ad) else j := getbyt(ad);
+                                j := j-getint(q2+intsize);
+                                b := getint(q2+(i+2)*intsize) <>
+                                     getint(q2+(j+2)*intsize);
+                              end;
                                 if b then begin
                                   ad := ad+q;
                                   for j := 1 to q1 do
@@ -2995,20 +3162,55 @@ begin (* main *)
                                 if dotrcsrc then
                                   writeln('Source line executed: ', q:1)
                           end;
+            19 (*vbs*): begin getq; popadr(ad); varenter(ad, ad+q-1) end;
+            20 (*vbe*): varexit;
+
+            8  (*cvbi*),
+            21 (*cvbx*),
+            22 (*cvbb*),
+            27 (*cvbc*): begin getq; getq1; getq2; popint(i); popadr(ad);
+                            pshadr(ad); pshint(i);
+                            i := i-getint(q2+intsize);
+                            if (i < 0) or (i >= getint(q2)) then
+                              errori('Value out of range       ');
+                            b := getdef(ad);
+                            if b then begin
+                              if op = 8 then j := getint(ad) else j := getbyt(ad);
+                              j := j-getint(q2+intsize);
+                              b := getint(q2+(i+2)*intsize) <>
+                                   getint(q2+(j+2)*intsize)
+                            end;
+                            if b then begin
+                              ad := ad+q;
+                              if varlap(ad, ad+q1-1) then
+                                errori('Change to VAR ref variant');
+                            end
+                          end;
+            100 (*ctp*): begin popadr(ad); pshadr(ad); ad := ad-intsize; ad1 := getadr(ad);
+                           if ad1 < intsize then
+                             errori('System error             ');
+                           ad1 := ad1-adrsize-1;
+                           if ad1 <> 0 then errori('Access tag allocated rec ')
+                         end;
+            101 (*wbs*): begin popadr(ad); pshadr(ad); withenter(ad) end;
+            102 (*wbe*): withexit;
 
             { illegal instructions }
-            8,    19,  20,  21,  22,  27,  91,  92,  96, 100, 101, 102, 111, 115,
-            116, 121, 122, 133, 135, 176, 177, 178, 205, 206, 207, 208, 209, 210,
-            211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224,
-            225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238,
-            239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252,
-            253, 254, 255: errori('Illegal instruction      ');
+            111, 115, 116, 121, 122, 133, 135, 176, 177, 178, 205, 206, 207, 208,
+            209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222,
+            223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236,
+            237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250,
+            251, 252, 253, 254, 255: errori('Illegal instruction      ');
 
       end
     end; (*while interpreting*)
 
+    if varlst <> nil then errori('VAR block imbalance      ');
+    if wthlst <> nil then errori('With block imbalance     ');
+
     { perform heap dump if requested }
     if dodmpspc then repspc;
+
   except
     on E: EAbort do
       ;
