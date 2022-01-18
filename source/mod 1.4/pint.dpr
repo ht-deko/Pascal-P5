@@ -2361,6 +2361,7 @@ begin (*callsp*)
                               end
                            else begin
                                 filstate[fn] := fread;
+                                AssignFile(filtable[fn] , 'FILE.' + IntToStr(fn - 4));
                                 reset(filtable[fn]);
                                 filbuff[fn] := false
                            end
@@ -2374,6 +2375,7 @@ begin (*callsp*)
                               end
                            else begin
                                 filstate[fn] := fwrite;
+                                AssignFile(filtable[fn] , 'FILE.' + IntToStr(fn - 4));
                                 rewrite(filtable[fn])
                            end
                       end;
@@ -3218,6 +3220,16 @@ begin (* main *)
 
   writeln;
   writeln('program complete');
+
+  for i := 5 to maxfil do
+  begin
+    if filstate[i] <> fclosed then
+    begin
+      if filstate[i] = fwrite then
+        Flush(filtable[i]);
+      CloseFile(filtable[i]);
+    end;
+  end;
 
   CloseFile(prd);
   Flush(prr);
