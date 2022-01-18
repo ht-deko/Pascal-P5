@@ -1233,7 +1233,7 @@ procedure load;
                     errorl('unexpected line start    ');
                   case ch of
                        '!': getlin; { comment }
-                       'l': begin read(prd,x);
+                       'l': begin x := GetNum(prd);
                                   getnxt;
                                   if ch='=' then read(prd,labelvalue)
                                             else labelvalue:= pc;
