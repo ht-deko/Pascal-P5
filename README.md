@@ -8,7 +8,7 @@ Original version is here:
 
  - [pascal-p5 (sourceforge.net)](https://sourceforge.net/projects/pascalp5/)
 
-## External file enhancement
+## External file enhancement (v1.4)
 
 ```pascal
 program Test(input, output, TMP='TEMP.TXT');
