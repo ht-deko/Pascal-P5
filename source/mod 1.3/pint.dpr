@@ -327,6 +327,7 @@ var   pc          : address;   (*program address register*)
       option      : array ['a'..'z'] of boolean; { option array }
 
       filtable    : array [1..maxfil] of text; { general (temp) text file holders }
+      nfiltable   : array [1..maxfil] of string;
       { general (temp) binary file holders }
       bfiltable   : array [1..maxfil] of bytfil;
       { file state holding }
@@ -881,6 +882,25 @@ procedure load;
         labelvalue: address;
         iline: integer; { line number of intermediate file }
 
+     function ReadNum(var F: Text): Integer;
+     var
+       IsNegative: Boolean;
+     begin
+       result := 0;
+       while (CurrentChar(F) = ' ') and not Eoln(F) do
+         Read(F, ch);
+       IsNegative := CurrentChar(F) = '-';
+       if IsNegative then
+         Read(F, ch);
+       while CharInSet(CurrentChar(F), ['0'..'9']) and not Eoln(F) do
+         begin
+           result := result * 10 + Ord(CurrentChar(F)) - Ord('0');
+           Read(F, ch);
+         end;
+       if IsNegative then
+         result := -result;
+     end;
+
    procedure init;
       var i: integer;
    begin for i := 0 to maxins do instr[i] := '          ';
@@ -1222,34 +1242,18 @@ procedure load;
       var x: integer; (* label number *)
           again: boolean;
           ch1: char;
-     function GetNum(var F: Text): Integer;
-     var
-       IsNegative: Boolean;
-     begin
-       result := 0;
-       while (CurrentChar(F) = ' ') and not Eoln(F) do
-         Read(F, ch);
-       IsNegative := CurrentChar(F) = '-';
-       if IsNegative then
-         Read(F, ch);
-       while CharInSet(CurrentChar(F), ['0'..'9']) and not Eoln(F) do
-         begin
-           result := result * 10 + Ord(CurrentChar(F)) - Ord('0');
-           Read(F, ch);
-         end;
-       if IsNegative then
-         result := -result;
-     end;
+          s: string;
    begin
       again := true;
       while again do
             begin if eof(prd) then errorl('unexpected eof on input  ');
                   getnxt;(* first character of line*)
-                  if not CharInSet(ch, ['i', 'l', 'q', ' ', ':', 'o', 'g']) then
+//                if not CharInSet(ch, ['i', 'l', 'q', ' ', ':', 'o', 'g']) then
+                  if not CharInSet(ch, ['i', 'l', 'q', ' ', ':', 'o', 'g', 'x']) then
                     errorl('unexpected line start    ');
                   case ch of
                        'i': getlin; { comment }
-                       'l': begin x := GetNum(prd);
+                       'l': begin x := ReadNum(prd);
                                   getnxt;
                                   if ch='=' then read(prd,labelvalue)
                                             else labelvalue:= pc;
@@ -1283,9 +1287,17 @@ procedure load;
                                 ch1 := ch; getnxt;
                                 option[ch1] := ch = '+'; getnxt
                               until not CharInSet(ch, ['a'..'z']);
-                              getlin 
+                              getlin
                             end;
                        'g': begin read(prd,gbsiz); gbset := true; getlin end;
+                       { Add begin }
+                       'x': begin { external file }
+                              read(prd,i);
+                              Readln(prd, s);
+                              nfiltable[i] := StringReplace(Trim(s), '''', '', [rfReplaceAll]);
+                              getlin
+                            end;
+                       { Add end }
                   end;
             end
    end; (*generate*)
@@ -1458,7 +1470,7 @@ procedure load;
                                      errorl('ldcs() expected          ');
                                    s := [ ];  getnxt;
                                    while ch<>')' do
-                                   begin read(prd,s1); getnxt; s := s + [s1]
+                                   begin s1 := ReadNum(prd); getnxt; s := s + [s1]
                                    end;
                                    cp := cp-setsize;
                                    alignd(setal, cp);
@@ -1829,6 +1841,7 @@ procedure callsp;
        r: real;
        fn: fileno;
        mn,mx: integer;
+       FileName: string;
 
    procedure readi(var f: text; var i: integer);
 
@@ -2270,6 +2283,11 @@ begin (*callsp*)
                               end
                            else begin
                                 filstate[fn] := fread;
+                                if nfiltable[fn] = '' then
+                                  FileName := 'FILE.' + IntToStr(fn - 4)
+                                else
+                                  FileName := nfiltable[fn];
+                                AssignFile(filtable[fn] , FileName);
                                 reset(filtable[fn]);
                                 filbuff[fn] := false
                            end
@@ -2283,6 +2301,11 @@ begin (*callsp*)
                               end
                            else begin
                                 filstate[fn] := fwrite;
+                                if nfiltable[fn] = '' then
+                                  FileName := 'FILE.' + IntToStr(fn - 4)
+                                else
+                                  FileName := nfiltable[fn];
+                                AssignFile(filtable[fn] , FileName);
                                 rewrite(filtable[fn])
                            end
                       end;
@@ -3016,6 +3039,16 @@ begin (* main *)
 
   writeln;
   writeln('program complete');
+
+  for i := 5 to maxfil do
+  begin
+    if filstate[i] <> fclosed then
+    begin
+      if filstate[i] = fwrite then
+        Flush(filtable[i]);
+      CloseFile(filtable[i]);
+    end;
+  end;
 
   CloseFile(prd);
   Flush(prr);

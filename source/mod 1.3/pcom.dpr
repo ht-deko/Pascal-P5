@@ -215,7 +215,7 @@ const
    maxstd     = 39;  { number of standard identifiers }
    maxres     = 35;  { number of reserved words }
    reslen     = 9;   { maximum length of reserved words }
-   varsqt     = 10;  { variable string quanta }
+   varsqt     = strglgth; { variable string quanta }
    prtlln     = 10;  { number of label characters to print in dumps }
 
    { default field sizes for write }
@@ -1253,16 +1253,14 @@ var
       begin if list then writeln(output); endofline
       end;
       if not eof(prd) then
-      begin eol := eoln(prd); read(prd,ch);
+       begin eol := eoln(prd); read(prd,ch);
         if list then write(output,ch);
         chcnt := chcnt + 1
-      end
+       end
       else if (sy <> endsy) or (ch <> '.') then
-      begin writeln(output,'   *** eof ','encountered');
-        eol := true;
-        ch := ' ';
-        test := false
-      end
+        begin writeln(output,'   *** eof ','encountered');
+          test := false
+        end
     end;
 
     procedure options;
@@ -5352,11 +5350,6 @@ var
                         strequri('prd      ', filename) or
                         strequri('prr      ', filename))
                 then begin id := filename;
-                       { output general error for undefined external file }
-                       writeln(output);
-                       writeln(output,'**** Error: external file unknown ''',
-                                      string(fextfilep^.filename):8, '''');
-                       toterr := toterr+1;
                        { hold the error in case not found, since this error
                          occurs far from the original symbol }
                        searchidne([vars],llcp);

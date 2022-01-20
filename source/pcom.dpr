@@ -221,7 +221,7 @@ const
    maxstd     = 39;   { number of standard identifiers }
    maxres     = 35;   { number of reserved words }
    reslen     = 9;    { maximum length of reserved words }
-   varsqt     = 10;   { variable string quanta }
+   varsqt     = strglgth; { variable string quanta }
    prtlln     = 10;   { number of label characters to print in dumps }
    varmax     = 1000; { maximum number of logical variants to track }
 
@@ -1404,7 +1404,10 @@ end;
         errlist[errinx].nmr := ferrnr
       end;
     errlist[errinx].pos := chcnt;
-    toterr := toterr+1
+    toterr := toterr+1;
+
+    if toterr = 1 then
+      ExitCode := ferrnr;
   end (*error*) ;
 
   procedure insymbol;
@@ -1431,16 +1434,17 @@ end;
       begin if list then writeln(output); endofline
       end;
       if not eof(prd) then
-      begin eol := eoln(prd); read(prd,ch);
+       begin eol := eoln(prd); read(prd,ch);
         if list then write(output,ch);
         chcnt := chcnt + 1
-      end
-      else if (sy <> endsy) or (ch <> '.') then
-      begin writeln(output,'   *** eof ','encountered');
-        eol := true;
-        ch := ' ';
-        test := false
-      end
+       end
+       else if (sy <> endsy) or (ch <> '.') then
+       begin
+         writeln(output,'   *** eof ','encountered');
+         eol := true;
+         ch := ' ';
+         test := false
+       end;
     end;
 
     procedure options;
@@ -1530,7 +1534,7 @@ end;
               else if ferr then begin error(182); ferr := false end;
               nextch
             until chartp[ch] in [special,illegal,chstrquo,chcolon,
-                                  chperiod,chlt,chgt,chlparen,chspace,chlcmt];
+                                 chperiod,chlt,chgt,chlparen,chspace,chlcmt];
             if k >= kk then kk := k
             else
               repeat id[kk] := ' '; kk := kk - 1
@@ -6676,6 +6680,7 @@ end;
   end (*inittables*) ;
 
 begin
+  ExitCode := 0;
   AssignFile(prd, 'prd');
   AssignFile(prr, 'prr');
   try
