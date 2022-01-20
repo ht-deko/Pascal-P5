@@ -1253,14 +1253,16 @@ var
       begin if list then writeln(output); endofline
       end;
       if not eof(prd) then
-       begin eol := eoln(prd); read(prd,ch);
+      begin eol := eoln(prd); read(prd,ch);
         if list then write(output,ch);
         chcnt := chcnt + 1
-       end
+      end
       else if (sy <> endsy) or (ch <> '.') then
-        begin writeln(output,'   *** eof ','encountered');
-          test := false
-        end
+      begin writeln(output,'   *** eof ','encountered');
+        eol := true;
+        ch := ' ';
+        test := false
+      end
     end;
 
     procedure options;
