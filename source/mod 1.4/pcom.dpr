@@ -1405,9 +1405,7 @@ end;
       end;
     errlist[errinx].pos := chcnt;
     toterr := toterr+1;
-
-    if toterr = 1 then
-      ExitCode := ferrnr;
+    
   end (*error*) ;
 
   procedure insymbol;
@@ -6680,7 +6678,6 @@ end;
   end (*inittables*) ;
 
 begin
-  ExitCode := 0;
   AssignFile(prd, 'prd');
   AssignFile(prr, 'prr');
   try
