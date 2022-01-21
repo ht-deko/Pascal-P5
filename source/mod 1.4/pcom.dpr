@@ -1405,7 +1405,6 @@ end;
       end;
     errlist[errinx].pos := chcnt;
     toterr := toterr+1;
-    
   end (*error*) ;
 
   procedure insymbol;

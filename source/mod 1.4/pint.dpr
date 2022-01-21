@@ -120,7 +120,7 @@ program pcode(input,output,prd,prr);
 {$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
 
 uses
-  System.SysUtils, System.Math;
+  System.SysUtils, System.Math, System.IOUtils;
 
 const
 
@@ -334,6 +334,7 @@ var   pc          : address;   (*program address register*)
 
   function CurrentChar(var F: Text): WideChar;
   begin
+    Eoln(F);
     result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
   end (*CurrentChar*) ;
 
@@ -2062,7 +2063,6 @@ begin (*callsp*)
 
       { trace routine executions }
       if dotrcrot then writeln(pc:6, '/', sp:6, '-> ', q:2);
-
       case q of
            0 (*get*): begin popadr(ad); valfil(ad); fn := store[ad];
                            if varlap(ad+fileidsize, ad+fileidsize) then
@@ -2370,9 +2370,15 @@ begin (*callsp*)
                                 prrfn: errori('Reset on prr file        ')
                               end
                            else begin
+                                if filstate[fn] <> fclosed then
+                                  begin
+                                    if filstate[fn] = fread then
+                                      Flush(filtable[fn]);
+                                    CloseFile(filtable[fn]);
+                                  end;
                                 filstate[fn] := fread;
                                 if nfiltable[fn] = '' then
-                                  FileName := 'FILE.' + IntToStr(fn - 4)
+                                  FileName := TPath.Combine(TPath.GetTempPath, Format('TMPFILE%.3d.TXT', [fn-4]))
                                 else
                                   FileName := nfiltable[fn];
                                 AssignFile(filtable[fn] , FileName);
@@ -2388,9 +2394,15 @@ begin (*callsp*)
                                 prrfn: rewrite(prr)
                               end
                            else begin
+                                if filstate[fn] <> fclosed then
+                                  begin
+                                    if filstate[fn] = fread then
+                                      Flush(filtable[fn]);
+                                    CloseFile(filtable[fn]);
+                                  end;
                                 filstate[fn] := fwrite;
                                 if nfiltable[fn] = '' then
-                                  FileName := 'FILE.' + IntToStr(fn - 4)
+                                  FileName := TPath.Combine(TPath.GetTempPath, Format('TMPFILE%.3d.TXT', [fn-4]))
                                 else
                                   FileName := nfiltable[fn];
                                 AssignFile(filtable[fn] , FileName);
@@ -2520,11 +2532,21 @@ begin (*callsp*)
                            if filstate[fn] = fclosed then
                              errori('Cannot reset closed file ');
                            filstate[fn] := fread;
+                           if nfiltable[fn] = '' then
+                             FileName := TPath.Combine(TPath.GetTempPath, Format('TMPFILE%.3d.BIN', [fn-4]))
+                           else
+                             FileName := nfiltable[fn];
+                           AssignFile(bfiltable[fn] , FileName);
                            reset(bfiltable[fn]);
                            filbuff[fn] := false
                       end;
            34(*rwb*): begin popadr(ad); valfil(ad); fn := store[ad];
                            filstate[fn] := fwrite;
+                           if nfiltable[fn] = '' then
+                             FileName := TPath.Combine(TPath.GetTempPath, Format('TMPFILE%.3d.BIN', [fn-4]))
+                           else
+                             FileName := nfiltable[fn];
+                           AssignFile(bfiltable[fn] , FileName);
                            rewrite(bfiltable[fn]);
                            filbuff[fn] := false
                       end;
@@ -3241,12 +3263,14 @@ begin (* main *)
 
   for i := 5 to maxfil do
   begin
-    if filstate[i] <> fclosed then
-    begin
-      if filstate[i] = fwrite then
-        Flush(filtable[i]);
-      CloseFile(filtable[i]);
-    end;
+    if TtextRec(filtable[i]).Handle <> 0 then
+      begin
+        if filstate[i] = fwrite then
+          Flush(filtable[i]);
+        CloseFile(filtable[i]);
+      end;
+    if TFileRec(bfiltable[i]).Handle <> 0 then
+      CloseFile(bfiltable[i]);
   end;
 
   CloseFile(prd);

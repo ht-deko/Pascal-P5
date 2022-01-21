@@ -5405,7 +5405,10 @@ var
 
   procedure programme(fsys:setofsys);
     var extfp:extfilep;
+    extfn: Integer;
+    extfilename: string;
   begin
+    extfn := 5;
     chkudtf := chkudtc; { finalize undefined tag checking flag }
     if sy = progsy then
       begin insymbol; if sy <> ident then error(2) else insymbol;
@@ -5418,11 +5421,32 @@ var
                   with extfp^ do
                     begin filename := id; nextfile := fextfilep end;
                   fextfilep := extfp;
+                  extfilename := Trim(id);
                   { check 'input' or 'output' appears in header for defaults }
                   if strequri('input    ', id) then inputhdf := true
                   else if strequri('output   ', id) then outputhdf := true;
                   insymbol;
-                  if not ( sy in [comma,rparent] ) then error(20)
+                  if not ( sy in [comma,rparent,relop] ) then
+                    error(20)
+                  else if sy = relop then
+                  begin
+                    insymbol;
+                    if sy <> stringconst then
+                      error(31)
+                    else
+                    begin
+                      extfilename := Trim(string(val.valp^.sval.str));
+                      insymbol
+                    end;
+                  end;
+                  if not (strequri('input    ', id) or
+                          strequri('output   ', id) or
+                          strequri('prd      ', id) or
+                          strequri('prr      ', id)) then
+                  begin
+                    writeln(prr, 'x ', extfn:1, ' ''', extfilename, '''');
+                    extfn := extfn + 1;
+                  end;
                 end
               else error(2)
             until sy <> comma;
