@@ -6699,6 +6699,7 @@ begin
 
     write('P5 Pascal compiler vs. ', majorver:1, '.', minorver:1);
     if experiment then write('.x');
+    write(' (Built with Delphi)');
     writeln;
     writeln('Pascal-P5 complies with the requirements of level 0 of ISO/IEC 7185.');
     writeln;

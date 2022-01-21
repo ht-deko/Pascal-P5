@@ -383,6 +383,33 @@ var   pc          : address;   (*program address register*)
     Write(F, #$0C);
   end (*Page*) ;
 
+  procedure WriteBool(var F: Text; b: Boolean; w: Integer = 0);
+  const
+    BOOLSTR: array [Boolean] of string = ('false', 'true');
+  var
+    s: string;
+  begin
+    s := BOOLSTR[b];
+    if w > 0 then
+      s := Copy(s, 1, w);
+    Write(F, s);
+  end (*WriteBool*) ;
+
+  procedure WriteReal(var F: Text; r: Real; w: Integer = 0);
+  var
+    s: string;
+    w2: Integer;
+  begin
+    if w < 8 then
+      w2 := 2
+    else
+      w2 := w - 6;
+    s := FloatToStrF(r, ffExponent, w2, 2);
+    if r >= 0 then
+      s := ' ' + s;
+    Write(F, s);
+  end (*WriteReal*) ;
+
 (*--------------------------------------------------------------------*)
 
 { Low level error check and handling }
@@ -2125,14 +2152,14 @@ begin (*callsp*)
                             if w < 1 then errori('Width cannot be < 1      ');
                             if fn <= prrfn then case fn of
                                  inputfn: errori('Write on input file      ');
-                                 outputfn: write(output, r: w);
+                                 outputfn: WriteReal(output, r, w);
                                  prdfn: errori('Write on prd file        ');
-                                 prrfn: write(prr, r:w)
+                                 prrfn: WriteReal(prr, r, w)
                               end
                             else begin
                                 if filstate[fn] <> fwrite then
                                    errori('File not in write mode   ');
-                                write(filtable[fn], r:w)
+                                WriteReal(filtable[fn], r, w)
                             end;
                       end;
            10(*wrc*): begin popint(w); popint(i); c := chr(i); popadr(ad);
@@ -2327,14 +2354,14 @@ begin (*callsp*)
                             if w < 1 then errori('Width cannot be < 1      ');
                             if fn <= prrfn then case fn of
                                  inputfn: errori('Write on input file      ');
-                                 outputfn: write(output, b:w);
+                                 outputfn: WriteBool(output, b, w);
                                  prdfn: errori('Write on prd file        ');
-                                 prrfn: write(prr, b:w)
+                                 prrfn: WriteBool(prr, b, w)
                               end
                             else begin
                                 if filstate[fn] <> fwrite then
                                    errori('File not in write mode   ');
-                                write(filtable[fn], b:w)
+                                WriteBool(filtable[fn], b, w)
                             end
                       end;
            25(*wrf*): begin popint(f); popint(w); poprel(r); popadr(ad); pshadr(ad);
@@ -2534,6 +2561,7 @@ begin (* main *)
 
     write('P5 Pascal interpreter vs. ', majorver:1, '.', minorver:1);
     if experiment then write('.x');
+    write(' (Built with Delphi)');
     writeln;
     writeln;
 
