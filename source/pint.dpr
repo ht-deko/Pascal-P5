@@ -2069,6 +2069,12 @@ procedure callsp;
    procedure readc(var f: text; var c: char);
    begin if eof(f) then errori('End of file              ');
          read(f,c);
+         {$IFDEF MSWINDOWS}
+         if c = #$0D then
+           read(f,c);
+         {$ENDIF}
+         if c = #$0A then
+           c := ' ';
    end;(*readc*)
 
    procedure writestr(var f: text; ad: address; w: integer; l: integer);
@@ -2244,16 +2250,13 @@ begin (*callsp*)
                             if w < 1 then errori('Width cannot be < 1      ');
                             if fn <= prrfn then case fn of
                                  inputfn: errori('Write on input file      ');
-//                               outputfn: write(output, r: w);
                                  outputfn: WriteReal(output, r, w);
                                  prdfn: errori('Write on prd file        ');
-//                               prrfn: write(prr, r:w)
                                  prrfn: WriteReal(prr, r, w)
                               end
                             else begin
                                 if filstate[fn] <> fwrite then
                                    errori('File not in write mode   ');
-//                              write(filtable[fn], r:w)
                                 WriteReal(filtable[fn], r, w)
                             end;
                       end;
@@ -2449,16 +2452,13 @@ begin (*callsp*)
                             if w < 1 then errori('Width cannot be < 1      ');
                             if fn <= prrfn then case fn of
                                  inputfn: errori('Write on input file      ');
-//                               outputfn: write(output, b:w);
                                  outputfn: WriteBool(output, b, w);
                                  prdfn: errori('Write on prd file        ');
-//                               prrfn: write(prr, b:w)
                                  prrfn: WriteBool(prr, b, w)
                               end
                             else begin
                                 if filstate[fn] <> fwrite then
                                    errori('File not in write mode   ');
-//                              write(filtable[fn], b:w)
                                 WriteBool(filtable[fn], b, w)
                             end
                       end;

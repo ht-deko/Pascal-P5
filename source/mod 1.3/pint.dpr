@@ -391,7 +391,12 @@ var   pc          : address;   (*program address register*)
   begin
     s := BOOLSTR[b];
     if w > 0 then
-      s := Copy(s, 1, w);
+      begin
+        if Length(s) < w then
+          s := StringOfChar(' ', w - (Length(s))) + s
+        else
+          s := Copy(s, 1, w);
+      end;
     Write(F, s);
   end (*WriteBool*) ;
 
@@ -1984,6 +1989,12 @@ procedure callsp;
    procedure readc(var f: text; var c: char);
    begin if eof(f) then errori('End of file              ');
          read(f,c);
+         {$IFDEF MSWINDOWS}
+         if c = #$0D then
+           read(f,c);
+         {$ENDIF}
+         if c = #$0A then
+           c := ' ';
    end;(*readc*)
 
    procedure writestr(var f: text; ad: address; w: integer; l: integer);
