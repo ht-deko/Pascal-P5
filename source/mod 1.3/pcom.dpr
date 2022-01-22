@@ -6016,8 +6016,16 @@ var
   end (*inittables*) ;
 
 begin
-  AssignFile(prd, 'prd');
-  AssignFile(prr, 'prr');
+  if ParamCount > 0 then
+  begin
+    AssignFile(prd, ParamStr(1));
+    AssignFile(prr, ChangeFileExt(ParamStr(1), '.p5'));
+  end
+  else
+  begin
+    AssignFile(prd, 'prd');
+    AssignFile(prr, 'prr');
+  end;
   try
     { Suppress unreferenced errors. These are all MPB (machine parameter
       block) equations that need to stay the same between front end and backend. }

@@ -2673,7 +2673,10 @@ begin
 end;
 
 begin (* main *)
-  AssignFile(prd, 'prd');
+  if ParamCount > 0 then
+    AssignFile(prd, ParamStr(1))
+  else
+    AssignFile(prd, 'prd');
   AssignFile(prr, 'prr');
   try
     { Suppress unreferenced errors. }
