@@ -389,11 +389,13 @@ type                                                        (*describing:*)
                   cslab: integer
                 end;
 
+     { Subrange char }
+     subchar = Chr(ordminchar)..Chr(ordmaxchar);
+
 (*-------------------------------------------------------------------------*)
 
 var
 
-    { !!! remove this statement for self compile }
     {elide}prd,prr: text;{noelide}       { output code file }
 
                                     (*returned by source program scanner
@@ -495,20 +497,20 @@ var
 
     constbegsys,simptypebegsys,typebegsys,blockbegsys,selectsys,facbegsys,
     statbegsys,typedels: setofsys;
-    chartp : array[char] of chtp;
+    chartp : array[subchar] of chtp;
     rw:  array [1..maxres(*nr. of res. words*)] of restr;
     frw: array [1..10] of 1..36(*nr. of res. words + 1*);
     rsy: array [1..maxres(*nr. of res. words*)] of symbol;
-    ssy: array [char] of symbol;
+    ssy: array [subchar] of symbol;
     rop: array [1..maxres(*nr. of res. words*)] of operator;
-    sop: array [char] of operator;
+    sop: array [subchar] of operator;
     na:  array [1..maxstd] of restr;
     mn:  array [0..maxins] of packed array [1..4] of char;
     sna: array [1..maxsp] of packed array [1..4] of char;
     cdx: array [0..maxins] of integer;
     cdxs: array [1..6, 1..7] of integer;
     pdx: array [1..maxsp] of integer;
-    ordint: array [char] of integer;
+    ordint: array [subchar] of integer;
 
     intlabel,mxint10: integer;
     inputhdf: boolean; { 'input' appears in header files }
@@ -6068,7 +6070,6 @@ begin
     (*compile:*)
     (**********)
 
-    { !!! remove these statements for self compile }
     {elide}reset(prd); rewrite(prr);{noelide} { open output file }
  
     { write generator comment }

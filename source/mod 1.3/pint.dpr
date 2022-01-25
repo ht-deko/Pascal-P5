@@ -211,8 +211,6 @@ const
 
       { internal constants }
 
-      { !!! Need to use the small size memory to self compile, otherwise, by
-        definition, pint cannot fit into its own memory. }
       {elide}maxstr      = 16777215;{noelide}  { maximum size of addressing for program/var }
       {remove maxstr     =  2000000; remove}  { maximum size of addressing for program/var }
       maxdef      = 2097152; { maxstr / 8 for defined bits }
@@ -316,7 +314,6 @@ var   pc          : address;   (*program address register*)
 
       interpreting: boolean;
 
-      { !!! remove this next statement for self compile }
       {elide}prd,prr     : text;{noelide}(*prd for read only, prr for write only *)
 
       instr       : array[instyp] of alfa; (* mnemonic instruction codes *)
@@ -1190,7 +1187,6 @@ procedure load;
          { initalize file state }
          for i := 1 to maxfil do filstate[i] := fclosed;
 
-         { !!! remove this next statement for self compile }
          {elide}reset(prd);{noelide}
 
          iline := 1; { set 1st line of intermediate }
@@ -2579,7 +2575,6 @@ begin (* main *)
     writeln;
     writeln;
 
-    { !!! remove this next statement for self compile }
     {elide}rewrite(prr);{noelide}
 
     { construct bit equivalence table }
