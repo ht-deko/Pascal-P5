@@ -415,10 +415,7 @@ type                                                        (*describing:*)
 
 var
 
-    { !!! remove this statement for self compile }
-{$IFNDEF SELF_COMPILE}
     prd,prr: text;                  { output code file }
-{$ENDIF}
 
                                     (*returned by source program scanner
                                      insymbol:
@@ -6731,10 +6728,7 @@ begin
     (*compile:*)
     (**********)
 
-    { !!! remove these statements for self compile }
-{$IFNDEF SELF_COMPILE}
     reset(prd); rewrite(prr); { open output file }
-{$ENDIF}
 
     { write generator comment }
     writeln(prr, '!');

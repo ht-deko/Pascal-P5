@@ -163,15 +163,9 @@ const
 
       { !!! Need to use the small size memory to self compile, otherwise, by
         definition, pint cannot fit into its own memory. }
-{$IFNDEF SELF_COMPILE}
       maxstr      = 16777215;  { maximum size of addressing for program/var }
       maxtop      = 16777216;  { maximum size of addressing for program/var+1 }
       maxdef      = 2097152;   { maxstr / 8 for defined bits }
-{$ELSE}
-      maxstr     =  2000000;   { maximum size of addressing for program/var }
-      maxtop     =  2000001;   { maximum size of addressing for program/var+1 }
-      maxdef      = 250000;    { maxstr /8 for defined bits }
-{$ENDIF}
 
       maxdigh     = 6;       { number of digits in hex representation of maxstr }
       maxdigd     = 8;       { number of digits in decimal representation of maxstr }
@@ -261,10 +255,7 @@ var   pc          : address;   (*program address register*)
 
       interpreting: boolean;
 
-      { !!! remove this next statement for self compile }
-{$IFNDEF SELF_COMPILE}
       prd,prr     : text; (*prd for read only, prr for write only *)
-{$ENDIF}
 
       instr       : array[instyp] of alfa; (* mnemonic instruction codes *)
       sptable     : array[0..maxsp] of alfa; (*standard functions and procedures*)
@@ -401,12 +392,12 @@ var   pc          : address;   (*program address register*)
 procedure wrthex(v: integer; { value } f: integer { field });
 var p,i,d,t,n: integer;
     digits: packed array [1..inthex] of char;
-function digit(d: integer): char;
-begin
-  if d < 10 then c := chr(d+ord('0'))
-  else c := chr(d-10+ord('A'));
-  digit := c
-end;
+  function digit(d: integer): char;
+  begin
+    if d < 10 then c := chr(d+ord('0'))
+    else c := chr(d-10+ord('A'));
+    digit := c
+  end;
 begin
    n := inthex; { number of digits }
    if v < 0 then begin { signed }
@@ -1172,10 +1163,7 @@ procedure load;
          { initalize file state }
          for i := 1 to maxfil do begin filstate[i] := fclosed; filbuff[i] := false end;
 
-         { !!! remove this next statement for self compile }
-{$IFNDEF SELF_COMPILE}
-  reset(prd);
-{$ENDIF}
+         reset(prd);
          iline := 1; { set 1st line of intermediate }
 
          gbset := false { global size not set }
@@ -2706,10 +2694,7 @@ begin (* main *)
     writeln;
     writeln;
 
-    { !!! remove this next statement for self compile }
-{$IFNDEF SELF_COMPILE}
     rewrite(prr);
-{$ENDIF}
 
     { construct bit equivalence table }
     i := 1;
