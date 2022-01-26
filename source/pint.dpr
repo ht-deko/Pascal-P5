@@ -329,12 +329,12 @@ var   pc          : address;   (*program address register*)
     result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
   end (*CurrentChar*) ;
 
-  function Mod2(A, B: Integer): Integer;
+  function Mod2(a, n: Integer): Integer;
   begin
-    if B = 0 then
-      result := A
+    if n = 0 then
+      result := a
     else
-      result := A - Floor(Extended(A / B)) * B;
+      result := a - Floor(Extended(a / n)) * n;
   end (*Mod2*) ;
 
   {$HINTS OFF}
@@ -2667,27 +2667,6 @@ begin (* main *)
     AssignFile(prd, 'prd');
   AssignFile(prr, 'prr');
   try
-    { Suppress unreferenced errors. }
-    {$WARN COMPARISON_FALSE OFF}
-    if adral = 0 then;
-    if adral = 0 then;
-    if boolal = 0 then;
-    if charmax = 0 then;
-    if charal = 0 then;
-    if codemax = 0 then;
-    if filesize = 0 then;
-    if fileal = 0 then;
-    if intdig = 0 then;
-    if maxresult = 0 then;
-    if ordminchar = 0 then;
-    if ordmaxchar = 0 then;
-    if maxexp = 0 then;
-    if stackelsize = 0 then;
-    if filres = 0 then;
-    if ujplen = 0 then;
-    if false then dmpdsp(0);
-    {$WARN COMPARISON_FALSE ON}
-
     write('P5 Pascal interpreter vs. ', majorver:1, '.', minorver:1);
     if experiment then write('.x');
     write(' (Built with Delphi)');

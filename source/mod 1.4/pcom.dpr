@@ -594,12 +594,12 @@ var
     result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
   end (*CurrentChar*) ;
 
-  function Mod2(A, B: Integer): Integer;
+  function Mod2(a, n: Integer): Integer;
   begin
-    if B = 0 then
-      result := A
+    if n = 0 then
+      result := a
     else
-      result := A - Floor(Extended(A / B)) * B;
+      result := a - Floor(Extended(a / n)) * n;
   end (*Mod2*) ;
 
 (*-------------------------------------------------------------------------*)
@@ -6688,23 +6688,6 @@ begin
     AssignFile(prr, 'prr');
   end;
   try
-    { Suppress unreferenced errors. These are all MPB (machine parameter
-      block) equations that need to stay the same between front end and backend. }
-    if begincode = 0 then;
-    if heapal = 0 then;
-    if inthex = 0 then;
-    if market = 0 then;
-    if markwb = 0 then;
-    if markep = 0 then;
-    if markdl = 0 then;
-    if markra = 0 then;
-    if marksb = 0 then;
-    if marksl = 0 then;
-    if maxresult = 0 then;
-    if maxsize = 0 then;
-    if gbsal = 0 then;
-    if ujplen = 0 then;
-
     write('P5 Pascal compiler vs. ', majorver:1, '.', minorver:1);
     if experiment then write('.x');
     write(' (Built with Delphi)');
