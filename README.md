@@ -8,6 +8,7 @@ Pascal-P5 v1.3 / 1.4 for Delphi.
 Original version is here:
 
  - [pascal-p5 (sourceforge.net)](https://sourceforge.net/projects/pascalp5/)
+ - [The P5 compiler (standardpascaline.org)](http://www.standardpascaline.org/p5.html)
 
 ## External file enhancement
 
