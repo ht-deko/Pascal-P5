@@ -1335,8 +1335,8 @@ procedure load;
                               read(prd,i); errsinprg := errsinprg+i; getlin
                             end;
                        'x': begin { external file }
-                              read(prd,i);
-                              Readln(prd, s);
+                              read(prd, i);
+                              read(prd, s);
                               nfiltable[i] := StringReplace(Trim(s), '''', '', [rfReplaceAll]);
                               getlin
                             end;

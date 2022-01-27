@@ -654,11 +654,7 @@ var
      if p^.cclass = strg then putstrs(p^.sval)
      else if p^.cclass = reel then putstrs(p^.rval);
      { release entry }
-     case p^.cclass of
-       reel: dispose(p);
-       pset: dispose(p);
-       strg: dispose(p)
-     end;
+     Dispose(p);
      cspcnt := cspcnt-1 { remove from count }
   end;
 
@@ -677,18 +673,9 @@ var
   procedure putstc(p: stp);
   begin
      { release entry }
-     case p^.form of
-       scalar:   if p^.scalkind = declared then dispose(p)
-                                           else dispose(p);
-       subrange: dispose(p);
-       pointer:  dispose(p);
-       power:    dispose(p);
-       arrays:   dispose(p);
-       records:  dispose(p);
-       files:    dispose(p);
-       tagfld:   begin dispose(p^.vart); dispose(p) end;
-       variant:  dispose(p);
-     end;
+     if p^.form = tagfld then
+       Dispose(p^.vart);
+     Dispose(p);
      stpcnt := stpcnt-1
   end;
 
@@ -723,20 +710,7 @@ var
      if (p^.klass = proc) or (p^.klass = func) then putidlst(p^.pflist);
      putstrs(p^.name); { release name string }
      { release entry according to class }
-     case p^.klass of
-       types: dispose(p);
-       konst: dispose(p);
-       vars:  dispose(p);
-       field: dispose(p);
-       proc: if p^.pfdeckind = standard then dispose(p)
-                                        else if p^.pfkind = actual then
-                                            dispose(p)
-                                          else dispose(p);
-       func: if p^.pfdeckind = standard then dispose(p)
-                                        else if p^.pfkind = actual then
-                                            dispose(p)
-                                          else dispose(p)
-     end;
+     Dispose(p);
      ctpcnt := ctpcnt-1 { remove from count }
   end;
 
