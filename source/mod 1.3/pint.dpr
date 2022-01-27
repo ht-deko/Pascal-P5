@@ -2319,7 +2319,7 @@ begin (*callsp*)
                            else begin
                                 if filstate[fn] <> fclosed then
                                 begin
-                                  if filstate[fn] = fread then
+                                  if filstate[fn] = fwrite then
                                     Flush(filtable[fn]);
                                   CloseFile(filtable[fn]);
                                 end;
@@ -2343,7 +2343,7 @@ begin (*callsp*)
                            else begin
                                 if filstate[fn] <> fclosed then
                                 begin
-                                  if filstate[fn] = fread then
+                                  if filstate[fn] = fwrite then
                                     Flush(filtable[fn]);
                                   CloseFile(filtable[fn]);
                                 end;
