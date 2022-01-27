@@ -358,10 +358,11 @@ var   pc          : address;   (*program address register*)
     Result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
   end (*CurrentChar*) ;
 
-  function PrevChar(var F: Text): WideChar;
+  procedure AddEoln(var F: Text);
   begin
-    Result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos - 1)^);
-  end (*PrevChar*) ;
+    if (TTextRec(F).BufPtr + TTextRec(F).BufPos - 1)^ <> #$0A then
+      Writeln(F);
+  end (*AddEoln*) ;
 
   function Mod2(a, n: Integer): Integer;
   begin
@@ -2326,8 +2327,7 @@ begin (*callsp*)
                                 begin
                                   if filstate[fn] = fwrite then
                                     begin
-                                      if PrevChar(filtable[fn]) <> #$000A then
-                                        Writeln(filtable[fn]);
+                                      AddEoln(filtable[fn]);
                                       Flush(filtable[fn]);
                                     end;
                                   CloseFile(filtable[fn]);
@@ -2354,8 +2354,7 @@ begin (*callsp*)
                                 begin
                                   if filstate[fn] = fwrite then
                                     begin
-                                      if PrevChar(filtable[fn]) <> #$000A then
-                                        Writeln(filtable[fn]);
+                                      AddEoln(filtable[fn]);
                                       Flush(filtable[fn]);
                                     end;
                                   CloseFile(filtable[fn]);
@@ -3102,8 +3101,7 @@ begin (* main *)
       begin
         if filstate[i] = fwrite then
           begin
-            if PrevChar(filtable[i]) <> #$000A then
-              Writeln(filtable[i]);
+            AddEoln(filtable[i]);
             Flush(filtable[i]);
           end;
         CloseFile(filtable[i]);
