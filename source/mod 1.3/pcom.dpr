@@ -540,15 +540,16 @@ var
 
   function CurrentChar(var F: Text): WideChar;
   begin
-    result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
+    Eoln(F);
+    Result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
   end (*CurrentChar*) ;
 
   function Mod2(a, n: Integer): Integer;
   begin
     if n = 0 then
-      result := a
+      Result := a
     else
-      result := a - Floor(Extended(a / n)) * n;
+      Result := a - Floor(Extended(a / n)) * n;
   end (*Mod2*) ;
 
 (*-------------------------------------------------------------------------*)

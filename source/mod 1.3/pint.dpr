@@ -355,15 +355,20 @@ var   pc          : address;   (*program address register*)
   function CurrentChar(var F: Text): WideChar;
   begin
     Eoln(F);
-    result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
+    Result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
   end (*CurrentChar*) ;
+
+  function PrevChar(var F: Text): WideChar;
+  begin
+    Result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos - 1)^);
+  end (*PrevChar*) ;
 
   function Mod2(a, n: Integer): Integer;
   begin
     if n = 0 then
-      result := a
+      Result := a
     else
-      result := a - Floor(Extended(a / n)) * n;
+      Result := a - Floor(Extended(a / n)) * n;
   end (*Mod2*) ;
 
   {$HINTS OFF}
@@ -916,7 +921,7 @@ procedure load;
      var
        IsNegative: Boolean;
      begin
-       result := 0;
+       Result := 0;
        while (CurrentChar(F) = ' ') and not Eoln(F) do
          Read(F, ch);
        IsNegative := CurrentChar(F) = '-';
@@ -924,11 +929,11 @@ procedure load;
          Read(F, ch);
        while CharInSet(CurrentChar(F), ['0'..'9']) and not Eoln(F) do
          begin
-           result := result * 10 + Ord(CurrentChar(F)) - Ord('0');
+           Result := Result * 10 + Ord(CurrentChar(F)) - Ord('0');
            Read(F, ch);
          end;
        if IsNegative then
-         result := -result;
+         Result := -Result;
      end;
 
    procedure init;
@@ -2320,7 +2325,11 @@ begin (*callsp*)
                                 if filstate[fn] <> fclosed then
                                 begin
                                   if filstate[fn] = fwrite then
-                                    Flush(filtable[fn]);
+                                    begin
+                                      if PrevChar(filtable[fn]) <> #$000A then
+                                        Writeln(filtable[fn]);
+                                      Flush(filtable[fn]);
+                                    end;
                                   CloseFile(filtable[fn]);
                                 end;
                                 filstate[fn] := fread;
@@ -2344,7 +2353,11 @@ begin (*callsp*)
                                 if filstate[fn] <> fclosed then
                                 begin
                                   if filstate[fn] = fwrite then
-                                    Flush(filtable[fn]);
+                                    begin
+                                      if PrevChar(filtable[fn]) <> #$000A then
+                                        Writeln(filtable[fn]);
+                                      Flush(filtable[fn]);
+                                    end;
                                   CloseFile(filtable[fn]);
                                 end;
                                 filstate[fn] := fwrite;
@@ -3088,7 +3101,11 @@ begin (* main *)
     if TtextRec(filtable[i]).Handle <> 0 then
       begin
         if filstate[i] = fwrite then
-          Flush(filtable[i]);
+          begin
+            if PrevChar(filtable[i]) <> #$000A then
+              Writeln(filtable[i]);
+            Flush(filtable[i]);
+          end;
         CloseFile(filtable[i]);
       end;
     if TFileRec(bfiltable[i]).Handle <> 0 then
