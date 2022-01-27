@@ -9,7 +9,7 @@ Original version is here:
 
  - [pascal-p5 (sourceforge.net)](https://sourceforge.net/projects/pascalp5/)
 
-## External file enhancement (v1.3 / v1.4)
+## External file enhancement
 
 ```pascal
 program Test(input, output, TMP='TEMP.TXT');
@@ -20,4 +20,11 @@ begin
   Rewrite(TMP);
   Writeln(TMP, 'Hello, world.');
 end.
+```
+
+## Command-line parameter enhancement
+
+```
+PCOM <Pascal file (*.pas)>
+PINT <Intermediate file (*.p5)>
 ```
