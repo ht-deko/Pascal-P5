@@ -201,6 +201,8 @@ const
       minorver   = 4; { minor version number }
       experiment = false; { is version experimental? }
 
+      p5temp     = 'P5TMP';
+
 type
       { These equates define the instruction layout. I have choosen a 32 bit
         layout for the instructions defined by (4 bit) digit:
@@ -388,6 +390,16 @@ var   pc          : address;   (*program address register*)
       s := ' ' + s;
     Write(F, s);
   end (*WriteReal*) ;
+
+  procedure RemoveTempFile;
+  begin
+    for var FileName in TDirectory.GetFiles(TPath.GetTempPath, p5temp + '*.*', TSearchOption.soTopDirectoryOnly) do
+      try
+        TFile.Delete(FileName);
+      except
+        ;
+      end;
+  end (*RemoveTempFile*) ;
 
 (*--------------------------------------------------------------------*)
 
@@ -2413,7 +2425,7 @@ begin (*callsp*)
                                   end;
                                 filstate[fn] := fread;
                                 if nfiltable[fn] = '' then
-                                  FileName := TPath.Combine(TPath.GetTempPath, Format('TMPFILE%.3d.TXT', [fn-4]))
+                                  FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp + '%.3d.TXT', [fn-4]))
                                 else
                                   FileName := nfiltable[fn];
                                 AssignFile(filtable[fn] , FileName);
@@ -2440,7 +2452,7 @@ begin (*callsp*)
                                   end;
                                 filstate[fn] := fwrite;
                                 if nfiltable[fn] = '' then
-                                  FileName := TPath.Combine(TPath.GetTempPath, Format('TMPFILE%.3d.TXT', [fn-4]))
+                                  FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp + '%.3d.TXT', [fn-4]))
                                 else
                                   FileName := nfiltable[fn];
                                 AssignFile(filtable[fn] , FileName);
@@ -2571,7 +2583,7 @@ begin (*callsp*)
                              errori('Cannot reset closed file ');
                            filstate[fn] := fread;
                            if nfiltable[fn] = '' then
-                             FileName := TPath.Combine(TPath.GetTempPath, Format('TMPFILE%.3d.BIN', [fn-4]))
+                             FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp + '%.3d.BIN', [fn-4]))
                            else
                              FileName := nfiltable[fn];
                            AssignFile(bfiltable[fn] , FileName);
@@ -2581,7 +2593,7 @@ begin (*callsp*)
            34(*rwb*): begin popadr(ad); valfil(ad); fn := store[ad];
                            filstate[fn] := fwrite;
                            if nfiltable[fn] = '' then
-                             FileName := TPath.Combine(TPath.GetTempPath, Format('TMPFILE%.3d.BIN', [fn-4]))
+                             FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp + '%.3d.BIN', [fn-4]))
                            else
                              FileName := nfiltable[fn];
                            AssignFile(bfiltable[fn] , FileName);
@@ -3283,7 +3295,7 @@ begin (* main *)
   begin
     if TtextRec(filtable[i]).Handle <> 0 then
       begin
-        if filstate[i] = fwrite then
+        if filstate[i] <> fclosed then
           begin
             AddEoln(filtable[i]);
             Flush(filtable[i]);
@@ -3297,4 +3309,6 @@ begin (* main *)
   CloseFile(prd);
   Flush(prr);
   CloseFile(prr);
+
+  RemoveTempFile;
 end.

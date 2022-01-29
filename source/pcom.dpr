@@ -1446,7 +1446,7 @@ end;
           if not list then writeln(output)
         end
         else if ch1 = 'd' then switch(debug)
-       else if ch1 = 'c' then switch(prcode)
+        else if ch1 = 'c' then switch(prcode)
         else if ch1 = 'v' then switch(chkvar)
         else if ch1 = 'r' then switch(chkref)
         else if ch1 = 'u' then switch(chkudtc)
@@ -5971,11 +5971,6 @@ end;
                         strequri('prd      ', filename) or
                         strequri('prr      ', filename))
                 then begin id := filename;
-//                       { output general error for undefined external file }
-//                       writeln(output);
-//                       writeln(output,'**** Error: external file unknown ''',
-//                                      string(fextfilep^.filename):8, '''');
-//                       toterr := toterr+1;
                        { hold the error in case not found, since this error
                          occurs far from the original symbol }
                        searchidne([vars],llcp,false);
@@ -6306,13 +6301,12 @@ end;
   procedure initscalars;
   var i: integer; c: char;
   begin fwptr := nil; for c := 'a' to 'z' do option[c] := false;
-    prtables := false; option['t'] := false; list := true; option['l'] := true;
-    prcode := true; option['c'] := true; debug := true; option['d'] := true;
-    chkvar := true; option['v'] := true; chkref := true; option['r'] := true;
-    chkudtc := true; option['u'] := true;
-    dodmplex := false; option['x'] := false; doprtryc := false; option['z'] := false;
-    doprtlab := false; option['b'] := false; dodmpdsp := false; option['y'] := false;
-    chkvbk := false; option['i'] := false;
+    prtables := false; option['t'] := false; list     := true;  option['l'] := true;
+    prcode   := true;  option['c'] := true;  debug    := true;  option['d'] := true;
+    chkvar   := true;  option['v'] := true;  chkref   := true;  option['r'] := true;
+    chkudtc  := true;  option['u'] := true;  dodmplex := false; option['x'] := false;
+    doprtryc := false; option['z'] := false; doprtlab := false; option['b'] := false;
+    dodmpdsp := false; option['y'] := false; chkvbk   := false; option['i'] := false;
     dp := true; errinx := 0;
     intlabel := 0; kk := maxids; fextfilep := nil; wthstk := nil;
     lc := lcaftermarkstack; gc := 0;

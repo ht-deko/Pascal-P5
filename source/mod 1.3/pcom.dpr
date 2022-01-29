@@ -5690,10 +5690,10 @@ var
   procedure initscalars;
   var i: integer; c: char;
   begin fwptr := nil; for c := 'a' to 'z' do option[c] := false;
-    prtables := false; option['t'] := false; list := true; option['l'] := true;
-    prcode := true; option['c'] := true; debug := true; option['d'] := true;
-    chkvar := true; option['v'] := true; chkref := true; option['r'] := true;
-    chkudtc := true; option['u'] := true;
+    prtables := false; option['t'] := false; list   := true;  option['l'] := true;
+    prcode   := true;  option['c'] := true;  debug  := true;  option['d'] := true;
+    chkvar   := true;  option['v'] := true;  chkref := true;  option['r'] := true;
+    chkudtc  := true;  option['u'] := true;
     dp := true; errinx := 0;
     intlabel := 0; kk := maxids; fextfilep := nil;
     lc := lcaftermarkstack; gc := 0;
