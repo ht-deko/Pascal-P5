@@ -10,7 +10,15 @@ Original version is here:
  - [pascal-p5 (sourceforge.net)](https://sourceforge.net/projects/pascalp5/)
  - [The P5 compiler (standardpascaline.org)](http://www.standardpascaline.org/p5.html)
 
-## External file enhancement
+## Build
+
+You can use Delphi Community Edition to compile.
+
+ - [Delphi Community Edition (Embarcadero)](https://www.embarcadero.com/jp/products/delphi/starter)
+
+## Enhancement
+
+### External file
 
 ```pascal
 program Test(input, output, TMP='TEMP.TXT');
@@ -23,7 +31,7 @@ begin
 end.
 ```
 
-## Command-line parameter enhancement
+### Command-line parameter
 
 ```
 PCOM <Pascal file (*.pas)>
