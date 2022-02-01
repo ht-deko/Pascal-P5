@@ -225,15 +225,15 @@ type
   { VAR reference block }
   varptr       = ^varblk;
   varblk       = record
-                   next: varptr; { next entry }
-                   s, e: address { start and end address of block }
-                 end;
+    next: varptr; { next entry }
+    s, e: address { start and end address of block }
+  end;
   { with reference block }
   wthptr       = ^wthblk;
   wthblk       = record
-                   next: wthptr; { next entry }
-                   b: address    { address of block }
-                 end;
+    next: wthptr; { next entry }
+    b: address    { address of block }
+  end;
 
 var
   pc          : address;   { program address register }

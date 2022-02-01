@@ -682,7 +682,7 @@ var
        case Boolean of
          True: (a: address);
          False: (b: packed array [1..adrsize] of Byte);
-  end;
+     end;
   i: 1..adrsize;
 begin
   if dochkdef then
@@ -899,9 +899,9 @@ type
   labelst = (entered, defined); { label situation }
   labelrg = 0..maxlabel; { label range }
   labelrec = record
-               val: address;
-               st: labelst
-             end;
+    val: address;
+    st: labelst
+  end;
 var
   word: array [alfainx] of Char;
   ch: Char;

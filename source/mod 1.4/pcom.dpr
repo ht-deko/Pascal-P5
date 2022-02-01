@@ -261,9 +261,9 @@ type
     strings are only stored in their length rounded to the nearest 10th. }
   strvsp = ^strvs; { pointer to variable length id string }
   strvs = record { id string variable length }
-            str:   packed array [1..varsqt] of Char; { data contained }
-            next:  strvsp { next }
-          end;
+    str: packed array [1..varsqt] of Char; { data contained }
+    next: strvsp { next }
+  end;
 
                                                          { constants }
                                                          { ********* }
@@ -271,19 +271,19 @@ type
   cstclass = (reel, pset, strg);
   csp = ^ constant;
   constant = record
-               next: csp; { next entry link }
-               case cclass: cstclass of
-                 reel: (rval: strvsp);
-                 pset: (pval: setty);
-                 strg: (slgth: 0..strglgth; 
-                        sval: strvsp)
-             end;
+     next: csp; { next entry link }
+     case cclass: cstclass of
+       reel: (rval: strvsp);
+       pset: (pval: setty);
+       strg: (slgth: 0..strglgth; 
+              sval: strvsp)
+   end;
 
   valu = record 
-           case intval: Boolean of
-             True:  (ival: Integer);
-             False: (valp: csp)
-           end;
+    case intval: Boolean of
+      True:  (ival: Integer);
+      False: (valp: csp)
+  end;
 
                                                         { data structures }
                                                         { *************** }
@@ -299,33 +299,33 @@ type
   ctp = ^ identifier;
 
   structure = record
-                snm: Integer; { serial number }
-                next: stp; { next entry link }
-                marked: Boolean;   { for test phase only }
-                size: addrrange;
-                packing: Boolean; { packing status }
-                case form: structform of
-                  scalar:   (case scalkind: declkind of
-                               declared: (fconst: ctp); 
-                               standard: ());
-                  subrange: (rangetype: stp; 
-                             min, max: valu);
-                  pointer:  (eltype: stp);
-                  power:    (elset: stp; 
-                             matchpack: Boolean);
-                  arrays:   (aeltype, inxtype: stp);
-                  records:  (fstfld: ctp; 
-                             recvar: stp; 
-                             recyc: stp);
-                  files:    (filtype: stp);
-                  tagfld:   (tagfieldp: ctp; 
-                             fstvar: stp; 
-                             vart: vartpt;
-                             varts: varinx);
-                  variant:  (nxtvar, subvar, caslst: stp; 
-                             varval: valu;
-                             varln: Integer)
-                end;
+    snm: Integer; { serial number }
+    next: stp; { next entry link }
+    marked: Boolean;   { for test phase only }
+    size: addrrange;
+    packing: Boolean; { packing status }
+    case form: structform of
+      scalar:   (case scalkind: declkind of
+                   declared: (fconst: ctp); 
+                   standard: ());
+      subrange: (rangetype: stp; 
+                 min, max: valu);
+      pointer:  (eltype: stp);
+      power:    (elset: stp; 
+                 matchpack: Boolean);
+      arrays:   (aeltype, inxtype: stp);
+      records:  (fstfld: ctp; 
+                 recvar: stp; 
+                 recyc: stp);
+      files:    (filtype: stp);
+      tagfld:   (tagfieldp: ctp; 
+                 fstvar: stp; 
+                 vart: vartpt;
+                 varts: varinx);
+      variant:  (nxtvar, subvar, caslst: stp; 
+                 varval: valu;
+                 varln: Integer)
+    end;
 
                                                          { names }
                                                          { ***** }
@@ -338,42 +338,42 @@ type
   nmstr = packed array [1..digmax] of Char;
   csstr = packed array [1..strglgth] of Char;
   identifier = record
-                 snm: Integer; { serial number }
-                 name: strvsp; 
-                 lastuse: Integer; 
-                 llink, rlink: ctp;
-                 idtype: stp; 
-                 next: ctp; 
-                 keep: Boolean; 
-                 refer: Boolean;
-                 defined: Boolean;
-                 case klass: idclass of
-                   types: ();
-                   konst: (values: valu);
-                   vars:  (vkind: idkind; 
-                           vlev: levrange; 
-                           vaddr: addrrange;
-                           threat: Boolean; 
-                           forcnt: Integer);
-                   field: (fldaddr: addrrange; 
-                           varnt: stp; 
-                           varlb: ctp;
-                           tagfield: Boolean; 
-                           taglvl: Integer;
-                           varsaddr: addrrange; 
-                           varssize: addrrange;
-                           vartl: Integer);
-                   proc, func:  (pfaddr: addrrange; 
-                                 pflist: ctp; { param list }
-                                 asgn: Boolean; { assigned }
-                                 case pfdeckind: declkind of
-                                   standard: (key: 1..18);
-                                   declared: (pflev: levrange; 
-                                              pfname: Integer;
-                                              case pfkind: idkind of
-                                                actual: (forwdecl, externl: Boolean);
-                                                formal: ()))
-               end;
+    snm: Integer; { serial number }
+    name: strvsp; 
+    lastuse: Integer; 
+    llink, rlink: ctp;
+    idtype: stp; 
+    next: ctp; 
+    keep: Boolean; 
+    refer: Boolean;
+    defined: Boolean;
+    case klass: idclass of
+      types: ();
+      konst: (values: valu);
+      vars:  (vkind: idkind; 
+              vlev: levrange; 
+              vaddr: addrrange;
+              threat: Boolean; 
+              forcnt: Integer);
+      field: (fldaddr: addrrange; 
+              varnt: stp; 
+              varlb: ctp;
+              tagfield: Boolean; 
+              taglvl: Integer;
+              varsaddr: addrrange; 
+              varssize: addrrange;
+              vartl: Integer);
+      proc, func:  (pfaddr: addrrange; 
+                    pflist: ctp; { param list }
+                    asgn: Boolean; { assigned }
+                    case pfdeckind: declkind of
+                      standard: (key: 1..18);
+                      declared: (pflev: levrange; 
+                                 pfname: Integer;
+                                 case pfkind: idkind of
+                                   actual: (forwdecl, externl: Boolean);
+                                   formal: ()))
+ end;
 
 
   disprange = 0..displimit;
@@ -385,71 +385,71 @@ type
   vaccess = (drct, indrct, inxd);
 
   attr = record 
-           typtr: stp;
-           case kind: attrkind of
-             cst:   (cval: valu);
-             varbl: (packing: Boolean; 
-                     packcom: Boolean;
-                     tagfield: Boolean; 
-                     taglvl: Integer; 
-                     varnt: stp;
-                     ptrref: Boolean; 
-                     vartagoff: addrrange;
-                     varssize: addrrange; 
-                     vartl: Integer; 
-                     ptrrec: Boolean;
-                     case access: vaccess of
-                       drct: (vlevel: levrange; 
-                              dplmt: addrrange);
-                       indrct: (idplmt: addrrange);
-                       inxd: ());
-             expr: ()
-         end;
+    typtr: stp;
+    case kind: attrkind of
+      cst:   (cval: valu);
+      varbl: (packing: Boolean; 
+              packcom: Boolean;
+              tagfield: Boolean; 
+              taglvl: Integer; 
+              varnt: stp;
+              ptrref: Boolean; 
+              vartagoff: addrrange;
+              varssize: addrrange; 
+              vartl: Integer; 
+              ptrrec: Boolean;
+              case access: vaccess of
+                drct: (vlevel: levrange; 
+                       dplmt: addrrange);
+                indrct: (idplmt: addrrange);
+                inxd: ());
+      expr: ()
+  end;
 
                                                               { labels }
                                                               { ****** }
   lbp = ^ labl;
   labl = record { 'goto' label }
-           nextlab: lbp;     { next list link }
-           defined: Boolean; { label defining point was seen }
-           labval,           { numeric value of label }
-           labname: Integer; { internal sequental name of label }
-           vlevel: levrange; { procedure level of definition }
-           slevel: Integer;  { statement level of definition }
-           ipcref: Boolean;  { was referenced by another proc/func }
-           minlvl: Integer;  { minimum goto reference statement lvl }
-           bact: Boolean;    { containing block is active }
-           refer: Boolean    { was referred to }
-         end;
+    nextlab: lbp;     { next list link }
+    defined: Boolean; { label defining point was seen }
+    labval,           { numeric value of label }
+    labname: Integer; { internal sequental name of label }
+    vlevel: levrange; { procedure level of definition }
+    slevel: Integer;  { statement level of definition }
+    ipcref: Boolean;  { was referenced by another proc/func }
+    minlvl: Integer;  { minimum goto reference statement lvl }
+    bact: Boolean;    { containing block is active }
+    refer: Boolean    { was referred to }
+  end;
 
   { external file tracking entries }
   extfilep = ^filerec;
   filerec = record  
-              filename:idstr; 
-              nextfile: extfilep 
-            end;
+    filename:idstr; 
+    nextfile: extfilep 
+  end;
 
   { case statement tracking entries }
   cip = ^caseinfo;
   caseinfo = record 
-               next: cip;
-               csstart: Integer;
-               cslab: Integer
-             end;
+    next: cip;
+    csstart: Integer;
+    cslab: Integer
+  end;
 
   { tag tracking entries }
   ttp = ^tagtrk;
   tagtrk = record
-             ival: Integer;
-             next: ttp
-           end;
+    ival: Integer;
+    next: ttp
+  end;
 
   { 'with' tracking entries }
   wtp = ^wthtrk;
   wthtrk = record 
-             next: wtp;
-             sl: Integer
-           end;
+    next: wtp;
+    sl: Integer
+  end;
 
   { Subrange Char }
   subchar = Chr(ordminchar)..Chr(ordmaxchar);
@@ -1959,9 +1959,8 @@ begin
             { separator must be non-alpha numeric or 'e' }
             if (chartp[ch] = letter) and not (lcase(ch) = 'e') then
               error(241);
-            if ((ch = '.') and (CurrentChar(prd) <> '.') and (CurrentChar(prd) <>
-              ')')) or
-              (lcase(ch) = 'e') then
+            if ((ch = '.') and (CurrentChar(prd) <> '.') and 
+              (CurrentChar(prd) <> ')')) or (lcase(ch) = 'e') then
             begin
               k := i;
               if ch = '.' then
