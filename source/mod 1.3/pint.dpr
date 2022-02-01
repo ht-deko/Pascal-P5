@@ -102,7 +102,7 @@
 *                                                                              *
 *******************************************************************************}
 
-program pcode(input, output, prd, prr);
+program pcode(Input, Output, prd, prr);
 {$APPTYPE Console}
 {$WEAKLINKRTTI ON}
 {$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
@@ -2292,7 +2292,7 @@ begin { callsp }
     Writeln(pc: 6, '/', sp: 6, '-> ', q: 2);
 
   case q of
-    0 { Get }:
+    0 { get }:
       begin
         popadr(ad);
         valfil(ad);
@@ -2456,7 +2456,7 @@ begin { callsp }
           writestr(filtable[fn], ad1, w, l)
         end;
       end;
-    41 { Eof }:
+    41 { eof }:
       begin
         popadr(ad);
         valfil(ad);
@@ -4195,7 +4195,7 @@ begin
                 errori('Invalid divisor in mod   ');
             pshint(Mod2(i1, i2))
           end;
-         50 { Odd }:
+         50 { odd }:
           begin
             popint(i1);
             pshint(Ord(Odd(i1)))

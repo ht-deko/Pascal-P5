@@ -6097,7 +6097,7 @@ var
                 if gattr.typtr^.form <> scalar then
                   error(113)
                 else if not comptypes(gattr.typtr, intptr) then
-                  gen0t(58 { Ord }, gattr.typtr);
+                  gen0t(58 { ord }, gattr.typtr);
               if lattr.typtr <> nil then
                 with lattr.typtr^ do
                 begin
@@ -6712,7 +6712,7 @@ var
               error(116);
             gen1(37 { lao }, outputptr^.vaddr);
           end;
-          if llkey = 12 then { Writeln }
+          if llkey = 12 then { writeln }
             gen1(30 { csp }, 22 { wln });
           { remove the file pointer from stack }
           gen1(71 { dmp }, ptrsize);
@@ -6942,7 +6942,7 @@ var
           else
           begin
             if lkey = 9 then
-              gen1(30 { csp }, 12 { New })
+              gen1(30 { csp }, 12 { new })
             else
               gen1(30 { csp }, 29 { dsp })
           end;
@@ -7008,7 +7008,7 @@ var
           if gattr.typtr <> nil then
             if gattr.typtr^.form >= power then
               error(125);
-          gen0t(58 { Ord }, gattr.typtr);
+          gen0t(58 { ord }, gattr.typtr);
           gattr.typtr := intptr
         end { ordfunction };
 
@@ -7017,7 +7017,7 @@ var
           if gattr.typtr <> nil then
             if not intt(gattr.typtr) then
               error(125);
-          gen0(59 { Chr });
+          gen0(59 { chr });
           gattr.typtr := charptr
         end { chrfunction };
 
@@ -7066,7 +7066,7 @@ var
           if lkey = 9 then
           begin
             if gattr.typtr = textptr then
-              gen1(30 { csp }, 44 { Eof })
+              gen1(30 { csp }, 44 { eof })
             else
               gen1(30 { csp }, 45 { efb })
           end
@@ -7552,7 +7552,7 @@ var
                             begin
                               load;
                               if not comptypes(gattr.typtr, intptr) then
-                                gen0t(58 { Ord }, gattr.typtr);
+                                gen0t(58 { ord }, gattr.typtr);
                             end;
                             tattr := gattr;
                             expression(fsys + [comma, rbrack], False);
@@ -7604,14 +7604,14 @@ var
                                     begin
                                       load;
                                       if not comptypes(gattr.typtr, intptr) then
-                                        gen0t(58 { Ord }, gattr.typtr)
+                                        gen0t(58 { ord }, gattr.typtr)
                                     end;
                                     tattr := gattr;
                                     gattr := rattr;
                                     load;
                                     gattr := tattr;
                                     if not comptypes(rattr.typtr, intptr) then
-                                      gen0t(58 { Ord }, rattr.typtr);
+                                      gen0t(58 { ord }, rattr.typtr);
                                     gen0(64 { rgs });
                                     if varpart then
                                       gen0(28 { uni })
@@ -7634,7 +7634,7 @@ var
                                 begin
                                   load;
                                   if not comptypes(gattr.typtr, intptr) then
-                                    gen0t(58 { Ord }, gattr.typtr);
+                                    gen0t(58 { ord }, gattr.typtr);
                                   gen0(23 { sgs });
                                   if varpart then
                                     gen0(28 { uni })
@@ -7917,7 +7917,7 @@ var
           lop := op;
           if lop = inop then
             if not comptypes(gattr.typtr, intptr) then
-              gen0t(58 { Ord }, gattr.typtr);
+              gen0t(58 { ord }, gattr.typtr);
           insymbol;
           simpleexpression(fsys, threaten);
           if gattr.typtr <> nil then
@@ -8254,7 +8254,7 @@ var
             lsp := nil
           end
           else if not comptypes(lsp, intptr) then
-            gen0t(58 { Ord }, lsp);
+            gen0t(58 { ord }, lsp);
         genujpxjp(57 { ujp }, lcix);
         mesl(-intsize); { remove selector from stack }
         if sy = ofsy then
@@ -8543,7 +8543,7 @@ var
               load;
               alignd(intptr, lc);
               if not comptypes(lattr.typtr, intptr) then
-                gen0t(58 { Ord }, gattr.typtr);
+                gen0t(58 { ord }, gattr.typtr);
               gen2t(56 { str }, 0, lc - intsize * 2, intptr);
               { set initial value of index }
               gen2t(54 { lod }, 0, lc - intsize, intptr);
@@ -8556,7 +8556,7 @@ var
               gattr := lattr;
               load;
               if not comptypes(gattr.typtr, intptr) then
-                gen0t(58 { Ord }, gattr.typtr);
+                gen0t(58 { ord }, gattr.typtr);
               gen2t(54 { lod }, 0, lc - intsize * 2, intptr);
               lcs := lc;
               lc := lc - intsize * 2;
@@ -8587,7 +8587,7 @@ var
         gattr := lattr;
         load;
         if not comptypes(gattr.typtr, intptr) then
-          gen0t(58 { Ord }, gattr.typtr);
+          gen0t(58 { ord }, gattr.typtr);
         gen2t(54 { lod }, 0, lcs - intsize * 2, intptr);
         gen2(47 { equ }, Ord(typind), 1);
         genujpxjp(73 { tjp }, lcix);

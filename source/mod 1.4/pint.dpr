@@ -329,6 +329,7 @@ procedure wrthex(v: Integer; { value } f: Integer { field });
 var
   p, i, d, t, n: Integer;
   digits: packed array [1..inthex] of Char;
+
   function digit(d: Integer): Char;
   begin
     if d < 10 then
@@ -337,6 +338,7 @@ var
       c := Chr(d - 10 + Ord('A'));
     digit := c
   end { digit };
+
 begin
   n := inthex; { number of digits }
   if v < 0 then
@@ -420,9 +422,8 @@ begin
     Write(' np = '); wrthex(np, maxdigh);
     Write(' cp = '); wrthex(cp, maxdigh);
     Writeln;
-    Write('------------------------------------------------------------');
-    Writeln('-------------');
-
+    Writeln('------------------------------------------------------------' +
+            '-------------');
     Writeln; Writeln('Stack');     Writeln; dmpmem(pctop, sp - 1); Writeln;
     Writeln; Writeln('Constants'); Writeln; dmpmem(cp, maxstr);    Writeln;
     Writeln; Writeln('Heap');      Writeln; dmpmem(np, cp - 1);    Writeln;
@@ -1796,7 +1797,7 @@ var
       152, 153, 155, 156, 157, 158, 159, 161, 162, 163, 164, 165, 167, 168, 169,
       170, 171,
 
-       59, 133, 134, 135, 136, 200, { Ord }
+       59, 133, 134, 135, 136, 200, { ord }
 
         6,  80,  81,  82,  83,  84, 197, { sto }
 
@@ -2446,7 +2447,7 @@ begin
   if dotrcrot then
     Writeln(pc: 6, '/', sp: 6, '-> ', q: 2);
   case q of
-    0 { Get }:
+    0 { get }:
       begin
         popadr(ad);
         valfil(ad);
@@ -2495,7 +2496,8 @@ begin
         end
       end;
     { unused placeholder for "release" }
-    2 { rst }: errori('Invalid std proc/func    ');
+    2 { rst }:
+      errori('Invalid std proc/func    ');
     3 { rln }:
       begin
         popadr(ad);
@@ -2611,7 +2613,7 @@ begin
           writestr(filtable[fn], ad1, w, l)
         end;
       end;
-    41 { Eof }:
+    41 { eof }:
       begin
         popadr(ad);
         valfil(ad);

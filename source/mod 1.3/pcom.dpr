@@ -5790,7 +5790,7 @@ var
               error(116);
             gen1(37 { lao }, outputptr^.vaddr);
           end;
-          if llkey = 12 then { Writeln }
+          if llkey = 12 then { writeln }
             gen1(30 { csp }, 22 { wln });
           { remove the file pointer from stack }
           gen1(71 { dmp }, ptrsize);
@@ -6009,7 +6009,7 @@ var
           else
           begin
             if lkey = 9 then
-              gen1(30 { csp }, 12 { New })
+              gen1(30 { csp }, 12 { new })
             else
               gen1(30 { csp }, 29 { dsp })
           end;
@@ -6126,7 +6126,7 @@ var
           if lkey = 9 then
           begin
             if gattr.typtr = textptr then
-              gen1(30 { csp }, 44 { Eof })
+              gen1(30 { csp }, 44 { eof })
             else
               gen1(30 { csp }, 45 { efb })
           end
