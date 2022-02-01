@@ -325,7 +325,7 @@ type
       variant:  (nxtvar, subvar, caslst: stp; 
                  varval: valu;
                  varln: Integer)
-    end;
+  end;
 
                                                          { names }
                                                          { ***** }
@@ -373,7 +373,7 @@ type
                                  case pfkind: idkind of
                                    actual: (forwdecl, externl: Boolean);
                                    formal: ()))
- end;
+  end;
 
 
   disprange = 0..displimit;
