@@ -734,6 +734,7 @@ var
   llp: lbp;
   lvp: csp;
   lsp: stp;
+
   { release substructure }
   procedure putsub(p: stp);
   var
@@ -761,6 +762,7 @@ var
     end;
     putstc(p) { release head entry }
   end { putsub };
+
 begin
   putnams(display[l].fname); { Dispose of identifier tree }
   { Dispose of label list }
@@ -2418,7 +2420,7 @@ var
         end
     end { markctp };
 
-  begin { marker }
+  begin
     for i := top downto lim do
       markctp(display[i].fname)
   end { marker };
@@ -4518,7 +4520,7 @@ var
       if Mod2(ic, 10) = 0 then
         if prcode then
           Writeln(prr, 'i', ic: 5)
-    end;
+    end { putic };
 
     procedure gen0(fop: oprange);
     begin
@@ -7143,7 +7145,6 @@ var
       var
         llp: lbp;
         ttop, ttop1: disprange;
-
       begin
         if sy = intconst then
         begin
@@ -7792,7 +7793,7 @@ var
       end
     end { statement };
 
-  begin { body }
+  begin
     if fprocp <> nil then
       entname := fprocp^.pfname
     else
@@ -7948,7 +7949,7 @@ var
     end;
   end { body };
 
-begin { block }
+begin
   stalvl := 0; { clear statement nesting level }
   dp := True;
   repeat
@@ -8631,7 +8632,6 @@ procedure inittables;
     sna[40] :=' rib'; sna[41] :=' rcb'; sna[42] :=' nwl'; sna[43] :=' dsl';
     sna[44] :=' eof'; sna[45] :=' efb'; sna[46] :=' fbv'; sna[47] :=' fvb';
     sna[48] :=' wbx';
-
   end { procmnemonics };
 
   procedure instrmnemonics;
@@ -8718,7 +8718,7 @@ procedure inittables;
     ordint['3'] := 3; ordint['4'] := 4; ordint['5'] := 5;
     ordint['6'] := 6; ordint['7'] := 7; ordint['8'] := 8;
     ordint['9'] := 9;
-  end;
+  end { chartypes };
 
   procedure initdx;
   begin
@@ -8842,9 +8842,9 @@ procedure inittables;
     pdx[43] := +(adrsize+intsize*2); pdx[44] := +adrsize-intsize;
     pdx[45] := +adrsize-intsize;     pdx[46] :=  0;
     pdx[47] := +intsize;             pdx[48] := +intsize;
-  end;
+  end { initdx };
 
-begin { inittables }
+begin
   reswords;
   symbols;
   rators;

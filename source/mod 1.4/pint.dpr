@@ -336,7 +336,7 @@ var
     else
       c := Chr(d - 10 + Ord('A'));
     digit := c
-  end;
+  end { digit };
 begin
   n := inthex; { number of digits }
   if v < 0 then
@@ -357,7 +357,7 @@ begin
   end;
   for i := f downto 1 do
     Write(digits[i]) { Output }
-end;
+end { wrthex };
 
 procedure dmpmem(s, e: address);
 var
@@ -406,7 +406,7 @@ begin
     else
       l := True
   end
-end;
+end { dmpmem };
 
 procedure pmd;
 begin
@@ -1812,7 +1812,7 @@ var
         storeop;
 
       { ujc must have same length as ujp, so we Output a dummy q argument }
-      61 { ujc }:
+       61 { ujc }:
         begin
           storeop;
           q := 0;
@@ -2030,7 +2030,7 @@ begin
     store[fa] := ff;
     putdef(fa, True)
   end
-end;
+end { valfil };
 
 procedure valfilwm(fa: address); { validate file Write mode }
 begin
@@ -3405,61 +3405,18 @@ begin
 end; { callsp }
 
 procedure dmpdsp(mp: address);
-
 begin
   Writeln;
   Write('Mark @');
   wrthex(mp, 8);
   Writeln;
-  Write('sl: ');
-  wrthex(mp + marksl, 8);
-  Write(': ');
-  if getdef(mp + marksl) then
-    wrthex(getadr(mp + marksl), 8)
-  else
-    Write('********');
-  Writeln;
-  Write('dl: ');
-  wrthex(mp + markdl, 8);
-  Write(': ');
-  if getdef(mp + markdl) then
-    wrthex(getadr(mp + markdl), 8)
-  else
-    Write('********');
-  Writeln;
-  Write('ep: ');
-  wrthex(mp + markep, 8);
-  Write(': ');
-  if getdef(mp + markep) then
-    wrthex(getadr(mp + markep), 8)
-  else
-    Write('********');
-  Writeln;
-  Write('sb: ');
-  wrthex(mp + marksb, 8);
-  Write(': ');
-  if getdef(mp + marksb) then
-    wrthex(getadr(mp + marksb), 8)
-  else
-    Write('********');
-  Writeln;
-  Write('et: ');
-  wrthex(mp + market, 8);
-  Write(': ');
-  if getdef(mp + market) then
-    wrthex(getadr(mp + market), 8)
-  else
-    Write('********');
-  Writeln;
-  Write('ra: ');
-  wrthex(mp + markra, 8);
-  Write(': ');
-  if getdef(mp + markra) then
-    wrthex(getadr(mp + markra), 8)
-  else
-    Write('********');
-  Writeln
-end;
+  Write('sl: '); wrthex(mp + marksl, 8); Write(': '); if getdef(mp + marksl) then wrthex(getadr(mp + marksl), 8) else Write('********'); Writeln;
+  Write('dl: '); wrthex(mp + markdl, 8); Write(': '); if getdef(mp + markdl) then wrthex(getadr(mp + markdl), 8) else Write('********'); Writeln;
+  Write('ep: '); wrthex(mp + markep, 8); Write(': '); if getdef(mp + markep) then wrthex(getadr(mp + markep), 8) else Write('********'); Writeln;
+  Write('sb: '); wrthex(mp + marksb, 8); Write(': '); if getdef(mp + marksb) then wrthex(getadr(mp + marksb), 8) else Write('********'); Writeln;
+  Write('et: '); wrthex(mp + market, 8); Write(': '); if getdef(mp + market) then wrthex(getadr(mp + market), 8) else Write('********'); Writeln;
+  Write('ra: '); wrthex(mp + markra, 8); Write(': '); if getdef(mp + markra) then wrthex(getadr(mp + markra), 8) else Write('********'); Writeln
+end { dmpdsp };
 
 procedure fndpow(var m: Integer; p: Integer; var d: Integer);
 begin
@@ -3470,9 +3427,9 @@ begin
     m := m * p;
     d := d + 1
   end
-end;
+end { fndpow };
 
-begin {  main  }
+begin
   if ParamCount > 0 then
     SrcFile := ParamStr(ParamCount)
   else

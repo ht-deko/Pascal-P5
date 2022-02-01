@@ -362,6 +362,7 @@ procedure wrthex(v: Integer; { value } f: Integer { field });
 var
   p, i, d, t, n: Integer;
   digits: packed array [1..8] of Char;
+
   function digit(d: Integer): Char;
   begin
     if d < 10 then
@@ -369,7 +370,8 @@ var
     else
       c := chr(d - 10 + Ord('A'));
     digit := c
-  end;
+  end { digit };
+
 begin
   n := 8; { number of digits }
   if v < 0 then
@@ -390,7 +392,7 @@ begin
   end;
   for i := f downto 1 do
     Write(digits[i]) { output }
-end;
+end { wrthex };
 
 procedure dmpmem(s, e: address);
 var
@@ -436,7 +438,7 @@ begin
     else
       l := True
   end
-end;
+end { dmpmem };
 
 procedure pmd;
 begin
@@ -456,7 +458,7 @@ begin
     Writeln; Writeln('Constants'); Writeln; dmpmem(cp, maxstr);    Writeln;
     Writeln; Writeln('Heap');      Writeln; dmpmem(np, cp - 1);    Writeln;
   end
-end; { pmd }
+end { pmd };
 
 procedure errori(passtr: beta);
 begin
@@ -466,7 +468,7 @@ begin
   Writeln(': ', string(passtr));
   pmd;
   Abort
-end; { errori }
+end { errori };
 
 { Get bit from defined array }
 
@@ -1196,14 +1198,14 @@ var
     iline := 1; { set 1st line of intermediate }
 
     gbset := False { global size not set }
-  end; { init }
+  end { init };
 
   procedure errorl(passtr: beta); { error in loading }
   begin
     Writeln;
     Writeln('*** Program load error: [', iline: 1, '] ', string(passtr));
     Abort
-  end; { errorl }
+  end { errorl };
 
   procedure dmplabs; { dump label table }
   var
@@ -1258,7 +1260,7 @@ var
       labeltab[x].st := defined;
       labeltab[x].val := labelvalue;
     end
-  end; { update }
+  end { update };
 
   procedure getnxt; { Get next character }
   begin
@@ -1376,7 +1378,7 @@ var
         { Add end }
       end;
     end
-  end; { generate }
+  end { generate };
 
   procedure assemble; { translate symbolic code into machine code and store }
   var
@@ -1399,7 +1401,7 @@ var
         defined:
           q := labeltab[x].val
       end
-    end; { lookup }
+    end { lookup };
 
     procedure labelsearch;
     var
@@ -1409,7 +1411,7 @@ var
         Read(prd, ch);
       Read(prd, x);
       lookup(x)
-    end; { labelsearch }
+    end { labelsearch };
 
     procedure getname;
     var
@@ -1433,7 +1435,7 @@ var
           Read(prd, ch); { next character }
       end;
       Move(word, name, SizeOf(name))
-    end; { getname }
+    end { getname };
 
     procedure storeop;
     begin
@@ -1765,7 +1767,7 @@ var
         end
     end;
     getlin { next intermediate line }
-  end; { assemble }
+  end { assemble };
 
   procedure prtrng(a, b: address);
   var
@@ -1814,8 +1816,7 @@ begin
     dmpins; { Debug: dump instructions from store }
   if dodmplab then
     dmplabs { Debug: dump label definitions }
-
-end; { load }
+end { load };
 
 { ------------------------------------------------------------------------ }
 
@@ -1832,7 +1833,7 @@ begin
     ld := ld - 1
   end;
   base := ad
-end; { base }
+end { base };
 
 procedure compare;
 { comparing is only correct if result by comparing integers will be }
@@ -1852,7 +1853,7 @@ begin
   end;
   if i = q then
     i := i - 1 { point at last location }
-end; { compare }
+end { compare };
 
 procedure valfil(fa: address); { attach file to file entry }
 var
@@ -2246,13 +2247,13 @@ var
     if Eof(f) then
       errori('End of file              ');
     Read(f, c);
-{$IFDEF MSWINDOWS}
+    {$IFDEF MSWINDOWS}
     if c = #$0D then
       Read(f, c);
-{$ENDIF}
+    {$ENDIF}
     if c = #$0A then
       c := ' ';
-  end; { readc }
+  end { readc };
 
   procedure writestr(var f: Text; ad: address; w: Integer; l: Integer);
   var
@@ -2265,14 +2266,14 @@ var
       l := w;
     for i := 0 to l - 1 do
       Write(f, getchr(ad + i))
-  end; { writestr }
+  end { writestr };
 
   procedure getfile(var f: Text);
   begin
     if Eof(f) then
       errori('End of file              ');
     Get(f);
-  end; { getfile }
+  end { getfile };
 
   procedure putfile(var f: Text; var ad: address; fn: fileno);
   begin
@@ -2280,7 +2281,7 @@ var
       errori('File buffer undefined    ');
     Write(f, getchr(ad + fileidsize));
     filbuff[fn] := False
-  end; { putfile }
+  end { putfile };
 
 begin { callsp }
   if q > maxsp then
@@ -3194,7 +3195,7 @@ begin { callsp }
         filbuff[fn] := True
       end;
   end;
-end; { callsp }
+end { callsp };
 
 procedure dmpdsp(mp: address);
 begin
@@ -3206,9 +3207,9 @@ begin
   Write('sb: '); wrthex(mp+marksb, 8); Write(': '); if getdef(mp+marksb) then wrthex(getadr(mp+marksb), 8) else Write('********'); Writeln;
   Write('et: '); wrthex(mp+market, 8); Write(': '); if getdef(mp+market) then wrthex(getadr(mp+market), 8) else Write('********'); Writeln;
   Write('ra: '); wrthex(mp+markra, 8); Write(': '); if getdef(mp+markra) then wrthex(getadr(mp+markra), 8) else Write('********'); Writeln
-end;
+end { dmpdsp };
 
-begin {  main  }
+begin
   if ParamCount > 0 then
     SrcFile := ParamStr(ParamCount)
   else

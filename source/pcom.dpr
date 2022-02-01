@@ -287,7 +287,8 @@ type
 
                                                         { data structures }
                                                         { *************** }
-  levrange = 0..maxlevel; addrrange = -maxaddr..maxaddr; stkoff = -maxaddr..0;
+  levrange = 0..maxlevel; addrrange = -maxaddr..maxaddr; 
+  stkoff = -maxaddr..0;
   structform = (scalar, subrange, pointer, power, arrays, records, files,
                 tagfld, variant);
   declkind = (standard, declared);
@@ -337,42 +338,42 @@ type
   nmstr = packed array [1..digmax] of Char;
   csstr = packed array [1..strglgth] of Char;
   identifier = record
-                snm: Integer; { serial number }
-                name: strvsp; 
-                lastuse: Integer; 
-                llink, rlink: ctp;
-                idtype: stp; 
-                next: ctp; 
-                keep: Boolean; 
-                refer: Boolean;
-                defined: Boolean;
-                case klass: idclass of
-                  types: ();
-                  konst: (values: valu);
-                  vars:  (vkind: idkind; 
-                          vlev: levrange; 
-                          vaddr: addrrange;
-                          threat: Boolean; 
-                          forcnt: Integer);
-                  field: (fldaddr: addrrange; 
-                          varnt: stp; 
-                          varlb: ctp;
-                          tagfield: Boolean; 
-                          taglvl: Integer;
-                          varsaddr: addrrange; 
-                          varssize: addrrange;
-                          vartl: Integer);
-                  proc, func:  (pfaddr: addrrange; 
-                                pflist: ctp; { param list }
-                                asgn: Boolean; { assigned }
-                                case pfdeckind: declkind of
-                                  standard: (key: 1..18);
-                                  declared: (pflev: levrange; 
-                                             pfname: Integer;
-                                             case pfkind: idkind of
-                                               actual: (forwdecl, externl: Boolean);
-                                               formal: ()))
-                end;
+                 snm: Integer; { serial number }
+                 name: strvsp; 
+                 lastuse: Integer; 
+                 llink, rlink: ctp;
+                 idtype: stp; 
+                 next: ctp; 
+                 keep: Boolean; 
+                 refer: Boolean;
+                 defined: Boolean;
+                 case klass: idclass of
+                   types: ();
+                   konst: (values: valu);
+                   vars:  (vkind: idkind; 
+                           vlev: levrange; 
+                           vaddr: addrrange;
+                           threat: Boolean; 
+                           forcnt: Integer);
+                   field: (fldaddr: addrrange; 
+                           varnt: stp; 
+                           varlb: ctp;
+                           tagfield: Boolean; 
+                           taglvl: Integer;
+                           varsaddr: addrrange; 
+                           varssize: addrrange;
+                           vartl: Integer);
+                   proc, func:  (pfaddr: addrrange; 
+                                 pflist: ctp; { param list }
+                                 asgn: Boolean; { assigned }
+                                 case pfdeckind: declkind of
+                                   standard: (key: 1..18);
+                                   declared: (pflev: levrange; 
+                                              pfname: Integer;
+                                              case pfkind: idkind of
+                                                actual: (forwdecl, externl: Boolean);
+                                                formal: ()))
+               end;
 
 
   disprange = 0..displimit;
@@ -409,16 +410,16 @@ type
                                                               { ****** }
   lbp = ^ labl;
   labl = record { 'goto' label }
-                nextlab: lbp;     { next list link }
-                defined: Boolean; { label defining point was seen }
-                labval,           { numeric value of label }
-                labname: Integer; { internal sequental name of label }
-                vlevel: levrange; { procedure level of definition }
-                slevel: Integer;  { statement level of definition }
-                ipcref: Boolean;  { was referenced by another proc/func }
-                minlvl: Integer;  { minimum goto reference statement lvl }
-                bact: Boolean;    { containing block is active }
-                refer: Boolean    { was referred to }
+           nextlab: lbp;     { next list link }
+           defined: Boolean; { label defining point was seen }
+           labval,           { numeric value of label }
+           labname: Integer; { internal sequental name of label }
+           vlevel: levrange; { procedure level of definition }
+           slevel: Integer;  { statement level of definition }
+           ipcref: Boolean;  { was referenced by another proc/func }
+           minlvl: Integer;  { minimum goto reference statement lvl }
+           bact: Boolean;    { containing block is active }
+           refer: Boolean    { was referred to }
          end;
 
   { external file tracking entries }
@@ -782,7 +783,9 @@ var
   llp: lbp;
   lvp: csp;
   lsp: stp;
+  
   { release substructure }
+  
   procedure putsub(p: stp);
   var
     p1: stp;
@@ -809,6 +812,7 @@ var
     end;
     putstc(p) { release head entry }
   end { putsub };
+  
 begin
   putnams(display[l].fname); { Dispose of identifier tree }
   { Dispose of label list }
@@ -833,7 +837,7 @@ begin
     display[l].fstruct := lsp^.next;
     putsub(lsp)
   end
-end; { putdsp }
+end { putdsp }; 
 
 { scrub all display levels until given }
 
@@ -942,7 +946,7 @@ end { popwth };
 
 { ------------------------------------------------------------------------- }
 
-  { find lower case of character }
+{ find lower case of character }
 
 function lcase(c: Char): Char;
 begin
@@ -1369,6 +1373,7 @@ var
   i: Integer;
   q: Integer;
   p, l: strvsp;
+  
   procedure getsqt;
   var
     y: Integer;
@@ -1384,7 +1389,8 @@ var
       else
         l^.next := p
     end
-  end;
+  end { getsqt };
+  
 begin
   i := 1;
   q := 1;
@@ -1432,11 +1438,12 @@ end { mltovf };
 
 { ------------------------------------------------------------------------- }
 
-  { dump the display }
+{ dump the display }
 
 procedure prtdsp;
 var
   i: Integer;
+  
   procedure prtlnk(p: ctp; f: Integer);
   var
     i: Integer;
@@ -1453,6 +1460,7 @@ var
         prtlnk(p^.rlink, f + 3)
     end
   end { prtlnk };
+  
 begin
   Writeln;
   Writeln('Display:');
@@ -1460,12 +1468,10 @@ begin
   for i := 0 to displimit do
     if display[i].fname <> nil then
     begin
-
       Writeln('level ', i: 1);
       Writeln;
       prtlnk(display[i].fname, 0);
       Writeln
-
     end;
   Writeln;
 end { prtdsp };
@@ -1815,7 +1821,7 @@ var
         if prcode then
           Writeln(prr, 'o ', ch1, '+')
       end
-    end; { switch }
+    end { switch }; 
   begin
     repeat
       nextch;
@@ -1863,11 +1869,13 @@ var
   var
     iscmte: Boolean;
     lastch: Char;
+
     procedure nextchcc;
     begin
       lastch := ch;
       nextch
     end { nextchcc };
+    
   begin
     lastch := ' ';
     if ch = '$' then
@@ -2652,13 +2660,15 @@ end { isbyte };
 
 function basetype(fsp: stp): stp;
 { remove any subrange types }
-  function issub(fsp: stp): Boolean;
+
+  function issub(fsp: stp): Boolean;  
   begin
     if fsp <> nil then
       issub := fsp^.form = subrange
     else
       issub := False
   end { issub };
+  
 begin
   if fsp <> nil then
     while issub(fsp) do
@@ -2775,7 +2785,7 @@ var
                 markstp(subvar)
               end;
           end
-        end { with }
+        end
     end { markstp };
 
     procedure markctp {(fp: ctp)};
@@ -3033,7 +3043,7 @@ var
         followctp(llink);
         followctp(rlink);
         followstp(idtype)
-      end { with }
+      end
   end { followctp };
 
 begin { printtables }
@@ -3052,8 +3062,8 @@ begin { printtables }
   Writeln('C: ', 'Entry #': intdig, ' ', 'Id': intdig, ' ', 'llink': intdig,
     ' ', 'rlink': intdig, ' ', 'Typ': intdig, ' ', 'Class': intdig);
   Writeln('S: ', 'Entry #': intdig, ' ', 'Size': intdig, ' ', 'Form ': intdig);
-  Write('===============================================================');
-  Writeln('==========================');
+  Writeln('===============================================================' + 
+          '==========================');
   marker;
   for i := top downto lim do
   begin
@@ -3224,7 +3234,7 @@ var
           m := False
     end;
     gap := m
-  end; { gap }
+  end { gap }; 
 
 begin
   la := lenp(a);
@@ -3254,7 +3264,7 @@ begin
       m := gap(b, a, lb, la) and (la > 1)
   end;
   match := m
-end; { match }
+end { match };
 
 function matres(ss: setofsys): symbol;
 var
@@ -3539,13 +3549,13 @@ var
     if fsp <> nil then
       with fsp^ do
         case form of
-          scalar: 
+          scalar, 
+          subrange, 
+          pointer, 
+          power, 
+          tagfld, 
+          variant: 
             ;
-          subrange: 
-            ;
-          pointer: 
-            ;
-          power: ;
           arrays: 
             if filecomponent(aeltype) then
               f := True;
@@ -3554,10 +3564,6 @@ var
               f := True;
           files: 
             f := True;
-          tagfld: 
-            ;
-          variant: 
-            ;
         end;
     filecomponent := f
   end { filecomponent };
@@ -3957,7 +3963,7 @@ var
             skip(fsys + [ident, casesy])
           end
         end
-      end { while };
+      end;
       nxt := nil;
       while nxt1 <> nil do
         with nxt1^ do
@@ -4756,7 +4762,7 @@ var
       end
       else
         error(250);
-    end;
+    end { pushlvl };
 
     procedure parameterlist(fsy: setofsys; var fpar: ctp);
     var
@@ -4789,7 +4795,7 @@ var
           lcp^.next := lcp1;
           lcp1 := lcp3
         end
-      end;
+      end { joinlists };
     begin
       lcp1 := nil;
       if not (sy in fsy + [lparent]) then
@@ -5037,7 +5043,7 @@ var
               skip(fsys + [ident, rparent])
             end
           end
-        end { while };
+        end;
         if sy = rparent then
         begin
           insymbol;
@@ -5074,7 +5080,7 @@ var
         fpar := nil
     end { parameterlist };
 
-  begin { procdeclaration }
+  begin
     llc := lc;
     lc := lcaftermarkstack;
     forw := False;
@@ -5883,6 +5889,7 @@ var
         lcp: ctp;
         lsize: addrrange;
         lmin, lmax: Integer;
+
         function schblk(fcp: ctp): Boolean;
         var
           i: disprange;
@@ -5894,6 +5901,7 @@ var
               f := True;
           schblk := f
         end { schblk };
+
         procedure checkvrnt(lcp: ctp);
         var
           vp: stp;
@@ -5969,7 +5977,7 @@ var
                 end
             end
           end
-        end;
+        end { checkvrnt };
       begin
         with fcp^, gattr do
         begin
@@ -6058,7 +6066,7 @@ var
                 end
               end
           end
-        end { with };
+        end;
         if not (sy in selectsys + fsys) then
         begin
           error(59);
@@ -6248,7 +6256,7 @@ var
             error(6);
             skip(fsys + selectsys)
           end
-        end { while }
+        end
       end { selector };
 
       procedure call(fsys: setofsys; fcp: ctp);
@@ -6919,7 +6927,7 @@ var
               else
                 error(116);
             1:
-          end { while };
+          end;
           if debug and tagrec then
             gen2(51 { ldc }, 1, tagc);
           gen2(51 { ldc }, 1, lsize);
@@ -7695,10 +7703,10 @@ var
                   error(6);
                   skip(fsys + facbegsys)
                 end
-              end { while }
+              end
             end { factor };
 
-          begin { term }
+          begin
             factor(fsys + [mulop], threaten);
             while sy = mulop do
             begin
@@ -7785,10 +7793,10 @@ var
                 end
               else
                 gattr.typtr := nil
-            end { while }
+            end
           end { term };
 
-        begin { simpleexpression }
+        begin
           fsy := sy;
           fop := op;
           if (sy = addop) and (op in [plus, minus]) then
@@ -7892,10 +7900,10 @@ var
               end
             else
               gattr.typtr := nil
-          end { while }
+          end
         end { simpleexpression };
 
-      begin { expression }
+      begin
         typind := ' ';
         simpleexpression(fsys + [relop], threaten);
         if sy = relop then
@@ -8707,7 +8715,7 @@ var
         lc := llc;
       end { withstatement };
 
-    begin { statement }
+    begin
       if sy = intconst then { label }
       begin
         searchlabel(llp, level); { search label }
@@ -8802,7 +8810,7 @@ var
       end
     end { statement };
 
-  begin { body }
+  begin
     if fprocp <> nil then
       entname := fprocp^.pfname
     else
@@ -8983,7 +8991,7 @@ var
     end;
   end { body };
 
-begin { block }
+begin
   stalvl := 0; { clear statement nesting level }
   dp := True;
   repeat
@@ -9045,7 +9053,7 @@ begin
     fp := fp^.nextfile
   end;
   searchext := f
-end;
+end { searchext };
 
 procedure programme(fsys: setofsys);
 var
@@ -9232,7 +9240,6 @@ procedure entstdnames;
 var
   cp, cp1: ctp;
   i: Integer;
-
 begin 
                                                             { name: }
                                                             { ***** }
@@ -9586,6 +9593,7 @@ begin
 end { initsets };
 
 procedure inittables;
+
   procedure reswords;
   begin
     rw[ 1] := 'if       '; rw[ 2] := 'do       '; rw[ 3] := 'of       ';
@@ -9752,7 +9760,7 @@ procedure inittables;
     ordint['3'] := 3; ordint['4'] := 4; ordint['5'] := 5;
     ordint['6'] := 6; ordint['7'] := 7; ordint['8'] := 8;
     ordint['9'] := 9;
-  end;
+  end { chartypes };
 
   procedure initdx;
   begin
@@ -9878,7 +9886,7 @@ procedure inittables;
     pdx[45] := +adrsize-intsize;     pdx[46] :=  0;
     pdx[47] := +intsize;             pdx[48] := +intsize;
     pdx[49] := +(intsize*3+adrsize);
-  end;
+  end { initdx };
 
 begin
   reswords;
@@ -9929,7 +9937,6 @@ begin
   AssignFile(prd, SrcFile);
   AssignFile(prr, DstFile);
   try
-
     { initialize }
     { ********** }
     initscalars;
