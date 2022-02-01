@@ -1524,7 +1524,7 @@ begin
   end;
   linecount := linecount + 1;
   if list and (not Eof(prd)) then
-{$IFDEF NO_PREAMBLE}
+  {$IFDEF NO_PREAMBLE}
   begin
     Write(Output, ' ': 6, '  ': 2);
     if dp then
@@ -1533,7 +1533,7 @@ begin
       Write(Output, ' ': 7);
     Write(Output, ' ')
   end;
-{$ELSE}
+  {$ELSE}
   begin
     Write(Output, linecount: 6, '  ': 2);
     if dp then
@@ -1542,7 +1542,7 @@ begin
       Write(Output, ic: 7);
     Write(Output, ' ')
   end;
-{$ENDIF}
+  {$ENDIF}
   { Output line marker in intermediate file }
   if not Eof(prd) then
     markline;
@@ -1734,10 +1734,10 @@ begin
   { This diagnostic is here because error buffers error numbers til the end
     of line, and sometimes you need to know exactly where they occurred. }
 
-{$IFDEF IMM_ERR}
+  {$IFDEF IMM_ERR}
   Writeln;
   Writeln('error: ', ferrnr: 1);
-{$ENDIF}
+  {$ENDIF}
 
   errtbl[ferrnr] := True; { track this error }
   if errinx >= 9 then
@@ -1769,13 +1769,13 @@ var
 
   procedure nextch;
   begin
-{$IFDEF MSWINDOWS}
+  {$IFDEF MSWINDOWS}
     if CurrentChar(prd) = #$0A then
     begin
       Read(prd, ch);
       Exit;
     end;
-{$ENDIF}
+  {$ENDIF}
     if eol then
     begin
       if list then

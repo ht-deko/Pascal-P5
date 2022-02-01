@@ -1592,13 +1592,13 @@ var
 
   procedure nextch;
   begin
-{$IFDEF MSWINDOWS}
+    {$IFDEF MSWINDOWS}
     if CurrentChar(prd) = #$0A then
     begin
       Read(prd, ch);
       Exit;
     end;
-{$ENDIF}
+    {$ENDIF}
     if eol then
     begin
       if list then

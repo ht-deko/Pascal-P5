@@ -2402,10 +2402,10 @@ var
     if Eof(f) then
       errori('End of file              ');
     Read(f, c);
-{$IFDEF MSWINDOWS}
+    {$IFDEF MSWINDOWS}
     if c = #$0D then
       Read(f, c);
-{$ENDIF}
+    {$ENDIF}
     if c = #$0A then
       c := ' ';
   end; { readc }
