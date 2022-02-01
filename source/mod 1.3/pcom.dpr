@@ -83,7 +83,7 @@ program pascalcompiler(Output, prd, prr);
 {$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
 
 uses
-  System.SysUtils, System.Math, System.IOUtils;
+  System.SysUtils, System.IOUtils, uPCommon;
 
 const
 
@@ -201,7 +201,7 @@ const
   {  stackelsize = minimum size for 1 stackelement
                 = k*stackal
     stackal     = scm(all other al-constants)
-    charmax     = scm(charsize,charal)
+    charmax     = scm(charsize, charal)
                   scm = smallest common multiple
     lcaftermarkstack >= maxresult+3*ptrsize+max(x-size)
                       = k1*stackelsize           }
@@ -263,7 +263,7 @@ type
     strings are only stored in their length rounded to the nearest 10th. }
   strvsp = ^strvs; { pointer to variable length id string }
   strvs = record { id string variable length }
-            str: packed array[1..varsqt] of Char; { data contained }
+            str: packed array [1..varsqt] of Char; { data contained }
             next: strvsp { next }
           end;
 
@@ -329,10 +329,10 @@ type
   idclass = (types, konst, vars, field, proc, func);
   setofids = set of idclass;
   idkind = (actual, formal);
-  idstr = packed array[1..maxids] of Char;
-  restr = packed array[1..reslen] of Char;
-  nmstr = packed array[1..digmax] of Char;
-  csstr = packed array[1..strglgth] of Char;
+  idstr = packed array [1..maxids] of Char;
+  restr = packed array [1..reslen] of Char;
+  nmstr = packed array [1..digmax] of Char;
+  csstr = packed array [1..strglgth] of Char;
   identifier = record
                  name: strvsp;
                  llink, rlink: ctp;
@@ -472,13 +472,12 @@ var
   chkref: Boolean;                { -- Reference checks }
   chkudtc, chkudtf: Boolean;      { -- Check undefined tagfields, candidate
                                        and final }
-  option: array['a'..'z'] of      { option array }
+  option: array ['a'..'z'] of      { option array }
   Boolean;
 
                                   { pointers: }
                                   { ********* }
-  parmptr,
-    intptr, realptr, charptr,
+  parmptr, intptr, realptr, charptr,
     boolptr, nilptr, textptr: stp;{ pointers to entries of standard ids }
   utypptr, ucstptr, uvarptr,
     ufldptr, uprcptr, ufctptr,    { pointers to entries for undeclared ids }
@@ -495,7 +494,7 @@ var
   top: disprange;                 { top of display }
 
   display:                        { where:   means: }
-  array[disprange] of
+  array [disprange] of
     packed record                 { =blck:   id is variable id }
       fname: ctp;
       flabel: lbp;                { =crec:   id is field id in record with }
@@ -517,7 +516,7 @@ var
 
   errinx: 0..10;                  { nr of errors in current source line }
   errlist:
-  array[1..10] of
+  array [1..10] of
     packed record
       pos: Integer;
       nmr: 1..500
@@ -533,25 +532,25 @@ var
 
   constbegsys, simptypebegsys, typebegsys, blockbegsys, selectsys, facbegsys,
     statbegsys, typedels: setofsys;
-  chartp: array[subchar] of chtp;
-  rw: array[1..maxres { nr. of res. words }] of restr;
-  frw: array[1..10] of 1..36 { nr. of res. words + 1 };
-  rsy: array[1..maxres { nr. of res. words }] of symbol;
-  ssy: array[subchar] of symbol;
-  rop: array[1..maxres { nr. of res. words }] of operator;
-  sop: array[subchar] of operator;
-  na: array[1..maxstd] of restr;
-  mn: array[0..maxins] of packed array[1..4] of Char;
-  sna: array[1..maxsp] of packed array[1..4] of Char;
-  cdx: array[0..maxins] of Integer;
-  cdxs: array[1..6, 1..7] of Integer;
-  pdx: array[1..maxsp] of Integer;
-  ordint: array[subchar] of Integer;
+  chartp: array [subchar] of chtp;
+  rw: array [1..maxres { nr. of res. words }] of restr;
+  frw: array [1..10] of 1..36 { nr. of res. words + 1 };
+  rsy: array [1..maxres { nr. of res. words }] of symbol;
+  ssy: array [subchar] of symbol;
+  rop: array [1..maxres { nr. of res. words }] of operator;
+  sop: array [subchar] of operator;
+  na: array [1..maxstd] of restr;
+  mn: array [0..maxins] of packed array [1..4] of Char;
+  sna: array [1..maxsp] of packed array [1..4] of Char;
+  cdx: array [0..maxins] of Integer;
+  cdxs: array [1..6, 1..7] of Integer;
+  pdx: array [1..maxsp] of Integer;
+  ordint: array [subchar] of Integer;
 
   intlabel, mxint10: Integer;
   inputhdf: Boolean; { 'input' appears in header files }
   outputhdf: Boolean; { 'output' appears in header files }
-  errtbl: array[1..500] of Boolean; { error occrence tracking }
+  errtbl: array [1..500] of Boolean; { error occrence tracking }
   toterr: Integer; { total errors in program }
 
   { Recycling tracking counters, used to check for New/Dispose mismatches. }
@@ -566,27 +565,8 @@ var
   f: Boolean; { flag for if error number list entries were printed }
   i: 1..500; { index for error number tracking array }
   c: Char;
+
   SrcFile, DstFile: string;
-
-{ ------------------------------------------------------------------------- }
-
-                           { for Delphi }
-
-{ ------------------------------------------------------------------------- }
-
-function CurrentChar(var F: Text): WideChar;
-begin
-  Eoln(F);
-  Result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
-end { CurrentChar };
-
-function Mod2(a, n: Integer): Integer;
-begin
-  if n = 0 then
-    Result := a
-  else
-    Result := a - Floor(Extended(a / n)) * n;
-end { Mod2 };
 
 { ------------------------------------------------------------------------- }
 
@@ -4432,7 +4412,7 @@ var
   var
     llcp: ctp;
     saveid: idstr;
-    cstptr: array[1..cstoccmax] of csp;
+    cstptr: array [1..cstoccmax] of csp;
     cstptrix: 0..cstoccmax;
     { allows referencing of noninteger constants by an index
      (instead of a pointer), which can be stored in the p2-field
@@ -4599,7 +4579,7 @@ var
         else if fop = 42 then
           begin
             if prcode then
-              Writeln(prr, chr(fp2))
+              Writeln(prr, Chr(fp2))
           end
         else if fop = 67 then
           begin
@@ -4636,15 +4616,15 @@ var
         47, 48, 49, 52, 53, 55:
           begin
             if prcode then
-              Write(prr, chr(fp1));
-            if chr(fp1) = 'm' then
+              Write(prr, Chr(fp1));
+            if Chr(fp1) = 'm' then
               begin
                 if prcode then
                   Write(prr, ' ', fp2: 11);
               end;
             if prcode then
               Writeln(prr);
-            case chr(fp1) of
+            case Chr(fp1) of
               'i': mesl(cdxs[cdx[fop]][1]);
               'r': mesl(cdxs[cdx[fop]][2]);
               'b': mesl(cdxs[cdx[fop]][3]);
@@ -4688,7 +4668,7 @@ var
                 end;
               6:
                 begin
-                  if chartp[chr(fp2)] = illegal then
+                  if chartp[Chr(fp2)] = illegal then
                     { Output illegal characters as numbers }
                     begin
                       if prcode then
@@ -4697,7 +4677,7 @@ var
                   else
                     begin
                       if prcode then
-                        Writeln(prr, 'c ''': 3, chr(fp2), '''');
+                        Writeln(prr, 'c ''': 3, Chr(fp2), '''');
                     end;
                   mesl(cdxs[cdx[fop]][4])
                 end;
@@ -5231,7 +5211,7 @@ var
                 if gattr.typtr^.form <> scalar then
                   error(113)
                 else if not comptypes(gattr.typtr, intptr) then
-                  gen0t(58 { Ord }, gattr.typtr);
+                  gen0t(58 { ord }, gattr.typtr);
               if lattr.typtr <> nil then
                 with lattr.typtr^ do
                 begin
@@ -5246,7 +5226,7 @@ var
                         gen1t(31 { dec }, lmin, intptr)
                       else if lmin < 0 then
                         gen1t(34 { inc }, -lmin, intptr);
-                      { or simply gen1(31,lmin) }
+                      { or simply gen1(31, lmin) }
                     end
                   end
                   else
@@ -5425,7 +5405,7 @@ var
           if lkey <= 2 then
           begin
             if gattr.typtr = textptr then
-              gen1(30 { csp }, lkey { get,put })
+              gen1(30 { csp }, lkey { get, put })
             else
             begin
               if gattr.typtr <> nil then
@@ -6093,7 +6073,7 @@ var
           if gattr.typtr <> nil then
             if gattr.typtr^.form >= power then
               error(125);
-          gen0t(58 { Ord }, gattr.typtr);
+          gen0t(58 { ord }, gattr.typtr);
           gattr.typtr := intptr
         end { ordfunction };
 
@@ -6467,7 +6447,7 @@ var
               while sy in facbegsys do
               begin
                 case sy of
-                  { id }ident:
+                  { id } ident:
                     begin
                       searchid([konst, vars, field, func], lcp);
                       insymbol;
@@ -6504,7 +6484,7 @@ var
                           with gattr, typtr^ do { simplify later tests }
                       end
                     end;
-                  { cst }intconst:
+                  { cst } intconst:
                     begin
                       with gattr do
                       begin
@@ -6549,7 +6529,7 @@ var
                       end;
                       insymbol
                     end;
-                  {  (  }lparent:
+                  {  (  } lparent:
                     begin
                       insymbol;
                       expression(fsys + [rparent], False);
@@ -6558,7 +6538,7 @@ var
                       else
                         error(4)
                     end;
-                  { not }notsy:
+                  { not } notsy:
                     begin
                       insymbol;
                       factor(fsys, False);
@@ -6571,7 +6551,7 @@ var
                           gattr.typtr := nil
                         end;
                     end;
-                  { [ }lbrack:
+                  { [ } lbrack:
                     begin
                       insymbol;
                       cstpart := [];
@@ -6609,7 +6589,7 @@ var
                             begin
                               load;
                               if not comptypes(gattr.typtr, intptr) then
-                                gen0t(58 { Ord }, gattr.typtr);
+                                gen0t(58 { ord }, gattr.typtr);
                             end;
                             tattr := gattr;
                             expression(fsys + [comma, rbrack], False);
@@ -6661,14 +6641,14 @@ var
                                     begin
                                       load;
                                       if not comptypes(gattr.typtr, intptr) then
-                                        gen0t(58 { Ord }, gattr.typtr)
+                                        gen0t(58 { ord }, gattr.typtr)
                                     end;
                                     tattr := gattr;
                                     gattr := rattr;
                                     load;
                                     gattr := tattr;
                                     if not comptypes(rattr.typtr, intptr) then
-                                      gen0t(58 { Ord }, rattr.typtr);
+                                      gen0t(58 { ord }, rattr.typtr);
                                     gen0(64 { rgs });
                                     if varpart then
                                       gen0(28 { uni })
@@ -6691,7 +6671,7 @@ var
                                 begin
                                   load;
                                   if not comptypes(gattr.typtr, intptr) then
-                                    gen0t(58 { Ord }, gattr.typtr);
+                                    gen0t(58 { ord }, gattr.typtr);
                                   gen0(23 { sgs });
                                   if varpart then
                                     gen0(28 { uni })
@@ -6742,7 +6722,8 @@ var
                         gattr.cval.valp := lvp
                       end
                     end;
-                  { nil }nilsy: with gattr do
+                  { nil } nilsy:
+                    with gattr do
                     begin
                       typtr := nilptr;
                       kind := cst;
@@ -6770,7 +6751,8 @@ var
               load;
               if (lattr.typtr <> nil) and (gattr.typtr <> nil) then
                 case lop of
-                  { * }mul: if (lattr.typtr = intptr) and (gattr.typtr = intptr)
+                  { * } mul:
+                    if (lattr.typtr = intptr) and (gattr.typtr = intptr)
                     then
                       gen0(15 { mpi })
                     else
@@ -6797,7 +6779,7 @@ var
                         gattr.typtr := nil
                       end
                     end;
-                  {  /  }rdiv:
+                  {  /  } rdiv:
                     begin
                       if gattr.typtr = intptr then
                       begin
@@ -6818,7 +6800,8 @@ var
                         gattr.typtr := nil
                       end
                     end;
-                  { div }idiv: if (lattr.typtr = intptr)
+                  { div } idiv:
+                    if (lattr.typtr = intptr)
                     and (gattr.typtr = intptr) then
                       gen0(6 { dvi })
                     else
@@ -6826,7 +6809,8 @@ var
                       error(134);
                       gattr.typtr := nil
                     end;
-                  { mod }imod: if (lattr.typtr = intptr)
+                  { mod } imod:
+                    if (lattr.typtr = intptr)
                     and (gattr.typtr = intptr) then
                       gen0(14 { mod })
                     else
@@ -6834,8 +6818,8 @@ var
                       error(134);
                       gattr.typtr := nil
                     end;
-                  { and }andop: if (lattr.typtr = boolptr)
-                    and (gattr.typtr = boolptr) then
+                  { and } andop:
+                    if (lattr.typtr = boolptr) and (gattr.typtr = boolptr) then
                       gen0(4 { and })
                     else
                     begin
@@ -6879,7 +6863,7 @@ var
             load;
             if (lattr.typtr <> nil) and (gattr.typtr <> nil) then
               case lop of
-                { + }plus:
+                { + } plus:
                   if (lattr.typtr = intptr) and (gattr.typtr = intptr) then
                     gen0(2 { adi })
                   else
@@ -6905,7 +6889,7 @@ var
                       gattr.typtr := nil
                     end
                   end;
-                { - }minus:
+                { - } minus:
                   if (lattr.typtr = intptr) and (gattr.typtr = intptr) then
                     gen0(21 { sbi })
                   else
@@ -6931,7 +6915,7 @@ var
                       gattr.typtr := nil
                     end
                   end;
-                { or }orop:
+                { or } orop:
                   if (lattr.typtr = boolptr) and (gattr.typtr = boolptr) then
                     gen0(13 { ior })
                   else
@@ -6959,7 +6943,7 @@ var
           lop := op;
           if lop = inop then
             if not comptypes(gattr.typtr, intptr) then
-              gen0t(58 { Ord }, gattr.typtr);
+              gen0t(58 { ord }, gattr.typtr);
           insymbol;
           simpleexpression(fsys, threaten);
           if gattr.typtr <> nil then
@@ -7141,8 +7125,10 @@ var
                       store(lattr)
                     end;
                   arrays,
-                    records: gen1(40 { mov }, lattr.typtr^.size);
-                  files: error(146)
+                  records:
+                    gen1(40 { mov }, lattr.typtr^.size);
+                  files:
+                    error(146)
                 end;
             end
             else
@@ -7273,7 +7259,7 @@ var
             lsp := nil
           end
           else if not comptypes(lsp, intptr) then
-            gen0t(58 { Ord }, lsp);
+            gen0t(58 { ord }, lsp);
         genujpxjp(57 { ujp }, lcix);
         mesl(-intsize); { remove selector from stack }
         if sy = ofsy then
@@ -7556,7 +7542,7 @@ var
               load;
               alignd(intptr, lc);
               if not comptypes(lattr.typtr, intptr) then
-                gen0t(58 { Ord }, gattr.typtr);
+                gen0t(58 { ord }, gattr.typtr);
               gen2t(56 { str }, 0, lc - intsize * 2, intptr);
               { set initial value of index }
               gen2t(54 { lod }, 0, lc - intsize, intptr);
@@ -7568,7 +7554,7 @@ var
               gattr := lattr;
               load;
               if not comptypes(gattr.typtr, intptr) then
-                gen0t(58 { Ord }, gattr.typtr);
+                gen0t(58 { ord }, gattr.typtr);
               gen2t(54 { lod }, 0, lc - intsize * 2, intptr);
               lcs := lc;
               lc := lc - intsize * 2;
@@ -7599,7 +7585,7 @@ var
         gattr := lattr;
         load;
         if not comptypes(gattr.typtr, intptr) then
-          gen0t(58 { Ord }, gattr.typtr);
+          gen0t(58 { ord }, gattr.typtr);
         gen2t(54 { lod }, 0, lcs - intsize * 2, intptr);
         gen2(47 { equ }, Ord(typind), 1);
         genujpxjp(73 { tjp }, lcix);
@@ -8202,7 +8188,7 @@ begin
                                                         { ***** }
 
   New(cp);
-  ininam(cp);                                  { Integer }
+  ininam(cp);                                  { integer }
   with cp^ do
   begin
     strassvr(name, 'integer  ');
@@ -8220,7 +8206,7 @@ begin
   end;
   enterid(cp);
   New(cp);
-  ininam(cp);                                  { Char }
+  ininam(cp);                                  { char }
   with cp^ do
   begin
     strassvr(name, 'char     ');
@@ -8229,7 +8215,7 @@ begin
   end;
   enterid(cp);
   New(cp);
-  ininam(cp);                                  { Boolean }
+  ininam(cp);                                  { boolean }
   with cp^ do
   begin
     strassvr(name, 'boolean  ');
@@ -8251,7 +8237,7 @@ begin
   for i := 1 to 2 do
   begin
     New(cp);
-    ininam(cp);                                { False,True }
+    ininam(cp);                                { false, true }
     with cp^ do
     begin
       strassvr(name, na[i]);
@@ -8267,7 +8253,7 @@ begin
   for i := 3 to 4 do
   begin
     New(cp);
-    ininam(cp);                                { input,Output }
+    ininam(cp);                                { input, output }
     with cp^ do
     begin
       strassvr(name, na[i]);
@@ -8290,7 +8276,7 @@ begin
   for i := 33 to 34 do
   begin
     New(cp);
-    ininam(cp);                                { prd,prr files }
+    ininam(cp);                                { prd, prr files }
     with cp^ do
     begin
       strassvr(name, na[i]);
@@ -8310,27 +8296,27 @@ begin
     if i <> 14 then { no longer doing release }
     begin
       New(cp);
-      ininam(cp);                              { get,put,reset }
-      with cp^ do                              { rewrite,Read }
+      ininam(cp);                              { get, put, reset }
+      with cp^ do                              { rewrite, Read }
       begin
         strassvr(name, na[i]);
-        idtype := nil;                         { Write,pack }
+        idtype := nil;                         { write, pack }
         pflist := nil;
         next := nil;
-        key := i - 4;                          { unpack,New }
+        key := i - 4;                          { unpack, New }
         klass := proc;
-        pfdeckind := standard                  { readln,Writeln }
+        pfdeckind := standard                  { readln, writeln }
       end;
       enterid(cp)
     end;
   for i := 17 to 26 do
   begin
     New(cp);
-    ininam(cp);                                { abs,sqr,trunc }
-    with cp^ do                                { odd,Ord,chr }
+    ininam(cp);                                { abs, sqr, trunc }
+    with cp^ do                                { odd, ord, chr }
     begin
       strassvr(name, na[i]);
-      idtype := nil;                           { pred,succ,Eof }
+      idtype := nil;                           { pred, succ, eof }
       pflist := nil;
       next := nil;
       key := i - 16;
@@ -8356,8 +8342,8 @@ begin
       forcnt := 0
     end;
     New(cp1);
-    ininam(cp1);                               { sin,cos,exp }
-    with cp1^ do                               { sqrt,ln,arctan }
+    ininam(cp1);                               { sin, cos, exp }
+    with cp1^ do                               { sqrt, ln, arctan }
     begin
       strassvr(name, na[i]);
       idtype := realptr;
@@ -8621,7 +8607,7 @@ procedure inittables;
     rop[5] := inop; rop[10] := idiv; rop[11] := imod;
     rop[6] := orop; rop[13] := andop;
     for i := ordminchar to ordmaxchar do
-      sop[chr(i)] := noop;
+      sop[Chr(i)] := noop;
     sop['+'] := plus; sop['-'] := minus; sop['*'] := mul; sop['/'] := rdiv;
     sop['='] := eqop; sop['<'] := ltop;  sop['>'] := gtop;
   end { rators };
@@ -8681,7 +8667,7 @@ procedure inittables;
     i: Integer;
   begin
     for i := ordminchar to ordmaxchar do
-      chartp[chr(i)] := illegal;
+      chartp[Chr(i)] := illegal;
     chartp['a'] := letter  ;
     chartp['b'] := letter  ; chartp['c'] := letter  ;
     chartp['d'] := letter  ; chartp['e'] := letter  ;
@@ -8891,17 +8877,18 @@ begin
   if (not TFile.Exists(SrcFile)) or
     FindCmdLineSwitch('?', ['-', '/'], True) or
     FindCmdLineSwitch('-help', ['-'], True) then
-    begin
-      Writeln('PCOM [+T | -T] [+L | -L] [+D | -D] [+C | -C] [filename]');
-      Writeln;
-      Writeln(' +   Turn on the option.');
-      Writeln(' -   Turn off the option.');
-      Writeln(' T   Print internal tables after each routine is compiled. (Default: Off)');
-      Writeln(' L   List the source program during compilation. (Default: On)');
-      Writeln(' D   Add extra code to check array bounds, subranges, etc. (Default: On)');
-      Writeln(' C   Output intermediate code. (Default: On)');
-      Exit;
-    end;
+  begin
+    Write(TPath.GetFileNameWithoutExtension(ParamStr(0)));
+    Writeln(' [+T | -T] [+L | -L] [+D | -D] [+C | -C] [filename]');
+    Writeln;
+    Writeln(' +   Turn on the option.');
+    Writeln(' -   Turn off the option.');
+    Writeln(' T   Print internal tables after each routine is compiled. (Default: Off)');
+    Writeln(' L   List the source program during compilation. (Default: On)');
+    Writeln(' D   Add extra code to check array bounds, subranges, etc. (Default: On)');
+    Writeln(' C   Output intermediate code. (Default: On)');
+    Exit;
+  end;
 
   AssignFile(prd, SrcFile);
   AssignFile(prr, DstFile);
@@ -8967,26 +8954,26 @@ begin
       prcode := False;
 
     if prcode then
-      begin
-        { Write generator comment }
-        Writeln(prr, 'i');
-        Writeln(prr,
-          'i Pascal intermediate file Generated by P5 Pascal compiler vs. ',
-          majorver: 1, '.', minorver: 1);
-        Writeln(prr, 'i');
+    begin
+      { Write generator comment }
+      Writeln(prr, 'i');
+      Writeln(prr,
+        'i Pascal intermediate file Generated by P5 Pascal compiler vs. ',
+        majorver: 1, '.', minorver: 1);
+      Writeln(prr, 'i');
 
-        { Write initial option values }
-        Write(prr, 'o ');
-        for c := 'a' to 'z' do
-        begin
-          Write(prr, c);
-          if option[c] then
-            Write(prr, '+')
-          else
-            Write(prr, '-')
-        end;
-        Writeln(prr);
+      { Write initial option values }
+      Write(prr, 'o ');
+      for c := 'a' to 'z' do
+      begin
+        Write(prr, c);
+        if option[c] then
+          Write(prr, '+')
+        else
+          Write(prr, '-')
       end;
+      Writeln(prr);
+    end;
 
     insymbol;
     programme(blockbegsys + statbegsys - [casesy]);

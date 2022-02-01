@@ -108,7 +108,7 @@ program pcode(input, output, prd, prr);
 {$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
 
 uses
-  System.SysUtils, System.Math, System.IOUtils;
+  System.SysUtils, System.IOUtils, uPCommon;
 
 const
 
@@ -272,8 +272,6 @@ const
   minorver   = 3; { minor version number }
   experiment = False; { is version experimental? }
 
-  p5temp     = 'P5TMP';
-
 type
   { These equates define the instruction layout. I have choosen a 32 bit
     layout for the instructions defined by (4 bit) digit:
@@ -289,152 +287,70 @@ type
   instyp      = 0..maxins;  { instruction }
   address     = -maxstr..maxstr; { address }
 
-  beta        = packed array[1..25] of Char; { error message }
+  beta        = packed array [1..25] of Char; { error message }
   settype     = set of setlow..sethigh;
   alfainx     = 1..maxalfa; { index for alfa type }
-  alfa        = packed array[alfainx] of Char;
+  alfa        = packed array [alfainx] of Char;
   Byte        = 0..255; { 8-bit Byte }
   bytfil      = packed file of Byte; { untyped file of bytes }
   fileno      = 0..maxfil; { logical file number }
 
 var
-  pc          : address;   { program address register }
-  pctop,lsttop: address;   { top of code store }
-  gbtop, gbsiz: address;   { top of globals, size of globals }
-  gbset       : Boolean;   { global size was set }
-  op : instyp; p : lvltyp; q : address;  { instruction register }
-  q1: address; { extra parameter }
-  store       : packed array [0..maxstr] of Byte; { complete program storage }
-  storedef    : packed array [0..maxdef] of Byte; { defined bits }
-  sdi         : 0..maxdef; { index for that }
-  cp          : address;  {  pointer to next free constant position  }
-  mp,sp,np,ep : address;  {  address registers  }
+  pc            : address;   { program address register }
+  pctop, lsttop : address;   { top of code store }
+  gbtop, gbsiz  : address;   { top of globals, size of globals }
+  gbset         : Boolean;   { global size was set }
+  op            : instyp;
+  p             : lvltyp;
+  q             : address;   { instruction register }
+  q1            : address;   { extra parameter }
+  store         : packed array [0..maxstr] of Byte; { complete program storage }
+  storedef      : packed array [0..maxdef] of Byte; { defined bits }
+  sdi           : 0..maxdef; { index for that }
+  cp            : address;   {  pointer to next free constant position  }
+  mp, sp, np, ep: address;   {  address registers  }
   { mp  points to beginning of a data segment
     sp  points to top of the stack
     ep  points to the maximum extent of the stack
     np  points to top of the dynamically allocated area }
-  bitmsk      : packed array [0..7] of Byte; { bits in Byte }
+  bitmsk        : packed array [0..7] of Byte; { bits in Byte }
 
-  interpreting: Boolean;
+  interpreting  : Boolean;
 
-  prd,prr     : Text; { prd for Read only, prr for Write only  }
+  prd, prr      : Text; { prd for Read only, prr for Write only  }
 
-  instr       : array[instyp] of alfa; {  mnemonic instruction codes  }
-  sptable     : array[0..maxsp] of alfa; { standard functions and procedures }
-  insp        : array[instyp] of Boolean; { instruction includes a p parameter }
-  insq        : array[instyp] of 0..16; { length of q parameter }
-  srclin      : Integer; { current source line executing }
-  option      : array ['a'..'z'] of Boolean; { option array }
+  instr         : array [instyp] of alfa; {  mnemonic instruction codes  }
+  sptable       : array [0..maxsp] of alfa; { standard functions and procedures }
+  insp          : array [instyp] of Boolean; { instruction includes a p parameter }
+  insq          : array [instyp] of 0..16; { length of q parameter }
+  srclin        : Integer; { current source line executing }
+  option        : array ['a'..'z'] of Boolean; { option array }
 
-  filtable    : array [1..maxfil] of Text; { general (temp) Text file holders }
-  nfiltable   : array [1..maxfil] of string;
+  filtable      : array [1..maxfil] of Text; { general (temp) Text file holders }
+  nfiltable     : array [1..maxfil] of string;
   { general (temp) binary file holders }
-  bfiltable   : array [1..maxfil] of bytfil;
+  bfiltable     : array [1..maxfil] of bytfil;
   { file state holding }
-  filstate    : array [1..maxfil] of (fclosed, fread, fwrite);
+  filstate      : array [1..maxfil] of (fclosed, fread, fwrite);
   { file buffer full status }
-  filbuff     : array [1..maxfil] of Boolean;
+  filbuff       : array [1..maxfil] of Boolean;
 
   { locally used for interpreting one instruction }
-  ad,ad1,ad2  : address;
-  b           : Boolean;
-  i,j,k,i1,i2 : Integer;
-  c           : Char;
-  i3, i4      : Integer;
-  r1, r2      : Real;
-  b1, b2      : Boolean;
-  s1, s2      : settype;
-  c1          : Char;
-  a1, a2, a3  : address;
-  pcs         : address;
-  bai         : Integer;
+  ad, ad1, ad2  : address;
+  b             : Boolean;
+  i,
+  j, k, i1, i2  : Integer;
+  c             : Char;
+  i3, i4        : Integer;
+  r1, r2        : Real;
+  b1, b2        : Boolean;
+  s1, s2        : settype;
+  c1            : Char;
+  a1, a2, a3    : address;
+  pcs           : address;
+  bai           : Integer;
 
   SrcFile, DstFile: string;
-
-{ ------------------------------------------------------------------------- }
-
-                           { for Delphi }
-
-{ ------------------------------------------------------------------------- }
-
-function CurrentChar(var F: Text): WideChar;
-begin
-  Eoln(F);
-  Result := WideChar((TTextRec(F).BufPtr + TTextRec(F).BufPos)^);
-end { CurrentChar };
-
-procedure AddEoln(var F: Text);
-begin
-  if (TTextRec(F).BufPtr + TTextRec(F).BufPos - 1)^ <> #$0A then
-    Writeln(F);
-end { AddEoln };
-
-function Mod2(a, n: Integer): Integer;
-begin
-  if n = 0 then
-    Result := a
-  else
-    Result := a - Floor(Extended(a / n)) * n;
-end { Mod2 };
-
-{$HINTS OFF}
-
-procedure Get(var F: Text);
-var
-  ch: Char;
-begin
-  Read(F, ch);
-end { Get };
-{$HINTS ON}
-
-procedure Page(var F: Text);
-begin
-  Write(F, #$0C);
-end { Page };
-
-procedure WriteBool(var F: Text; b: Boolean; w: Integer = 0);
-const
-  BOOLSTR: array[Boolean] of string = ('false', 'true');
-var
-  s: string;
-begin
-  s := BOOLSTR[b];
-  if w > 0 then
-  begin
-    if Length(s) < w then
-      s := StringOfChar(' ', w - (Length(s))) + s
-    else
-      s := Copy(s, 1, w);
-  end;
-  Write(F, s);
-end { WriteBool };
-
-procedure WriteReal(var F: Text; r: Real; w: Integer = 0);
-var
-  s: string;
-  w2: Integer;
-begin
-  if w < 8 then
-    w2 := 2
-  else
-    w2 := w - 6;
-  s := FloatToStrF(r, ffExponent, w2, 2);
-  if r >= 0 then
-    s := ' ' + s;
-  Write(F, s);
-end { WriteReal };
-
-procedure RemoveTempFile;
-begin
-for var
-  FileName in TDirectory.GetFiles(TPath.GetTempPath, p5temp + '*.*',
-    TSearchOption.soTopDirectoryOnly) do
-    try
-    TFile.Delete(FileName);
-  except
-    ;
-  end;
-end { RemoveTempFile };
 
 { -------------------------------------------------------------------- }
 
@@ -445,13 +361,13 @@ end { RemoveTempFile };
 procedure wrthex(v: Integer; { value } f: Integer { field });
 var
   p, i, d, t, n: Integer;
-  digits: packed array[1..8] of Char;
+  digits: packed array [1..8] of Char;
   function digit(d: Integer): Char;
   begin
     if d < 10 then
-      c := chr(d + ord('0'))
+      c := chr(d + Ord('0'))
     else
-      c := chr(d - 10 + ord('A'));
+      c := chr(d - 10 + Ord('A'));
     digit := c
   end;
 begin
@@ -479,7 +395,7 @@ end;
 procedure dmpmem(s, e: address);
 var
   i, x: Integer;
-  bs: array[1..16] of Byte;
+  bs: array [1..16] of Byte;
   f, l: Boolean;
   ba: address;
 begin
@@ -562,7 +478,7 @@ begin
   if dochkdef then
   begin
     b := storedef[a div 8]; { Get Byte }
-    r := odd(b div bitmsk[Mod2(a, 8)])
+    r := Odd(b div bitmsk[Mod2(a, 8)])
   end
   else
     r := True; { always set defined }
@@ -580,7 +496,7 @@ begin
   begin
     sb := storedef[a div 8]; { Get Byte }
     { test bit as is }
-    r := odd(sb div bitmsk[Mod2(a, 8)]);
+    r := Odd(sb div bitmsk[Mod2(a, 8)]);
     if r <> b then
     begin
       if b then
@@ -619,7 +535,7 @@ var
   r: record
        case Boolean of
          True: (i: Integer);
-         False: (b: packed array[1..intsize] of Byte);
+         False: (b: packed array [1..intsize] of Byte);
      end;
   i: 1..intsize;
 begin
@@ -635,7 +551,7 @@ var
   r: record
        case Boolean of
          True: (i: Integer);
-         False: (b: packed array[1..intsize] of Byte);
+         False: (b: packed array [1..intsize] of Byte);
      end;
   i: 1..intsize;
 begin
@@ -652,7 +568,7 @@ var
   r: record
        case Boolean of
          True: (r: Real);
-         False: (b: packed array[1..realsize] of Byte);
+         False: (b: packed array [1..realsize] of Byte);
      end;
   i: 1..realsize;
 begin
@@ -668,7 +584,7 @@ var
   r: record
        case Boolean of
          True: (r: Real);
-         False: (b: packed array[1..realsize] of Byte);
+         False: (b: packed array [1..realsize] of Byte);
      end;
   i: 1..realsize;
 begin
@@ -695,7 +611,7 @@ end { getbol };
 
 procedure putbol(a: address; b: Boolean);
 begin
-  store[a] := ord(b);
+  store[a] := Ord(b);
   putdef(a, True)
 end { putbol };
 
@@ -704,7 +620,7 @@ var
   r: record
        case Boolean of
          True: (s: settype);
-         False: (b: packed array[1..setsize] of Byte);
+         False: (b: packed array [1..setsize] of Byte);
      end;
   i: 1..setsize;
 begin
@@ -720,7 +636,7 @@ var
   r: record
        case Boolean of
          True: (s: settype);
-         False: (b: packed array[1..setsize] of Byte);
+         False: (b: packed array [1..setsize] of Byte);
      end;
   i: 1..setsize;
 begin
@@ -741,7 +657,7 @@ end { getchr };
 
 procedure putchr(a: address; c: Char);
 begin
-  store[a] := ord(c);
+  store[a] := Ord(c);
   putdef(a, True)
 end { putchr };
 
@@ -763,7 +679,7 @@ var
   r: record
        case Boolean of
          True: (a: address);
-         False: (b: packed array[1..adrsize] of Byte);
+         False: (b: packed array [1..adrsize] of Byte);
   end;
   i: 1..adrsize;
 begin
@@ -779,7 +695,7 @@ var
   r: record
        case Boolean of
          True: (a: address);
-         False: (b: packed array[1..adrsize] of Byte);
+         False: (b: packed array [1..adrsize] of Byte);
      end;
   i: 1..adrsize;
 begin
@@ -795,7 +711,7 @@ end { putadr };
 
 procedure swpstk(l: address);
 var
-  sb: packed array[1..maxsize] of Byte;
+  sb: packed array [1..maxsize] of Byte;
   p: address;
   i: 1..maxsize;
 begin
@@ -985,9 +901,9 @@ type
                st: labelst
              end;
 var
-  word: array[alfainx] of Char;
+  word: array [alfainx] of Char;
   ch: Char;
-  labeltab: array[labelrg] of labelrec;
+  labeltab: array [labelrg] of labelrec;
   labelvalue: address;
   iline: Integer; { line number of intermediate file }
 
@@ -1275,7 +1191,7 @@ var
     for i := 1 to maxfil do
       filstate[i] := fclosed;
 
-    reset(prd);
+    Reset(prd);
 
     iline := 1; { set 1st line of intermediate }
 
@@ -1328,11 +1244,11 @@ var
         begin
           ad := curr;
           op := store[ad]; { Get instruction }
-          q := getadr(ad + 1 + ord(insp[op]));
+          q := getadr(ad + 1 + Ord(insp[op]));
           succ := q; { Get target address from that }
           q := labelvalue; { place new target address }
           ad := curr;
-          putadr(ad + 1 + ord(insp[op]), q);
+          putadr(ad + 1 + Ord(insp[op]), q);
           if succ = -1 then
             endlist := True
           else
@@ -1469,7 +1385,7 @@ var
     s: settype;
     i, x, s1, lb, ub, l: Integer;
     c: Char;
-    str: packed array[1..stringlgth] of Char; { buffer for string constants }
+    str: packed array [1..stringlgth] of Char; { buffer for string constants }
     t: Integer; { [sam] temp for compiler bug }
 
     procedure lookup(x: labelrg); {  search in label table }
@@ -1566,9 +1482,9 @@ var
 
     case op of {  Get parameters p,q  }
 
-      { lod,str,lda,lip }
-      0, 193, 105, 106, 107, 108, 109, 195,
-        2, 70, 71, 72, 73, 74, 4, 120:
+      { lod, str, lda, lip }
+        0, 193, 105, 106, 107, 108, 109, 195,
+        2,  70,  71,  72,  73,  74,   4, 120:
         begin
           Read(prd, p, q);
           storeop;
@@ -1578,7 +1494,7 @@ var
 
       { [sam] There is a compiler bug with reads to restricted range
         variables in IP Pascal here. }
-      12 { cup }:
+       12 { cup }:
         begin
           Read(prd, t {p});
           p := t;
@@ -1588,35 +1504,31 @@ var
           storeq
         end;
 
-      11, 113 { mst,cip }:
+       11, 113 { mst,cip }:
         begin
           Read(prd, p);
           storeop;
           storep
         end;
 
-      { equm,neqm,geqm,grtm,leqm,lesm take a parameter }
+      { equm, neqm, geqm, grtm, leqm, lesm take a parameter }
       142, 148, 154, 160, 166, 172,
 
-      { lao,ixa,mov,dmp,swp }
-      5, 16, 55, 117, 118,
+      { lao, ixa, mov, dmp, swp }
+        5,  16,  55, 117, 118,
 
       { ldo,sro,ind,inc,dec,ckv }
-      1, 194, 196, 198, 65, 66, 67, 68, 69,
-        3, 75, 76, 77, 78, 79,
-        9, 85, 86, 87, 88, 89,
-        10, 90, 91, 92, 93, 94,
-        57, 100, 101, 102, 103, 104,
-        175, 176, 177, 178, 179, 180, 201, 202,
-        203:
+        1, 194, 196, 198,  65,  66,  67,  68,  69,   3,  75,  76,  77,  78,  79,
+        9,  85,  86,  87,  88,  89,  10,  90,  91,  92,  93,  94,  57, 100, 101,
+      102, 103, 104, 175, 176, 177, 178, 179, 180, 201, 202, 203:
         begin
           Read(prd, q);
           storeop;
           storeq
         end;
 
-      { pck,upk,cta,ivt }
-      63, 64, 191, 192:
+      { pck, upk, cta, ivt }
+       63, 64, 191, 192:
         begin
           Read(prd, q); Read(prd, q1);
           storeop;
@@ -1624,18 +1536,18 @@ var
           storeq1
         end;
 
-      { ujp,fjp,xjp,tjp }
-      23, 24, 25, 119,
+      { ujp, fjp, xjp, tjp }
+       23, 24, 25, 119,
 
-      { ents,ente }
-      13, 173:
+      { ents, ente }
+       13, 173:
         begin
           labelsearch;
           storeop;
           storeq
         end;
 
-      { ipj,lpa }
+      { ipj, lpa }
       112, 114:
         begin
           Read(prd, p);
@@ -1645,7 +1557,7 @@ var
           storeq
         end;
 
-      15 { csp }:
+       15 { csp }:
         begin
           skpspc;
           getname;
@@ -1663,7 +1575,7 @@ var
           pc := pc + 1
         end;
 
-      7, 123, 124, 125, 126, 127 { ldc }:
+        7, 123, 124, 125, 126, 127 { ldc }:
         begin
           case op of { Get q }
             123:
@@ -1709,7 +1621,7 @@ var
                   i := 0;
                   while CharInSet(ch, ['0'..'9']) do
                   begin
-                    i := i * 10 + ord(ch) - ord('0');
+                    i := i * 10 + Ord(ch) - Ord('0');
                     getnxt
                   end;
                   c := chr(i);
@@ -1823,38 +1735,34 @@ var
 
       14, 128, 129, 130, 131, 132, 204, { ret }
 
-      { equ,neq,geq,grt,leq,les with no parameter }
-      17, 137, 138, 139, 140, 141,
-        18, 143, 144, 145, 146, 147,
-        19, 149, 150, 151, 152, 153,
-        20, 155, 156, 157, 158, 159,
-        21, 161, 162, 163, 164, 165,
-        22, 167, 168, 169, 170, 171,
+      { equ, neq, geq, grt, leq, les with no parameter }
+       17, 137, 138, 139, 140, 141,  18, 143, 144, 145, 146, 147,  19, 149, 150,
+      151, 152, 153,  20, 155, 156, 157, 158, 159,  21, 161, 162, 163, 164, 165,
+       22, 167, 168, 169, 170, 171,
 
-      59, 133, 134, 135, 136, 200, { ord }
+       59, 133, 134, 135, 136, 200, { ord }
 
-      6, 80, 81, 82, 83, 84, 197, { sto }
+        6,  80,  81,  82,  83,  84, 197, { sto }
 
-      { Eof,adi,adr,sbi,sbr,sgs,flt,flo,trc,ngi,ngr,sqi,sqr,abi,abr,not,and,
-        ior,dif,int,uni,inn,mod,odd,mpi,mpr,dvi,dvr,stp,chr,rnd,rgs,fbv,
-        fvb }
-      27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
-        45, 46, 47,
-        48, 49, 50, 51, 52, 53, 54, 58, 60, 62, 110, 111,
-        115, 116,
+      { eof, adi, adr, sbi, sbr, sgs, flt, flo, trc, ngi, ngr, sqi, sqr, abi,
+        abr, not, and, ior, dif, int, uni, inn, mod, odd, mpi, mpr, dvi, dvr,
+        stp, chr, rnd, rgs, fbv, fvb }
+       27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,
+       42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  58,  60,
+       62, 110, 111, 115, 116,
 
       { dupi, dupa, dupr, dups, dupb, dupc, cks, cke, inv }
-      181, 182, 183, 184, 185, 186, 187, 188, 189: storeop;
+      181, 182, 183, 184, 185, 186, 187, 188, 189:
+        storeop;
 
       { ujc must have same length as ujp, so we output a dummy
         q argument }
-      61 { ujc }:
+       61 { ujc }:
         begin
           storeop;
           q := 0;
           storeq
         end
-
     end;
     getlin { next intermediate line }
   end; { assemble }
@@ -2242,7 +2150,7 @@ var
     i := 0; { clear initial value }
     while CharInSet(CurrentChar(f), ['0'..'9']) do
     begin { parse digit }
-      d := ord(CurrentChar(f)) - ord('0');
+      d := Ord(CurrentChar(f)) - Ord('0');
       if (i > maxint div 10) or
         ((i = maxint div 10) and (d > Mod2(maxint, 10))) then
         errori('Input value overflows    ');
@@ -2269,7 +2177,7 @@ var
       p := 1.0E+1; { set 1st power }
       t := 1.0; { initalize result }
       repeat
-        if odd(e) then
+        if Odd(e) then
           t := t * p; { if bit set, add this power }
         e := e div 2; { index next bit }
         p := sqr(p) { find next power }
@@ -2296,7 +2204,7 @@ var
       errori('Invalid real format      ');
     while CharInSet(CurrentChar(f), ['0'..'9']) do
     begin { parse digit }
-      d := ord(CurrentChar(f)) - ord('0');
+      d := Ord(CurrentChar(f)) - Ord('0');
       r := r * 10 + d; { add in new digit }
       Get(f)
     end;
@@ -2309,7 +2217,7 @@ var
           errori('Invalid real format      ');
         while CharInSet(CurrentChar(f), ['0'..'9']) do
         begin { parse digit }
-          d := ord(CurrentChar(f)) - ord('0');
+          d := Ord(CurrentChar(f)) - Ord('0');
           r := r * 10 + d; { add in new digit }
           Get(f);
           e := e - 1 { count off right of decimal }
@@ -2453,7 +2361,8 @@ begin { callsp }
                   errori('End of file              ');
                 Readln(prd)
               end;
-            prrfn: errori('Readln on prr file       ')
+            prrfn:
+              errori('Readln on prr file       ')
           end
         else
         begin
@@ -2554,9 +2463,9 @@ begin { callsp }
         if fn <= prrfn then
           case fn of
             inputfn:
-              pshint(ord(Eof(input)));
+              pshint(Ord(Eof(input)));
             prdfn:
-              pshint(ord(Eof(prd)));
+              pshint(Ord(Eof(prd)));
             outputfn,
             prrfn:
                 errori('Eof test on output file  ')
@@ -2564,9 +2473,9 @@ begin { callsp }
         else
         begin
           if filstate[fn] = fwrite then
-            pshint(ord(True))
+            pshint(Ord(True))
           else if filstate[fn] = fread then
-            pshint(ord(Eof(filtable[fn]) and not filbuff[fn]))
+            pshint(Ord(Eof(filtable[fn]) and not filbuff[fn]))
           else
             errori('File is not open         ')
         end
@@ -2577,7 +2486,7 @@ begin { callsp }
         valfilrm(ad);
         fn := store[ad];
         { Eof is file Eof, and buffer not full }
-        pshint(ord(Eof(bfiltable[fn]) and not filbuff[fn]))
+        pshint(Ord(Eof(bfiltable[fn]) and not filbuff[fn]))
       end;
     7 { eln }:
       begin
@@ -2602,7 +2511,7 @@ begin { callsp }
             errori('File not in read mode    ');
           line := eoln(filtable[fn])
         end;
-        pshint(ord(line))
+        pshint(Ord(line))
       end;
     8 { wri }:
       begin
@@ -2835,7 +2744,7 @@ begin { callsp }
             inputfn:
               begin
                 readc(input, c);
-                if (ord(c) < mn) or (ord(c) > mx) then
+                if (Ord(c) < mn) or (Ord(c) > mx) then
                   errori('Value read out of range  ');
                 putchr(ad1, c)
               end;
@@ -2844,7 +2753,7 @@ begin { callsp }
             prdfn:
               begin
                 readc(prd, c);
-                if (ord(c) < mn) or (ord(c) > mx) then
+                if (Ord(c) < mn) or (Ord(c) > mx) then
                   errori('Value read out of range  ');
                 putchr(ad1, c)
               end;
@@ -2855,7 +2764,7 @@ begin { callsp }
           if filstate[fn] <> fread then
             errori('File not in read mode    ');
           readc(filtable[fn], c);
-          if (ord(c) < mn) or (ord(c) > mx) then
+          if (Ord(c) < mn) or (Ord(c) > mx) then
             errori('Value read out of range  ');
           putchr(ad1, c)
         end
@@ -2931,7 +2840,7 @@ begin { callsp }
             outputfn:
               errori('Reset on output file     ');
             prdfn:
-              reset(prd);
+              Reset(prd);
             prrfn:
               errori('Reset on prr file        ')
           end
@@ -2948,12 +2857,11 @@ begin { callsp }
           end;
           filstate[fn] := fread;
           if nfiltable[fn] = '' then
-            FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp +
-              '%.3d.TXT', [fn - 4]))
+            FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp + '%.3d.TXT', [fn - 4]))
           else
             FileName := nfiltable[fn];
           AssignFile(filtable[fn], FileName);
-          reset(filtable[fn]);
+          Reset(filtable[fn]);
           filbuff[fn] := False
         end
       end;
@@ -2971,7 +2879,7 @@ begin { callsp }
             prdfn:
               errori('Rewrite on prd file      ');
             prrfn:
-              rewrite(prr)
+              Rewrite(prr)
           end
         else
         begin
@@ -2986,12 +2894,11 @@ begin { callsp }
           end;
           filstate[fn] := fwrite;
           if nfiltable[fn] = '' then
-            FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp +
-              '%.3d.TXT', [fn - 4]))
+            FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp + '%.3d.TXT', [fn - 4]))
           else
             FileName := nfiltable[fn];
           AssignFile(filtable[fn], FileName);
-          rewrite(filtable[fn])
+          Rewrite(filtable[fn])
         end
       end;
     24 { wrb }:
@@ -3206,12 +3113,11 @@ begin { callsp }
           errori('Cannot reset closed file ');
         filstate[fn] := fread;
         if nfiltable[fn] = '' then
-          FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp +
-            '%.3d.BIN', [fn - 4]))
+          FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp + '%.3d.BIN', [fn - 4]))
         else
           FileName := nfiltable[fn];
         AssignFile(bfiltable[fn], FileName);
-        reset(bfiltable[fn]);
+        Reset(bfiltable[fn]);
         filbuff[fn] := False
       end;
     34 { rwb }:
@@ -3221,12 +3127,11 @@ begin { callsp }
         fn := store[ad];
         filstate[fn] := fwrite;
         if nfiltable[fn] = '' then
-          FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp +
-            '%.3d.BIN', [fn - 4]))
+          FileName := TPath.Combine(TPath.GetTempPath, Format(p5temp + '%.3d.BIN', [fn - 4]))
         else
           FileName := nfiltable[fn];
         AssignFile(bfiltable[fn], FileName);
-        rewrite(bfiltable[fn]);
+        Rewrite(bfiltable[fn]);
         filbuff[fn] := False
       end;
     35 { gbf }:
@@ -3320,15 +3225,16 @@ begin {  main  }
   if (not TFile.Exists(SrcFile)) or
     FindCmdLineSwitch('?', ['-', '/'], True) or
     FindCmdLineSwitch('-help', ['-'], True) then
-    begin
-      Writeln('PINT [filename]');
-      Exit;
-    end;
+  begin
+    Write(TPath.GetFileNameWithoutExtension(ParamStr(0)));
+    Writeln(' [filename]');
+    Exit;
+  end;
 
   AssignFile(prd, SrcFile);
   AssignFile(prr, DstFile);
   try
-    rewrite(prr);
+    Rewrite(prr);
 
     { construct bit equivalence table }
     i := 1;
@@ -3418,13 +3324,13 @@ begin {  main  }
           begin
             getp;
             getq;
-            pshint(ord(getbol(base(p) + q)))
+            pshint(Ord(getbol(base(p) + q)))
           end;
         109 { lodc }:
           begin
             getp;
             getq;
-            pshint(ord(getchr(base(p) + q)))
+            pshint(Ord(getchr(base(p) + q)))
           end;
 
           1 { ldoi }:
@@ -3456,12 +3362,12 @@ begin {  main  }
          68 { ldob }:
           begin
             getq;
-            pshint(ord(getbol(pctop + q)))
+            pshint(Ord(getbol(pctop + q)))
           end;
          69 { ldoc }:
           begin
             getq;
-            pshint(ord(getchr(pctop + q)))
+            pshint(Ord(getchr(pctop + q)))
           end;
 
           2 { stri }:
@@ -3620,12 +3526,12 @@ begin {  main  }
 
         127 { ldcc }:
           begin
-            pshint(ord(getchr(pc)));
+            pshint(Ord(getchr(pc)));
             pc := pc + 1
           end;
         126 { ldcb }:
           begin
-            pshint(ord(getbol(pc)));
+            pshint(Ord(getbol(pc)));
             pc := pc + 1
           end;
         123 { ldci }:
@@ -3683,13 +3589,13 @@ begin {  main  }
           begin
             getq;
             popadr(ad);
-            pshint(ord(getbol(ad + q)))
+            pshint(Ord(getbol(ad + q)))
           end;
          89 { indc }:
           begin
             getq;
             popadr(ad);
-            pshint(ord(getchr(ad + q)))
+            pshint(Ord(getchr(ad + q)))
           end;
 
          93 { incb },
@@ -3717,7 +3623,7 @@ begin {  main  }
             { p=level of calling procedure minus level of called
               procedure + 1;  set dl and sl, decrement sp }
             {  then length of this element is
-              max(intsize,realsize,boolsize,charsize,ptrsize  }
+              max(intsize, realsize, boolsize, charsize, ptrsize  }
             getp;
             ad := sp; { save mark base }
             { allocate mark }
@@ -3784,7 +3690,7 @@ begin {  main  }
             if sp <> getadr(mp + marksb) then
               errori('Stack balance            ');
             putint(mp + markfv + maxresult div 2,
-              ord(getchr(mp + markfv + maxresult div 2)));
+              Ord(getchr(mp + markfv + maxresult div 2)));
             { set stack below function result }
             sp := mp + markfv + maxresult div 2;
             pc := getadr(mp + markra);
@@ -3796,7 +3702,7 @@ begin {  main  }
             if sp <> getadr(mp + marksb) then
               errori('Stack balance            ');
             putint(mp + markfv + maxresult div 2,
-              ord(getbol(mp + markfv + maxresult div 2)));
+              Ord(getbol(mp + markfv + maxresult div 2)));
             { set stack below function result }
             sp := mp + markfv + maxresult div 2;
             pc := getadr(mp + markra);
@@ -3853,7 +3759,7 @@ begin {  main  }
           begin
             popadr(a2);
             popadr(a1);
-            pshint(ord(a1 = a2))
+            pshint(Ord(a1 = a2))
           end;
         139 { equb },
         141 { equc },
@@ -3861,32 +3767,32 @@ begin {  main  }
           begin
             popint(i2);
             popint(i1);
-            pshint(ord(i1 = i2))
+            pshint(Ord(i1 = i2))
           end;
         138 { equr }:
           begin
             poprel(r2);
             poprel(r1);
-            pshint(ord(r1 = r2))
+            pshint(Ord(r1 = r2))
           end;
         140 { equs }:
           begin
             popset(s2);
             popset(s1);
-            pshint(ord(s1 = s2))
+            pshint(Ord(s1 = s2))
           end;
         142 { equm }:
           begin
             getq;
             compare;
-            pshint(ord(b))
+            pshint(Ord(b))
           end;
 
          18 { neqa }:
           begin
             popadr(a2);
             popadr(a1);
-            pshint(ord(a1 <> a2))
+            pshint(Ord(a1 <> a2))
           end;
         145 { neqb },
         147 { neqc },
@@ -3894,25 +3800,25 @@ begin {  main  }
           begin
             popint(i2);
             popint(i1);
-            pshint(ord(i1 <> i2))
+            pshint(Ord(i1 <> i2))
           end;
         144 { neqr }:
           begin
             poprel(r2);
             poprel(r1);
-            pshint(ord(r1 <> r2))
+            pshint(Ord(r1 <> r2))
           end;
         146 { neqs }:
           begin
             popset(s2);
             popset(s1);
-            pshint(ord(s1 <> s2))
+            pshint(Ord(s1 <> s2))
           end;
         148 { neqm }:
           begin
             getq;
             compare;
-            pshint(ord(not b))
+            pshint(Ord(not b))
           end;
 
         151 { geqb },
@@ -3921,25 +3827,25 @@ begin {  main  }
           begin
             popint(i2);
             popint(i1);
-            pshint(ord(i1 >= i2))
+            pshint(Ord(i1 >= i2))
           end;
         150 { geqr }:
           begin
             poprel(r2);
             poprel(r1);
-            pshint(ord(r1 >= r2))
+            pshint(Ord(r1 >= r2))
           end;
         152 { geqs }:
           begin
             popset(s2);
             popset(s1);
-            pshint(ord(s1 >= s2))
+            pshint(Ord(s1 >= s2))
           end;
         154 { geqm }:
           begin
             getq;
             compare;
-            pshint(ord(b or (store[a1 + i] >= store[a2 + i])))
+            pshint(Ord(b or (store[a1 + i] >= store[a2 + i])))
           end;
 
         157 { grtb },
@@ -3948,20 +3854,20 @@ begin {  main  }
           begin
             popint(i2);
             popint(i1);
-            pshint(ord(i1 > i2))
+            pshint(Ord(i1 > i2))
           end;
         156 { grtr }:
           begin
             poprel(r2);
             poprel(r1);
-            pshint(ord(r1 > r2))
+            pshint(Ord(r1 > r2))
           end;
         158 { grts }: errori('set inclusion            ');
         160 { grtm }:
           begin
             getq;
             compare;
-            pshint(ord(not b and (store[a1 + i] > store[a2 + i])))
+            pshint(Ord(not b and (store[a1 + i] > store[a2 + i])))
           end;
 
         163 { leqb },
@@ -3970,25 +3876,25 @@ begin {  main  }
           begin
             popint(i2);
             popint(i1);
-            pshint(ord(i1 <= i2))
+            pshint(Ord(i1 <= i2))
           end;
         162 { leqr }:
           begin
             poprel(r2);
             poprel(r1);
-            pshint(ord(r1 <= r2))
+            pshint(Ord(r1 <= r2))
           end;
         164 { leqs }:
           begin
             popset(s2);
             popset(s1);
-            pshint(ord(s1 <= s2))
+            pshint(Ord(s1 <= s2))
           end;
         166 { leqm }:
           begin
             getq;
             compare;
-            pshint(ord(b or (store[a1 + i] <= store[a2 + i])))
+            pshint(Ord(b or (store[a1 + i] <= store[a2 + i])))
           end;
 
         169 { lesb },
@@ -3997,20 +3903,20 @@ begin {  main  }
           begin
             popint(i2);
             popint(i1);
-            pshint(ord(i1 < i2))
+            pshint(Ord(i1 < i2))
           end;
         168 { lesr }:
           begin
             poprel(r2);
             poprel(r1);
-            pshint(ord(r1 < r2))
+            pshint(Ord(r1 < r2))
           end;
         170 { less }: errori('Set inclusion            ');
         172 { lesm }:
           begin
             getq;
             compare;
-            pshint(ord(not b and (store[a1 + i] < store[a2 + i])))
+            pshint(Ord(not b and (store[a1 + i] < store[a2 + i])))
           end;
 
          23 { ujp }:
@@ -4095,7 +4001,7 @@ begin {  main  }
             popint(i2);
             popint(i1);
             pshint(i1);
-            pshint(ord((i1 = q) or (i2 <> 0)));
+            pshint(Ord((i1 = q) or (i2 <> 0)));
           end;
         188 { cke }:
           begin
@@ -4237,7 +4143,7 @@ begin {  main  }
           begin
             popint(i1);
             b1 := i1 <> 0;
-            pshint(ord(not b1))
+            pshint(Ord(not b1))
           end;
          43 { and }:
           begin
@@ -4245,7 +4151,7 @@ begin {  main  }
             b2 := i2 <> 0;
             popint(i1);
             b1 := i1 <> 0;
-            pshint(ord(b1 and b2))
+            pshint(Ord(b1 and b2))
           end;
          44 { ior }:
           begin
@@ -4253,7 +4159,7 @@ begin {  main  }
             b2 := i2 <> 0;
             popint(i1);
             b1 := i1 <> 0;
-            pshint(ord(b1 or b2))
+            pshint(Ord(b1 or b2))
           end;
          45 { dif }:
           begin
@@ -4277,7 +4183,7 @@ begin {  main  }
           begin
             popset(s1);
             popint(i1);
-            pshint(ord(i1 in s1))
+            pshint(Ord(i1 in s1))
           end;
          49 { mod }:
           begin
@@ -4288,10 +4194,10 @@ begin {  main  }
                 errori('Invalid divisor in mod   ');
             pshint(Mod2(i1, i2))
           end;
-         50 { odd }:
+         50 { Odd }:
           begin
             popint(i1);
-            pshint(ord(odd(i1)))
+            pshint(Ord(Odd(i1)))
           end;
          51 { mpi }:
           begin
@@ -4366,7 +4272,7 @@ begin {  main  }
         136 { ordc },
         200 { ordx },
          59 { ordi }:
-          ; { ord is a no-op }
+          ; { Ord is a no-op }
 
          60 { chr }:
           ; { chr is a no-op }
@@ -4542,7 +4448,6 @@ begin {  main  }
         239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252,
         253, 254, 255:
           errori('Illegal instruction      ');
-
       end
     end; { while interpreting }
 
