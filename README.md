@@ -35,6 +35,6 @@ end.
 ### Command-line parameter
 
 ```
-PCOM  [+T | -T] [+L | -L] [+D | -D] [+C | -C] [Pascal file (*.pas)]
+PCOM [+T | -T] [+L | -L] [+D | -D] [+C | -C] [Pascal file (*.pas)]
 PINT [Intermediate file (*.p5)]
 ```
