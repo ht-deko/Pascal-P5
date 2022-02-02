@@ -102,9 +102,9 @@
 * or record, and were effectively treated as constants. To treat them as True  *
 * variable accesses, the stacking order of the file in all file subroutines    *
 * was changed so that the file is on the bottom. This matches the source       *
-* order of the file in Write(f, ...) or Read(f, ...). Also, the file           *
-* operations now leave the file on the stack for the duration of a Write or    *
-* Read, then dump them using a specific New instruction "dmp". This allows     *
+* order of the file in write(f, ...) or read(f, ...). Also, the file           *
+* operations now leave the file on the stack for the duration of a write or    *
+* read, then dump them using a specific New instruction "dmp". This allows     *
 * multiparameter writes and reads to be effectively a chain of single          *
 * operations using one file reference. Finally, files were tied to the type    *
 * ending 'a', because files are now full variable references.                  *
@@ -224,7 +224,7 @@ const
   prtlln     = 10;   { number of label characters to print in dumps }
   varmax     = 1000; { maximum number of logical variants to track }
 
-  { default field sizes for Write }
+  { default field sizes for write }
   intdeff    = 11; { default field length for integer }
   reldeff    = 22; { default field length for real }
   chrdeff    = 1;  { default field length for char (usually 1) }
@@ -451,13 +451,13 @@ type
     sl: Integer
   end;
 
-  { Subrange Char }
+  { subrange char }
   subchar = Chr(ordminchar)..Chr(ordmaxchar);
 
 { ------------------------------------------------------------------------- }
 
 var
-  prd, prr: text;                 { Output code file }
+  prd, prr: Text;                 { output code file }
 
                                   { returned by source program scanner
                                    insymbol:
@@ -606,7 +606,7 @@ var
   errtbl: array [1..500] of Boolean; { error occrence tracking }
   toterr: Integer; { total errors in program }
 
-  { Recycling tracking counters, used to check for New/Dispose mismatches. }
+  { Recycling tracking counters, used to check for new/dispose mismatches. }
   strcnt: Integer; { strings }
   cspcnt: Integer; { constants }
   stpcnt: Integer; { structures }
@@ -637,7 +637,7 @@ var
 
 procedure getstr(var p: strvsp);
 begin
-  New(p); { get New entry }
+  New(p); { get new entry }
   strcnt := strcnt + 1 { count }
 end { getstr };
 
@@ -660,7 +660,7 @@ end { putstrs };
 
 procedure getlab(var p: lbp);
 begin
-  New(p); { get New entry }
+  New(p); { get new entry }
   lbpcnt := lbpcnt + 1 { add to count }
 end { getlab };
 
@@ -814,22 +814,22 @@ var
   end { putsub };
   
 begin
-  putnams(display[l].fname); { Dispose of identifier tree }
-  { Dispose of label list }
+  putnams(display[l].fname); { dispose of identifier tree }
+  { dispose of label list }
   while display[l].flabel <> nil do
   begin
     llp := display[l].flabel;
     display[l].flabel := llp^.nextlab;
     putlab(llp)
   end;
-  { Dispose of constant list }
+  { dispose of constant list }
   while display[l].fconst <> nil do
   begin
     lvp := display[l].fconst;
     display[l].fconst := lvp^.next;
     putcst(lvp)
   end;
-  { Dispose of structure list }
+  { dispose of structure list }
   while display[l].fstruct <> nil do
   begin
     { remove top from list }
@@ -837,7 +837,7 @@ begin
     display[l].fstruct := lsp^.next;
     putsub(lsp)
   end
-end { putdsp }; 
+end { putdsp };
 
 { scrub all display levels until given }
 
@@ -862,7 +862,7 @@ end { putdsps };
 
 procedure getfil(var p: extfilep);
 begin
-  New(p); { get New entry }
+  New(p); { get new entry }
   filcnt := filcnt + 1 { count entry }
 end { getfil };
 
@@ -878,7 +878,7 @@ end { putfil };
 
 procedure getcas(var p: cip);
 begin
-  New(p); { get New entry }
+  New(p); { get new entry }
   cipcnt := cipcnt + 1 { count entry }
 end { getcas };
 
@@ -894,7 +894,7 @@ end { putcas };
 
 procedure gettag(var p: ttp);
 begin
-  New(p); { get New entry }
+  New(p); { get new entry }
   ttpcnt := ttpcnt + 1 { count entry }
 end { gettag };
 
@@ -912,7 +912,7 @@ procedure pshwth(sl: Integer);
 var
   p: wtp;
 begin
-  New(p); { get a New entry }
+  New(p); { get a new entry }
   p^.next := wthstk; { push to stack }
   wthstk := p;
   p^.sl := sl; { mark level }
@@ -972,7 +972,7 @@ begin
   strequri := m
 end { strequri };
 
-{ Write variable length id string to Output }
+{ write variable length id string to output }
 
 procedure writev(var f: text; s: strvsp; fl: Integer);
 var
@@ -1485,7 +1485,7 @@ procedure endofline;
 var
   lastpos, freepos, currpos, currnmr, f, k: Integer;
 begin
-  if errinx > 0 then { Output error messages }
+  if errinx > 0 then { output error messages }
   begin
     Write(Output, linecount: 6, ' ****  ': 9);
     lastpos := -1;
@@ -1542,7 +1542,7 @@ begin
     Write(Output, ' ')
   end;
   {$ENDIF}
-  { Output line marker in intermediate file }
+  { output line marker in intermediate file }
   if not Eof(prd) then
     markline;
   chcnt := 0
@@ -1754,7 +1754,7 @@ begin
 end { error };
 
 procedure insymbol;
-{ Read next basic symbol of source program and return its
+{ read next basic symbol of source program and return its
 description in the global variables sy, op, id, val and lgth }
 var
   i, k, ks: Integer;
@@ -3335,7 +3335,7 @@ var
   lsy: symbol;
   stalvl: Integer; { statement nesting level }
 
-  { check Integer or subrange of }
+  { check integer or subrange of }
   function intt(fsp: stp): Boolean;
   var
     t: stp;
@@ -3468,7 +3468,7 @@ var
   function comptypes(fsp1, fsp2: stp): Boolean;
     { decide whether structures pointed at by fsp1 and fsp2 are compatible }
   begin
-    comptypes := False; { set default is False }
+    comptypes := False; { set default is false }
     { remove any subranges }
     fsp1 := basetype(fsp1);
     fsp2 := basetype(fsp2);
@@ -4200,7 +4200,7 @@ var
             if lsp^.varts > varmax then
               lsp^.varts := varmax
           end;
-          { Output LVN table }
+          { output LVN table }
           if prcode then
             Write(prr, 'v ');
           genlabel(lcp^.vartl);
@@ -5514,7 +5514,7 @@ var
                   if prcode then
                   begin  
                     if chartp[Chr(fp2)] = illegal then
-                      { Output illegal characters as numbers }
+                      { output illegal characters as numbers }
                       Writeln(prr, 'c  ': 3, fp2: 1)
                     else
                       Writeln(prr, 'c ''': 3, Chr(fp2), '''');
@@ -8459,7 +8459,7 @@ var
           dplmt := 0;
           packing := False
         end;
-        typind := 'i'; {  default to Integer [sam]  }
+        typind := 'i'; {  default to integer [sam]  }
         if sy = ident then
         begin
           searchid([vars], lcp);
@@ -8731,7 +8731,7 @@ var
               { Label referenced by goto at lesser statement level or
                 differently nested statement }
               error(186);
-            putlabel(labname); { Output label to intermediate }
+            putlabel(labname); { output label to intermediate }
             markline
           end
         else
@@ -8897,7 +8897,7 @@ var
         error(500); { stack should have wound to zero } // debug
     if fprocp <> nil then
     begin
-      { Output var block ends for each var parameter }
+      { output var block ends for each var parameter }
       lcp := fprocp^.pflist;
       while lcp <> nil do
         with lcp^ do
@@ -9169,7 +9169,7 @@ begin
                                                            { **************** }
 
   New(intptr);
-  pshstc(intptr);                                        { Integer }
+  pshstc(intptr);                                        { integer }
   with intptr^ do
   begin
     form := scalar;
@@ -9243,7 +9243,7 @@ begin
                                                             { ***** }
 
   New(cp);
-  ininam(cp);                                            { Integer }
+  ininam(cp);                                            { integer }
   with cp^ do
   begin
     klass := types;
@@ -9261,7 +9261,7 @@ begin
   end;
   enterid(cp);
   New(cp);
-  ininam(cp);                                            { Char }
+  ininam(cp);                                            { char }
   with cp^ do
   begin
     klass := types;
@@ -9270,7 +9270,7 @@ begin
   end;
   enterid(cp);
   New(cp);
-  ininam(cp);                                            { Boolean }
+  ininam(cp);                                            { boolean }
   with cp^ do
   begin
     klass := types;
@@ -9292,7 +9292,7 @@ begin
   for i := 1 to 2 do
   begin
     New(cp);
-    ininam(cp);                                          { False, True }
+    ininam(cp);                                          { false, true }
     with cp^ do
     begin
       klass := konst;
@@ -9309,7 +9309,7 @@ begin
   for i := 3 to 4 do
   begin
     New(cp);
-    ininam(cp);                                          { input, Output }
+    ininam(cp);                                          { input, output }
     with cp^ do
     begin
       klass := vars;
@@ -9353,15 +9353,15 @@ begin
     begin
       New(cp);
       ininam(cp);                                        { get, put, reset }
-      with cp^ do                                        { rewrite, Read }
+      with cp^ do                                        { rewrite, read }
       begin
         klass := proc;
-        pfdeckind := standard;                           { Write, pack }
+        pfdeckind := standard;                           { write, pack }
         strassvr(name, na[i]);
-        idtype := nil;                                   { unpack, New }
+        idtype := nil;                                   { unpack, new }
         pflist := nil;
         next := nil;
-        key := i - 4                                     { readln, Writeln }
+        key := i - 4                                     { readln, writeln }
       end;
       enterid(cp)
     end;
@@ -9663,7 +9663,7 @@ procedure inittables;
     sna[13] :=' rst'; sna[14] :=' eln'; sna[15] :=' sin'; sna[16] :=' cos';
     sna[17] :=' exp'; sna[18] :=' sqt'; sna[19] :=' log'; sna[20] :=' atn';
     sna[21] :=' rln'; sna[22] :=' wln'; sna[23] :=' sav';
-    { New procedure/function memonics for p5 }
+    { new procedure/function memonics for p5 }
     sna[24] :=' pag'; sna[25] :=' rsf'; sna[26] :=' rwf'; sna[27] :=' wrb';
     sna[28] :=' wrf'; sna[29] :=' dsp'; sna[30] :=' wbf'; sna[31] :=' wbi';
     sna[32] :=' wbr'; sna[33] :=' wbc'; sna[34] :=' wbb'; sna[35] :=' rbf';
@@ -9692,7 +9692,7 @@ procedure inittables;
     mn[52] :=' leq'; mn[53] :=' les'; mn[54] :=' lod'; mn[55] :=' neq';
     mn[56] :=' str'; mn[57] :=' ujp'; mn[58] :=' ord'; mn[59] :=' chr';
     mn[60] :=' ujc';
-    { New instruction memonics for p5 }
+    { new instruction memonics for p5 }
     mn[61] :=' rnd'; mn[62] :=' pck'; mn[63] :=' upk'; mn[64] :=' rgs';
     mn[65] :=' cvb'; mn[66] :=' ipj'; mn[67] :=' cip'; mn[68] :=' lpa';
     mn[69] :=' vbs'; mn[70] :=' vbe'; mn[71] :=' dmp'; mn[72] :=' swp';
@@ -9978,7 +9978,7 @@ begin
     { ******** }
 
     Reset(prd);
-    Rewrite(prr); { open Output file }
+    Rewrite(prr); { open output file }
 
     if FindCmdLineSwitch('T', ['+'], True) then
       prtables := True;
@@ -9999,13 +9999,13 @@ begin
 
     if prcode then
     begin
-      { Write generator comment }
+      { write generator comment }
       Writeln(prr, '!');
       Writeln(prr, '! Pascal intermediate file Generated by P5 Pascal compiler vs. ',
         majorver: 1, '.', minorver: 1);
       Writeln(prr, '!');
 
-      { Write initial option values }
+      { write initial option values }
       Write(prr, 'o ');
       for c := 'a' to 'z' do
         if not CharInSet(c, 
@@ -10022,7 +10022,7 @@ begin
     insymbol;
     programme(blockbegsys + statbegsys);
 
-    { Dispose of levels 0 and 1 }
+    { dispose of levels 0 and 1 }
     putdsp(1);
     putdsp(0);
 
@@ -10031,7 +10031,7 @@ begin
 
     Writeln;
     Writeln('Errors in program: ', toterr: 1);
-    { Output error report as required }
+    { output error report as required }
     f := True;
     for i := 1 to 500 do
       if errtbl[i] then

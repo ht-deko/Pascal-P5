@@ -255,7 +255,7 @@ var
 
   interpreting: Boolean;
 
-  prd, prr    : Text; { prd for Read only, prr for Write only  }
+  prd, prr    : Text; { prd for read only, prr for write only  }
 
   instr       : array [instyp] of alfa; {  mnemonic instruction codes  }
   sptable     : array [0..maxsp] of alfa; { standard functions and procedures }
@@ -286,7 +286,7 @@ var
                               invokes dorecycl = False }
   dochkdef    : Boolean;    { check undefined accesses }
 
-  filtable    : array [1..maxfil] of Text; { general (temp) Text file holders }
+  filtable    : array [1..maxfil] of Text; { general (temp) text file holders }
   nfiltable   : array [1..maxfil] of string;
   { general (temp) binary file holders }
   bfiltable   : array [1..maxfil] of bytfil;
@@ -358,7 +358,7 @@ begin
       p := p * 16
   end;
   for i := f downto 1 do
-    Write(digits[i]) { Output }
+    Write(digits[i]) { output }
 end { wrthex };
 
 procedure dmpmem(s, e: address);
@@ -1526,7 +1526,7 @@ var
     if op = maxins then
       errorl('illegal instruction      ');
 
-    case op of {  Get parameters p,q  }
+    case op of { get parameters p,q  }
 
       { lod, str, lda, lip }
         0, 193, 105, 106, 107, 108, 109, 195,
@@ -1812,7 +1812,7 @@ var
       181, 182, 183, 184, 185, 186, 187, 188, 189, 20:
         storeop;
 
-      { ujc must have same length as ujp, so we Output a dummy q argument }
+      { ujc must have same length as ujp, so we output a dummy q argument }
        61 { ujc }:
         begin
           storeop;
@@ -2033,14 +2033,14 @@ begin
   end
 end { valfil };
 
-procedure valfilwm(fa: address); { validate file Write mode }
+procedure valfilwm(fa: address); { validate file write mode }
 begin
   valfil(fa); { validate file address }
   if filstate[store[fa]] <> fwrite then
     errori('File not in write mode   ')
 end { valfilwm };
 
-procedure valfilrm(fa: address); { validate file Read mode }
+procedure valfilrm(fa: address); { validate file read mode }
 begin
   valfil(fa); { validate file address }
   if filstate[store[fa]] <> fread then
@@ -2100,7 +2100,7 @@ begin
   ad := gbtop; { index the bottom of heap }
   while ad < np do
   begin
-    l := getadr(ad); { Get next block length }
+    l := getadr(ad); { get next block length }
     Write('addr: ');
     wrthex(ad, maxdigh);
     Write(': ', Abs(l): 6, ': ');
@@ -2643,7 +2643,7 @@ begin
         popadr(ad);
         valfilrm(ad);
         fn := store[ad];
-        { Eof is file Eof, and buffer not full }
+        { eof is file eof, and buffer not full }
         pshint(Ord(Eof(bfiltable[fn]) and not filbuff[fn]))
       end;
     7 { eln }:
