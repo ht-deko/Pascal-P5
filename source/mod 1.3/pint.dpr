@@ -143,7 +143,7 @@ const
   intal       =        4;        { alignment of integer }
   intdig      =        11  {20}; { number of decimal digits in integer }
   inthex      =        8   {16}; { number of hex digits of integer }
-  realsize    =        8;        { size of Real }
+  realsize    =        8;        { size of real }
   realal      =        4;        { alignment of real }
   charsize    =        1;        { size of char }
   charal      =        1;        { alignment of char }
@@ -317,7 +317,7 @@ var
 
   interpreting  : Boolean;
 
-  prd, prr      : Text; { prd for Read only, prr for Write only  }
+  prd, prr      : Text; { prd for read only, prr for write only  }
 
   instr         : array [instyp] of alfa; {  mnemonic instruction codes  }
   sptable       : array [0..maxsp] of alfa; { standard functions and procedures }
@@ -326,7 +326,7 @@ var
   srclin        : Integer; { current source line executing }
   option        : array ['a'..'z'] of Boolean; { option array }
 
-  filtable      : array [1..maxfil] of Text; { general (temp) Text file holders }
+  filtable      : array [1..maxfil] of Text; { general (temp) text file holders }
   nfiltable     : array [1..maxfil] of string;
   { general (temp) binary file holders }
   bfiltable     : array [1..maxfil] of bytfil;
@@ -1330,7 +1330,7 @@ var
           end;
         ':':
           begin { source line }
-            Read(prd, x); { Get source line number }
+            Read(prd, x); { get source line number }
             if dosrclin then
             begin
               { pass source line register instruction }
@@ -1367,7 +1367,6 @@ var
             gbset := True;
             getlin
           end;
-        { Add begin }
         'x':
           begin { external file }
             Read(prd, i);
@@ -1375,7 +1374,6 @@ var
             nfiltable[i] := StringReplace(Trim(s), '''', '', [rfReplaceAll]);
             getlin
           end;
-        { Add end }
       end;
     end
   end { generate };
@@ -1482,7 +1480,7 @@ var
     if op = maxins then
       errorl('illegal instruction      ');
 
-    case op of {  Get parameters p,q  }
+    case op of {  get parameters p,q  }
 
       { lod, str, lda, lip }
         0, 193, 105, 106, 107, 108, 109, 195,
@@ -1890,14 +1888,14 @@ begin
   end
 end { valfil };
 
-procedure valfilwm(fa: address); { validate file Write mode }
+procedure valfilwm(fa: address); { validate file write mode }
 begin
   valfil(fa); { validate file address }
   if filstate[store[fa]] <> fwrite then
     errori('File not in write mode   ')
 end { valfilwm };
 
-procedure valfilrm(fa: address); { validate file Read mode }
+procedure valfilrm(fa: address); { validate file read mode }
 begin
   valfil(fa); { validate file address }
   if filstate[store[fa]] <> fread then
@@ -2163,7 +2161,7 @@ var
 
   procedure readr(var f: Text; var r: Real);
   var
-    i: Integer; { Integer holding }
+    i: Integer; { integer holding }
     e: Integer; { exponent }
     d: Integer; { digit }
     s: Boolean; { sign }
@@ -2486,7 +2484,7 @@ begin { callsp }
         popadr(ad);
         valfilrm(ad);
         fn := store[ad];
-        { Eof is file Eof, and buffer not full }
+        { eof is file eof, and buffer not full }
         pshint(Ord(Eof(bfiltable[fn]) and not filbuff[fn]))
       end;
     7 { eln }:
@@ -4273,7 +4271,7 @@ begin
         136 { ordc },
         200 { ordx },
          59 { ordi }:
-          ; { Ord is a no-op }
+          ; { ord is a no-op }
 
          60 { chr }:
           ; { chr is a no-op }

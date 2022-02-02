@@ -167,7 +167,7 @@ const
     Mark format is:
 
     -8:  Function return value, 64 bits, enables a full real result.
-    -12:  Static link.
+    -12: Static link.
     -16: Dynamic link.
     -20: Saved EP from previous frame.
     -24: Stack bottom after locals allocate. Used for interprocdural gotos.
@@ -428,14 +428,14 @@ type
     cslab: Integer
   end;
 
-  { Subrange char }
+  { subrange char }
   subchar = Chr(ordminchar)..Chr(ordmaxchar);
 
   { ------------------------------------------------------------------------- }
 
 var
 
-  prd, prr: text;  { Output code file }
+  prd, prr: text;  { output code file }
 
                                   { returned by source program scanner
                                    insymbol:
@@ -553,7 +553,7 @@ var
   errtbl: array [1..500] of Boolean; { error occrence tracking }
   toterr: Integer; { total errors in program }
 
-  { Recycling tracking counters, used to check for New/Dispose mismatches. }
+  { Recycling tracking counters, used to check for new/dispose mismatches. }
   strcnt: Integer; { strings }
   cspcnt: Integer; { constants }
   stpcnt: Integer; { structures }
@@ -608,7 +608,7 @@ end { ctptoint };
 
 procedure getstr(var p: strvsp);
 begin
-  New(p); { get New entry }
+  New(p); { get new entry }
   strcnt := strcnt + 1 { count }
 end { getstr };
 
@@ -631,7 +631,7 @@ end { putstrs };
 
 procedure getlab(var p: lbp);
 begin
-  New(p); { get New entry }
+  New(p); { get new entry }
   lbpcnt := lbpcnt + 1 { add to count }
 end { getlab };
 
@@ -764,22 +764,22 @@ var
   end { putsub };
 
 begin
-  putnams(display[l].fname); { Dispose of identifier tree }
-  { Dispose of label list }
+  putnams(display[l].fname); { dispose of identifier tree }
+  { dispose of label list }
   while display[l].flabel <> nil do
   begin
     llp := display[l].flabel;
     display[l].flabel := llp^.nextlab;
     putlab(llp)
   end;
-  { Dispose of constant list }
+  { dispose of constant list }
   while display[l].fconst <> nil do
   begin
     lvp := display[l].fconst;
     display[l].fconst := lvp^.next;
     putcst(lvp)
   end;
-  { Dispose of structure list }
+  { dispose of structure list }
   while display[l].fstruct <> nil do
   begin
     { remove top from list }
@@ -812,7 +812,7 @@ end { putdsps };
 
 procedure getfil(var p: extfilep);
 begin
-  New(p); { get New entry }
+  New(p); { get new entry }
   filcnt := filcnt + 1 { count entry }
 end { getfil };
 
@@ -828,7 +828,7 @@ end { putfil };
 
 procedure getcas(var p: cip);
 begin
-  New(p); { get New entry }
+  New(p); { get new entry }
   cipcnt := cipcnt + 1 { count entry }
 end { getcas };
 
@@ -872,7 +872,7 @@ begin
   strequri := m
 end { equstr };
 
-{ Write variable length id string to Output }
+{ write variable length id string to output }
 
 procedure writev(var f: text; s: strvsp; fl: Integer);
 var
@@ -1329,7 +1329,7 @@ procedure endofline;
 var
   lastpos, freepos, currpos, currnmr, f, k: Integer;
 begin
-  if errinx > 0 then { Output error messages }
+  if errinx > 0 then { output error messages }
   begin
     Write(Output, linecount: 6, ' ****  ': 9);
     lastpos := -1;
@@ -1375,7 +1375,7 @@ begin
       Write(Output, ic: 7);
     Write(Output, ' ')
   end;
-  { Output line marker in intermediate file }
+  { output line marker in intermediate file }
   if not Eof(prd) then
   begin
     if prcode then
@@ -2837,7 +2837,7 @@ var
   function comptypes(fsp1, fsp2: stp): Boolean;
     { decide whether structures pointed at by fsp1 and fsp2 are compatible }
   begin
-    comptypes := False; { set default is False }
+    comptypes := False; { set default is false }
     { remove any subranges }
     fsp1 := basetype(fsp1);
     fsp2 := basetype(fsp2);
@@ -4669,7 +4669,7 @@ var
               6:
                 begin
                   if chartp[Chr(fp2)] = illegal then
-                    { Output illegal characters as numbers }
+                    { output illegal characters as numbers }
                     begin
                       if prcode then
                         Writeln(prr, 'c  ': 3, fp2: 1)
@@ -7459,7 +7459,7 @@ var
           dplmt := 0;
           packing := False
         end;
-        typind := 'i'; {  default to Integer [sam]  }
+        typind := 'i'; {  default to integer [sam]  }
         if sy = ident then
         begin
           searchid([vars], lcp);
@@ -7712,7 +7712,7 @@ var
               { Label referenced by goto at lesser statement level or
                 differently nested statement }
               error(186);
-            putlabel(labname); { Output label to intermediate }
+            putlabel(labname); { output label to intermediate }
           end
         else
         begin { not found }
@@ -8622,7 +8622,7 @@ procedure inittables;
     sna[13] :=' rst'; sna[14] :=' eln'; sna[15] :=' sin'; sna[16] :=' cos';
     sna[17] :=' exp'; sna[18] :=' sqt'; sna[19] :=' log'; sna[20] :=' atn';
     sna[21] :=' rln'; sna[22] :=' wln'; sna[23] :=' sav';
-    { New procedure/function memonics for p5 }
+    { new procedure/function memonics for p5 }
     sna[24] :=' pag'; sna[25] :=' rsf'; sna[26] :=' rwf'; sna[27] :=' wrb';
     sna[28] :=' wrf'; sna[29] :=' dsp'; sna[30] :=' wbf'; sna[31] :=' wbi';
     sna[32] :=' wbr'; sna[33] :=' wbc'; sna[34] :=' wbb'; sna[35] :=' rbf';
@@ -8932,7 +8932,7 @@ begin
     { ******** }
 
     Reset(prd);
-    Rewrite(prr); { open Output file }
+    Rewrite(prr); { open output file }
 
     if FindCmdLineSwitch('T', ['+'], True) then
       prtables := True;
@@ -8953,13 +8953,13 @@ begin
 
     if prcode then
     begin
-      { Write generator comment }
+      { write generator comment }
       Writeln(prr, 'i');
       Writeln(prr, 'i Pascal intermediate file Generated by P5 Pascal compiler vs. ',
         majorver: 1, '.', minorver: 1);
       Writeln(prr, 'i');
 
-      { Write initial option values }
+      { write initial option values }
       Write(prr, 'o ');
       for c := 'a' to 'z' do
       begin
@@ -8975,7 +8975,7 @@ begin
     insymbol;
     programme(blockbegsys + statbegsys - [casesy]);
 
-    { Dispose of levels 0 and 1 }
+    { dispose of levels 0 and 1 }
     putdsp(1);
     putdsp(0);
 
@@ -8984,7 +8984,7 @@ begin
 
     Writeln;
     Writeln('Errors in program: ', toterr: 1);
-    { Output error report as required }
+    { output error report as required }
     f := True;
     for i := 1 to 500 do
       if errtbl[i] then
