@@ -225,10 +225,10 @@ const
   varmax     = 1000; { maximum number of logical variants to track }
 
   { default field sizes for Write }
-  intdeff    = 11; { default field length for Integer }
+  intdeff    = 11; { default field length for integer }
   reldeff    = 22; { default field length for real }
-  chrdeff    = 1;  { default field length for Char (usually 1) }
-  boldeff    = 5;  { default field length for Boolean (usually 5 for 'false' }
+  chrdeff    = 1;  { default field length for char (usually 1) }
+  boldeff    = 5;  { default field length for boolean (usually 5 for 'false' }
 
   { version numbers }
 
@@ -1420,7 +1420,6 @@ end { strchrass };
 { ------------------------------------------------------------------------- }
 
 function addovf(a, b: Integer): Boolean;
-
 begin
   addovf := False;
   if (a < 0) = (b < 0) then

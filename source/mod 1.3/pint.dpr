@@ -121,10 +121,10 @@ const
 
   type                  #bits 32  #bits 64
   ===========================================================
-  Integer               32        64
-  Real                  64        64
-  Char                  8         8
-  Boolean               8         8
+  integer               32        64
+  real                  64        64
+  char                  8         8
+  boolean               8         8
   set                   256       256
   pointers              32        64
   marks                 32        64
@@ -133,23 +133,23 @@ const
   Both endian types are supported. There is no alignment needed, but you
   may wish to use alignment to tune the runtime speed.
 
-  The machine characteristics dependent on Byte accessable machines. This
-  table is all you should need to adapt to any Byte addressable machine.
+  The machine characteristics dependent on byte accessable machines. This
+  table is all you should need to adapt to any byte addressable machine.
 
   }
 
   { type               #32 #64 }
-  intsize     =        4   {8};  { size of Integer }
-  intal       =        4;        { alignment of Integer }
-  intdig      =        11  {20}; { number of decimal digits in Integer }
-  inthex      =        8   {16}; { number of hex digits of Integer }
+  intsize     =        4   {8};  { size of integer }
+  intal       =        4;        { alignment of integer }
+  intdig      =        11  {20}; { number of decimal digits in integer }
+  inthex      =        8   {16}; { number of hex digits of integer }
   realsize    =        8;        { size of Real }
-  realal      =        4;        { alignment of Real }
-  charsize    =        1;        { size of Char }
-  charal      =        1;        { alignment of Char }
+  realal      =        4;        { alignment of real }
+  charsize    =        1;        { size of char }
+  charal      =        1;        { alignment of char }
   charmax     =        1;
-  boolsize    =        1;        { size of Boolean }
-  boolal      =        1;        { alignment of Boolean }
+  boolsize    =        1;        { size of boolean }
+  boolal      =        1;        { alignment of boolean }
   ptrsize     =        4   {8};  { size of pointer }
   adrsize     =        4   {8};  { size of address }
   adral       =        4;        { alignment of address }
@@ -238,7 +238,7 @@ const
 
   stringlgth  = 1000;    { longest string length we can buffer }
   maxsp       = 45;      { number of predefined procedures/functions }
-  maxins      = 255;     { maximum instruction code, 0-255 or Byte }
+  maxins      = 255;     { maximum instruction code, 0-255 or byte }
   maxfil      = 100;     { maximum number of general (temp) files }
   maxalfa     = 10;      { maximum number of characters in alfa type }
   ujplen      = 5;       { length of ujp instruction (used for case jumps) }
@@ -276,9 +276,9 @@ type
   { These equates define the instruction layout. I have choosen a 32 bit
     layout for the instructions defined by (4 bit) digit:
 
-       Byte 0:   Instruction code
-       Byte 1:   P parameter
-       Byte 2-5: Q parameter
+       byte 0:   Instruction code
+       byte 1:   P parameter
+       byte 2-5: Q parameter
 
     This means that there are 256 instructions, 256 procedure levels,
     and 2gb of total addressing. This could be 4gb if we Get rid of the
@@ -291,7 +291,7 @@ type
   settype     = set of setlow..sethigh;
   alfainx     = 1..maxalfa; { index for alfa type }
   alfa        = packed array [alfainx] of Char;
-  Byte        = 0..255; { 8-bit Byte }
+//byte        = 0..255; { 8-bit byte }
   bytfil      = packed file of Byte; { untyped file of bytes }
   fileno      = 0..maxfil; { logical file number }
 
@@ -313,7 +313,7 @@ var
     sp  points to top of the stack
     ep  points to the maximum extent of the stack
     np  points to top of the dynamically allocated area }
-  bitmsk        : packed array [0..7] of Byte; { bits in Byte }
+  bitmsk        : packed array [0..7] of Byte; { bits in byte }
 
   interpreting  : Boolean;
 
@@ -470,7 +470,7 @@ begin
   Abort
 end { errori };
 
-{ Get bit from defined array }
+{ get bit from defined array }
 
 function getdef(a: address): Boolean;
 var
@@ -479,7 +479,7 @@ var
 begin
   if dochkdef then
   begin
-    b := storedef[a div 8]; { Get Byte }
+    b := storedef[a div 8]; { get byte }
     r := Odd(b div bitmsk[Mod2(a, 8)])
   end
   else
@@ -496,7 +496,7 @@ var
 begin
   if dochkdef then
   begin
-    sb := storedef[a div 8]; { Get Byte }
+    sb := storedef[a div 8]; { get byte }
     { test bit as is }
     r := Odd(sb div bitmsk[Mod2(a, 8)]);
     if r <> b then
@@ -525,7 +525,7 @@ end { chkdef };
   formats.
 
   The acessors are fairly machine independent, they rely here on the machine
-  being Byte addressable. The endian format is inherent to the machine.
+  being byte addressable. The endian format is inherent to the machine.
 
   The exception are the Get/put int8,16,32,64 and 128 bit routines, which are
   dependent on the endian mode of the machine.
@@ -717,7 +717,7 @@ var
   p: address;
   i: 1..maxsize;
 begin
-  { Get the top pointer }
+  { get the top pointer }
   p := getadr(sp);
   { load up the second on stack }
   for i := 1 to l do
@@ -796,7 +796,7 @@ var
   p: lvltyp;
   q, q1: address; { instruction register }
 begin
-  { fetch instruction from Byte store }
+  { fetch instruction from byte store }
   op := store[ad];
   ad := ad + 1;
   p := 0;
@@ -1245,9 +1245,9 @@ var
         while not endlist do
         begin
           ad := curr;
-          op := store[ad]; { Get instruction }
+          op := store[ad]; { get instruction }
           q := getadr(ad + 1 + Ord(insp[op]));
-          succ := q; { Get target address from that }
+          succ := q; { get target address from that }
           q := labelvalue; { place new target address }
           ad := curr;
           putadr(ad + 1 + Ord(insp[op]), q);
@@ -1262,7 +1262,7 @@ var
     end
   end { update };
 
-  procedure getnxt; { Get next character }
+  procedure getnxt; { get next character }
   begin
     ch := ' ';
     if not eoln(prd) then
@@ -1275,7 +1275,7 @@ var
       getnxt
   end { skpspc };
 
-  procedure getlin; { Get next line }
+  procedure getlin; { get next line }
   begin
     Readln(prd);
     iline := iline + 1 { next intermediate line }
@@ -1343,7 +1343,7 @@ var
             { skip the rest of the line, which would be the
               contents of the source line if included }
             while not eoln(prd) do
-              Read(prd, c); { Get next character }
+              Read(prd, c); { get next character }
             getlin { source line }
           end;
         'o':
@@ -1579,7 +1579,7 @@ var
 
         7, 123, 124, 125, 126, 127 { ldc }:
         begin
-          case op of { Get q }
+          case op of { get q }
             123:
               begin
                 Read(prd, i);
@@ -1904,25 +1904,25 @@ begin
     errori('File not in read mode    ')
 end { valfilrm };
 
-procedure getop; { Get opcode }
+procedure getop; { get opcode }
 begin
   op := store[pc];
   pc := pc + 1
 end { getop };
 
-procedure getp; { Get p parameter }
+procedure getp; { get p parameter }
 begin
   p := store[pc];
   pc := pc + 1
 end { getp };
 
-procedure getq; { Get q parameter }
+procedure getq; { get q parameter }
 begin
   q := getadr(pc);
   pc := pc + adrsize
 end { getq };
 
-procedure getq1; { Get q1 parameter }
+procedure getq1; { get q1 parameter }
 begin
   q1 := getadr(pc);
   pc := pc + adrsize
@@ -1951,7 +1951,7 @@ begin
   ad := gbtop; { index the bottom of heap }
   while ad < np do
   begin
-    l := getadr(ad); { Get next block length }
+    l := getadr(ad); { get next block length }
     Write('addr: ');
     wrthex(ad, maxdigh); Write(': ', Abs(l): 6, ': ');
     if l >= 0 then
@@ -1973,7 +1973,7 @@ begin
   blk := gbtop; { set to bottom of heap }
   while blk < np do
   begin { search blocks in heap }
-    l := getadr(blk); { Get length }
+    l := getadr(blk); { get length }
     if (Abs(l) < heapal) or (Abs(l) > np) then
       errori('Heap format invalid      ');
     if l >= len + adrsize then
@@ -2019,7 +2019,7 @@ begin
       ad1 := ad;
       ad := ad + Abs(getadr(ad))
     end;
-    l := getadr(ad1); { Get header length }
+    l := getadr(ad1); { get header length }
     if l >= 0 then
       np := ad1; { release to free space }
   end;
@@ -2027,13 +2027,13 @@ begin
   ad := gbtop; { index bottom }
   while ad < np do
   begin
-    l := getadr(ad); { Get header length }
+    l := getadr(ad); { get header length }
     if l >= 0 then
     begin { free }
       ad1 := ad + l; { index next block }
       if ad1 < np then
       begin { not against end }
-        l1 := getadr(ad1); { Get length next }
+        l1 := getadr(ad1); { get length next }
         if l1 >= 0 then
           putadr(ad, l + l1) { both blocks are free, combine the blocks }
         else
@@ -2098,7 +2098,7 @@ begin
   else if dochkrpt then
   begin { perform special recycle }
     { check can break off top block }
-    len := Abs(getadr(ad)); { Get length }
+    len := Abs(getadr(ad)); { get length }
     if len >= adrsize * 2 then
       putadr(ad + adrsize, Abs(getadr(ad)) - adrsize);
     { the "marker" is a block with a single address. Since it can't
@@ -2193,7 +2193,7 @@ var
     { skip leading spaces }
     while (CurrentChar(f) = ' ') and not eoln(f) do
       Get(f);
-    { Get any sign from number }
+    { get any sign from number }
     if CurrentChar(f) = '-' then
     begin
       Get(f);
@@ -2229,7 +2229,7 @@ var
         Get(f); { skip 'e' }
         if not CharInSet(CurrentChar(f), ['0'..'9', '+', '-']) then
           errori('Invalid real format      ');
-        readi(f, i); { Get exponent }
+        readi(f, i); { get exponent }
         { find with exponent }
         e := e + i
       end;
@@ -2398,7 +2398,7 @@ begin { callsp }
           putint(ad1, j);
           k := k - 1
         end;
-        { Get pointer to dest var, place base above taglist and
+        { get pointer to dest var, place base above taglist and
           list of fixed consts }
         popadr(ad1);
         putadr(ad1, ad + (i + 1) * intsize)
@@ -2971,8 +2971,8 @@ begin { callsp }
     40 { dsl }:
       begin
         popadr(ad1);
-        popint(i); { Get size of record and n tags }
-        ad := getadr(sp + i * intsize); { Get rec addr }
+        popint(i); { get size of record and n tags }
+        ad := getadr(sp + i * intsize); { get rec addr }
         { under us is either the number of tags or the length of the block, if it
           was freed. Either way, it is >= adrsize if not free }
         if getint(ad - intsize) <= adrsize then
@@ -3090,7 +3090,7 @@ begin { callsp }
           end
         else
         begin
-          { FPC has an error where it indicates Eof 1 Byte
+          { FPC has an error where it indicates Eof 1 byte
             before the end of the file. A workaround is to
             comment the Eof check out, but note that this
             is not permanent, since it compromises error
@@ -3274,7 +3274,7 @@ begin
 
       if pc >= pctop then
         errori('pc out of range          ');
-      { fetch instruction from Byte store }
+      { fetch instruction from byte store }
       pcs := pc; { save starting pc }
       getop;
 
@@ -3680,9 +3680,9 @@ begin
             if sp <> getadr(mp + marksb) then
               errori('Stack balance            ');
             sp := mp;
-            pc := getadr(mp + markra); { Get ra }
-            ep := getadr(mp + markep); { Get old ep }
-            mp := getadr(mp + markdl) { Get dl }
+            pc := getadr(mp + markra); { get ra }
+            ep := getadr(mp + markep); { get old ep }
+            mp := getadr(mp + markdl) { get dl }
           end;
         { For characters and booleans, need to clean 8 bit results because
           only the lower 8 bits were stored to. }
@@ -4336,8 +4336,8 @@ begin
             pc := q;
             mp := base(p); { index the mark to restore }
             { restore marks until we reach the destination level }
-            sp := getadr(mp + marksb); { Get the stack bottom }
-            ep := getadr(mp + market) { Get the mark ep }
+            sp := getadr(mp + marksb); { get the stack bottom }
+            ep := getadr(mp + market) { get the mark ep }
           end;
         113 { cip }:
           begin

@@ -428,7 +428,7 @@ type
     cslab: Integer
   end;
 
-  { Subrange Char }
+  { Subrange char }
   subchar = Chr(ordminchar)..Chr(ordmaxchar);
 
   { ------------------------------------------------------------------------- }
@@ -8113,7 +8113,7 @@ begin
                                                         { **************** }
 
   New(intptr);
-  pshstc(intptr);                              { Integer }
+  pshstc(intptr);                              { integer }
   with intptr^ do
   begin
     size := intsize;
@@ -8131,7 +8131,7 @@ begin
     packing := False
   end;
   New(charptr);
-  pshstc(charptr);                             { Char }
+  pshstc(charptr);                             { char }
   with charptr^ do
   begin
     size := charsize;
@@ -8140,7 +8140,7 @@ begin
     packing := False
   end;
   New(boolptr);
-  pshstc(boolptr);                             { Boolean }
+  pshstc(boolptr);                             { boolean }
   with boolptr^ do
   begin
     size := boolsize;
@@ -8296,13 +8296,13 @@ begin
     begin
       New(cp);
       ininam(cp);                              { get, put, reset }
-      with cp^ do                              { rewrite, Read }
+      with cp^ do                              { rewrite, read }
       begin
         strassvr(name, na[i]);
         idtype := nil;                         { write, pack }
         pflist := nil;
         next := nil;
-        key := i - 4;                          { unpack, New }
+        key := i - 4;                          { unpack, new }
         klass := proc;
         pfdeckind := standard                  { readln, writeln }
       end;
@@ -8395,7 +8395,7 @@ begin
   end;
   enterid(cp);
   New(cp);
-  ininam(cp);                                  { Dispose }
+  ininam(cp);                                  { dispose }
   with cp^ do
   begin
     strassvr(name, na[39]);
