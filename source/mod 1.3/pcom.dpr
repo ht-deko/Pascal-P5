@@ -8603,11 +8603,11 @@ procedure inittables;
   begin
     for i := 1 to maxres { nr of res words } do
       rop[i] := noop;
-    rop[5] := inop; rop[10] := idiv; rop[11] := imod;
+    rop[5] := inop; rop[10] := idiv;  rop[11] := imod;
     rop[6] := orop; rop[13] := andop;
     for i := ordminchar to ordmaxchar do
       sop[Chr(i)] := noop;
-    sop['+'] := plus; sop['-'] := minus; sop['*'] := mul; sop['/'] := rdiv;
+    sop['+'] := plus; sop['-'] := minus; sop['*'] := mul;  sop['/'] := rdiv;
     sop['='] := eqop; sop['<'] := ltop;  sop['>'] := gtop;
   end { rators };
 
@@ -8666,51 +8666,51 @@ procedure inittables;
   begin
     for i := ordminchar to ordmaxchar do
       chartp[Chr(i)] := illegal;
-    chartp['a'] := letter  ;
-    chartp['b'] := letter  ; chartp['c'] := letter  ;
-    chartp['d'] := letter  ; chartp['e'] := letter  ;
-    chartp['f'] := letter  ; chartp['g'] := letter  ;
-    chartp['h'] := letter  ; chartp['i'] := letter  ;
-    chartp['j'] := letter  ; chartp['k'] := letter  ;
-    chartp['l'] := letter  ; chartp['m'] := letter  ;
-    chartp['n'] := letter  ; chartp['o'] := letter  ;
-    chartp['p'] := letter  ; chartp['q'] := letter  ;
-    chartp['r'] := letter  ; chartp['s'] := letter  ;
-    chartp['t'] := letter  ; chartp['u'] := letter  ;
-    chartp['v'] := letter  ; chartp['w'] := letter  ;
-    chartp['x'] := letter  ; chartp['y'] := letter  ;
-    chartp['z'] := letter  ;
-    chartp['A'] := letter  ;
-    chartp['B'] := letter  ; chartp['C'] := letter  ;
-    chartp['D'] := letter  ; chartp['E'] := letter  ;
-    chartp['F'] := letter  ; chartp['G'] := letter  ;
-    chartp['H'] := letter  ; chartp['I'] := letter  ;
-    chartp['J'] := letter  ; chartp['K'] := letter  ;
-    chartp['L'] := letter  ; chartp['M'] := letter  ;
-    chartp['N'] := letter  ; chartp['O'] := letter  ;
-    chartp['P'] := letter  ; chartp['Q'] := letter  ;
-    chartp['R'] := letter  ; chartp['S'] := letter  ;
-    chartp['T'] := letter  ; chartp['U'] := letter  ;
-    chartp['V'] := letter  ; chartp['W'] := letter  ;
-    chartp['X'] := letter  ; chartp['Y'] := letter  ;
-    chartp['Z'] := letter  ;
-    chartp['0'] := number  ;
-    chartp['1'] := number  ; chartp['2'] := number  ;
-    chartp['3'] := number  ; chartp['4'] := number  ;
-    chartp['5'] := number  ; chartp['6'] := number  ;
-    chartp['7'] := number  ; chartp['8'] := number  ;
-    chartp['9'] := number  ; chartp['+'] := special ;
-    chartp['-'] := special ; chartp['*'] := special ;
-    chartp['/'] := special ; chartp['('] := chlparen;
-    chartp[')'] := special ; chartp['$'] := special ;
-    chartp['='] := special ; chartp[' '] := chspace ;
-    chartp[','] := special ; chartp['.'] := chperiod;
-    chartp['''']:= chstrquo; chartp['['] := special ;
-    chartp[']'] := special ; chartp[':'] := chcolon ;
-    chartp['^'] := special ; chartp[';'] := special ;
-    chartp['<'] := chlt    ; chartp['>'] := chgt    ;
-    chartp['{'] := chlcmt  ; chartp['}'] := special ;
-    chartp['@'] := special ;
+    chartp['a'] := letter;
+    chartp['b'] := letter;   chartp['c'] := letter;
+    chartp['d'] := letter;   chartp['e'] := letter;
+    chartp['f'] := letter;   chartp['g'] := letter;
+    chartp['h'] := letter;   chartp['i'] := letter;
+    chartp['j'] := letter;   chartp['k'] := letter;
+    chartp['l'] := letter;   chartp['m'] := letter;
+    chartp['n'] := letter;   chartp['o'] := letter;
+    chartp['p'] := letter;   chartp['q'] := letter;
+    chartp['r'] := letter;   chartp['s'] := letter;
+    chartp['t'] := letter;   chartp['u'] := letter;
+    chartp['v'] := letter;   chartp['w'] := letter;
+    chartp['x'] := letter;   chartp['y'] := letter;
+    chartp['z'] := letter;
+    chartp['A'] := letter;
+    chartp['B'] := letter;   chartp['C'] := letter;
+    chartp['D'] := letter;   chartp['E'] := letter;
+    chartp['F'] := letter;   chartp['G'] := letter;
+    chartp['H'] := letter;   chartp['I'] := letter;
+    chartp['J'] := letter;   chartp['K'] := letter;
+    chartp['L'] := letter;   chartp['M'] := letter;
+    chartp['N'] := letter;   chartp['O'] := letter;
+    chartp['P'] := letter;   chartp['Q'] := letter;
+    chartp['R'] := letter;   chartp['S'] := letter;
+    chartp['T'] := letter;   chartp['U'] := letter;
+    chartp['V'] := letter;   chartp['W'] := letter;
+    chartp['X'] := letter;   chartp['Y'] := letter;
+    chartp['Z'] := letter;
+    chartp['0'] := number;
+    chartp['1'] := number;   chartp['2'] := number;
+    chartp['3'] := number;   chartp['4'] := number;
+    chartp['5'] := number;   chartp['6'] := number;
+    chartp['7'] := number;   chartp['8'] := number;
+    chartp['9'] := number;   chartp['+'] := special;
+    chartp['-'] := special;  chartp['*'] := special;
+    chartp['/'] := special;  chartp['('] := chlparen;
+    chartp[')'] := special;  chartp['$'] := special;
+    chartp['='] := special;  chartp[' '] := chspace;
+    chartp[','] := special;  chartp['.'] := chperiod;
+    chartp['''']:= chstrquo; chartp['['] := special;
+    chartp[']'] := special;  chartp[':'] := chcolon;
+    chartp['^'] := special;  chartp[';'] := special;
+    chartp['<'] := chlt;     chartp['>'] := chgt;
+    chartp['{'] := chlcmt;   chartp['}'] := special;
+    chartp['@'] := special;
 
     ordint['0'] := 0; ordint['1'] := 1; ordint['2'] := 2;
     ordint['3'] := 3; ordint['4'] := 4; ordint['5'] := 5;
@@ -8736,7 +8736,7 @@ procedure inittables;
     cdx[20] :=  0;                   cdx[21] := +intsize;
     cdx[22] := +realsize;            cdx[23] := +intsize-setsize;
     cdx[24] :=  0;                   cdx[25] :=  0;
-    cdx[26] := 1{*};                 cdx[27] := +realsize-intsize;
+    cdx[26] :=  1{*};                cdx[27] := +realsize-intsize;
     cdx[28] := +setsize;             cdx[29] :=  0;
     cdx[30] :=  0;                   cdx[31] :=  2{*};
     cdx[32] :=  0;                   cdx[33] := +intsize;
@@ -8753,7 +8753,7 @@ procedure inittables;
     cdx[54] :=  4{*};                cdx[55] :=  6{*};
     cdx[56] :=  5{*};                cdx[57] :=  0;
     cdx[58] :=  2{*};                cdx[59] :=  0;
-    cdx[60] :=  0;                   cdx[61] :=  +realsize-intsize;
+    cdx[60] :=  0;                   cdx[61] := +realsize-intsize;
     cdx[62] := +adrsize*3;           cdx[63] := +adrsize*3;
     cdx[64] := +intsize*2-setsize;   cdx[65] :=  0;
     cdx[66] :=  0;                   cdx[67] := +ptrsize;
@@ -8761,8 +8761,8 @@ procedure inittables;
     cdx[70] :=  0;                   cdx[71] := +ptrsize;
     cdx[72] :=  0;                   cdx[73] := +intsize;
     cdx[74] := -adrsize*2;           cdx[75] :=  2{*};
-    cdx[76] :=  4{*};                cdx[77] :=  +intsize*2;
-    cdx[78] := -intsize;             cdx[79] :=  +adrsize;
+    cdx[76] :=  4{*};                cdx[77] := +intsize*2;
+    cdx[78] := -intsize;             cdx[79] := +adrsize;
     cdx[80] :=  0;                   cdx[81] :=  0;
     cdx[82] :=  0;
 
@@ -8773,15 +8773,15 @@ procedure inittables;
     cdxs[1][4] := +(adrsize+intsize);  { stoc }
     cdxs[1][5] := +(adrsize+adrsize);  { stoa }
     cdxs[1][6] := +(adrsize+setsize);  { stos }
-    cdxs[1][7] := 0;
+    cdxs[1][7] :=  0;
 
-    cdxs[2][1] := 0; { deci/inci/ordi/chki/reti }
-    cdxs[2][2] := 0; { chkr/retr }
-    cdxs[2][3] := 0; { decb/incb/ordb/chkb/retb }
-    cdxs[2][4] := 0; { decc/incc/ordc/chkc/retc }
-    cdxs[2][5] := 0; { chka/reta }
-    cdxs[2][6] := 0; { chks }
-    cdxs[2][7] := 0;
+    cdxs[2][1] :=  0; { deci/inci/ordi/chki/reti }
+    cdxs[2][2] :=  0; { chkr/retr }
+    cdxs[2][3] :=  0; { decb/incb/ordb/chkb/retb }
+    cdxs[2][4] :=  0; { decc/incc/ordc/chkc/retc }
+    cdxs[2][5] :=  0; { chka/reta }
+    cdxs[2][6] :=  0; { chks }
+    cdxs[2][7] :=  0;
 
     cdxs[3][1] := +adrsize-intsize;  { indi }
     cdxs[3][2] := +adrsize-realsize; { indr }
@@ -8789,7 +8789,7 @@ procedure inittables;
     cdxs[3][4] := +adrsize-intsize;  { indc }
     cdxs[3][5] := +adrsize-adrsize;  { inda }
     cdxs[3][6] := +adrsize-setsize;  { inds }
-    cdxs[3][7] := 0;
+    cdxs[3][7] :=  0;
 
     cdxs[4][1] := -intsize;  { ldoi/ldc/lodi/dupi }
     cdxs[4][2] := -realsize; { ldor/ldc/lodr/dupr }
@@ -8797,7 +8797,7 @@ procedure inittables;
     cdxs[4][4] := -intsize;  { ldoc/ldc/lodc/dupc }
     cdxs[4][5] := -adrsize;  { ldoa/ldc/loda/dupa }
     cdxs[4][6] := -setsize;  { ldos/ldc/lods/dups }
-    cdxs[4][7] := 0;
+    cdxs[4][7] :=  0;
 
     cdxs[5][1] := +intsize;  { sroi/stri }
     cdxs[5][2] := +realsize; { sror/strr }
@@ -8805,7 +8805,7 @@ procedure inittables;
     cdxs[5][4] := +intsize;  { sroc/strc }
     cdxs[5][5] := +adrsize;  { sroa/stra }
     cdxs[5][6] := +setsize;  { sros/strs }
-    cdxs[5][7] := 0;
+    cdxs[5][7] :=  0;
 
     { note that all of the comparisions share the same table }
     cdxs[6][1] := +(intsize+intsize)-intsize; { equi/neqi/geqi/grti/leqi/lesi }
@@ -8819,7 +8819,7 @@ procedure inittables;
     pdx[ 1] := +adrsize;             pdx[ 2] := +adrsize;
     pdx[ 3] := +adrsize;             pdx[ 4] := +adrsize;
     pdx[ 5] := +adrsize;             pdx[ 6] := +adrsize*2;
-    pdx[ 7] := 0;                    pdx[ 8] := +(realsize+intsize);
+    pdx[ 7] :=  0;                   pdx[ 8] := +(realsize+intsize);
     pdx[ 9] := +intsize*2;           pdx[10] := +(adrsize+intsize*2);
     pdx[11] :=  0;                   pdx[12] := +ptrsize*2;
     pdx[13] :=  0;                   pdx[14] := +adrsize-intsize;

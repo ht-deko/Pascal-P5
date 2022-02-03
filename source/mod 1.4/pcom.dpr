@@ -9629,10 +9629,10 @@ procedure inittables;
 
       for i := ordminchar to ordmaxchar do 
         ssy[Chr(i)] := othersy;
-      ssy['+'] := addop ;    ssy['-'] := addop;    ssy['*'] := mulop;
-      ssy['/'] := mulop ;    ssy['('] := lparent;  ssy[')'] := rparent;
+      ssy['+'] := addop;     ssy['-'] := addop;    ssy['*'] := mulop;
+      ssy['/'] := mulop;     ssy['('] := lparent;  ssy[')'] := rparent;
       ssy['$'] := othersy;   ssy['='] := relop;    ssy[' '] := othersy;
-      ssy[','] := comma ;    ssy['.'] := period;   ssy['''']:= othersy;
+      ssy[','] := comma;     ssy['.'] := period;   ssy['''']:= othersy;
       ssy['['] := lbrack;    ssy[']'] := rbrack;   ssy[':'] := colon;
       ssy['^'] := arrow;     ssy['<'] := relop;    ssy['>'] := relop;
       ssy[';'] := semicolon; ssy['@'] := arrow;    ssy['}'] := othersy;
@@ -9644,11 +9644,11 @@ procedure inittables;
   begin
     for i := 1 to maxres { nr of res words } do 
       rop[i] := noop;
-    rop[5] := inop; rop[10] := idiv; rop[11] := imod;
+    rop[5] := inop; rop[10] := idiv;  rop[11] := imod;
     rop[6] := orop; rop[13] := andop;
     for i := ordminchar to ordmaxchar do 
       sop[Chr(i)] := noop;
-    sop['+'] := plus; sop['-'] := minus; sop['*'] := mul; sop['/'] := rdiv;
+    sop['+'] := plus; sop['-'] := minus; sop['*'] := mul;  sop['/'] := rdiv;
     sop['='] := eqop; sop['<'] := ltop;  sop['>'] := gtop;
   end { rators };
 
@@ -9770,7 +9770,7 @@ procedure inittables;
     cdx[ 4] := +intsize;             cdx[ 5] := +setsize;
     cdx[ 6] := +intsize;             cdx[ 7] := +realsize;
     cdx[ 8] :=  0;                   cdx[ 9] := +intsize-realsize;
-    cdx[10] :=  -realsize+intsize;   cdx[11] := +setsize;
+    cdx[10] := -realsize+intsize;    cdx[11] := +setsize;
     cdx[12] := +setsize;             cdx[13] := +intsize;
     cdx[14] := +intsize;             cdx[15] := +intsize;
     cdx[16] := +realsize;            cdx[17] :=  0;
@@ -9778,7 +9778,7 @@ procedure inittables;
     cdx[20] :=  0;                   cdx[21] := +intsize;
     cdx[22] := +realsize;            cdx[23] := +intsize-setsize;
     cdx[24] :=  0;                   cdx[25] :=  0;
-    cdx[26] := 1{*};                 cdx[27] := +realsize-intsize;
+    cdx[26] :=  1{*};                cdx[27] := +realsize-intsize;
     cdx[28] := +setsize;             cdx[29] :=  0;
     cdx[30] :=  0;                   cdx[31] :=  2{*};
     cdx[32] :=  0;                   cdx[33] := +intsize;
@@ -9795,7 +9795,7 @@ procedure inittables;
     cdx[54] :=  4{*};                cdx[55] :=  6{*};
     cdx[56] :=  5{*};                cdx[57] :=  0;
     cdx[58] :=  2{*};                cdx[59] :=  0;
-    cdx[60] :=  0;                   cdx[61] :=  +realsize-intsize;
+    cdx[60] :=  0;                   cdx[61] := +realsize-intsize;
     cdx[62] := +adrsize*3;           cdx[63] := +adrsize*3;
     cdx[64] := +intsize*2-setsize;   cdx[65] :=  0;
     cdx[66] :=  0;                   cdx[67] := +ptrsize;
@@ -9803,8 +9803,8 @@ procedure inittables;
     cdx[70] :=  0;                   cdx[71] := +ptrsize;
     cdx[72] :=  0;                   cdx[73] := +intsize;
     cdx[74] := -adrsize*2;           cdx[75] :=  2{*};
-    cdx[76] :=  4{*};                cdx[77] :=  +intsize*2;
-    cdx[78] := -intsize;             cdx[79] :=  +adrsize;
+    cdx[76] :=  4{*};                cdx[77] := +intsize*2;
+    cdx[78] := -intsize;             cdx[79] := +adrsize;
     cdx[80] :=  2{*};                cdx[81] :=  0;
     cdx[82] :=  0;                   cdx[83] :=  0;
     cdx[84] :=  0;                   cdx[85] :=  0;
@@ -9816,15 +9816,15 @@ procedure inittables;
     cdxs[1][4] := +(adrsize + intsize);  { stoc }
     cdxs[1][5] := +(adrsize + adrsize);  { stoa }
     cdxs[1][6] := +(adrsize + setsize);  { stos }
-    cdxs[1][7] := 0;
+    cdxs[1][7] :=  0;
 
-    cdxs[2][1] := 0; { deci/inci/ordi/chki/reti }
-    cdxs[2][2] := 0; { chkr/retr }
-    cdxs[2][3] := 0; { decb/incb/ordb/chkb/retb }
-    cdxs[2][4] := 0; { decc/incc/ordc/chkc/retc }
-    cdxs[2][5] := 0; { chka/reta }
-    cdxs[2][6] := 0; { chks }
-    cdxs[2][7] := 0;
+    cdxs[2][1] :=  0; { deci/inci/ordi/chki/reti }
+    cdxs[2][2] :=  0; { chkr/retr }
+    cdxs[2][3] :=  0; { decb/incb/ordb/chkb/retb }
+    cdxs[2][4] :=  0; { decc/incc/ordc/chkc/retc }
+    cdxs[2][5] :=  0; { chka/reta }
+    cdxs[2][6] :=  0; { chks }
+    cdxs[2][7] :=  0;
 
     cdxs[3][1] := +adrsize - intsize;  { indi }
     cdxs[3][2] := +adrsize - realsize; { indr }
@@ -9832,7 +9832,7 @@ procedure inittables;
     cdxs[3][4] := +adrsize - intsize;  { indc }
     cdxs[3][5] := +adrsize - adrsize;  { inda }
     cdxs[3][6] := +adrsize - setsize;  { inds }
-    cdxs[3][7] := 0;
+    cdxs[3][7] :=  0;
 
     cdxs[4][1] := -intsize;  { ldoi/ldc/lodi/dupi }
     cdxs[4][2] := -realsize; { ldor/ldc/lodr/dupr }
@@ -9840,7 +9840,7 @@ procedure inittables;
     cdxs[4][4] := -intsize;  { ldoc/ldc/lodc/dupc }
     cdxs[4][5] := -adrsize;  { ldoa/ldc/loda/dupa }
     cdxs[4][6] := -setsize;  { ldos/ldc/lods/dups }
-    cdxs[4][7] := 0;
+    cdxs[4][7] :=  0;
 
     cdxs[5][1] := +intsize;  { sroi/stri }
     cdxs[5][2] := +realsize; { sror/strr }
@@ -9848,7 +9848,7 @@ procedure inittables;
     cdxs[5][4] := +intsize;  { sroc/strc }
     cdxs[5][5] := +adrsize;  { sroa/stra }
     cdxs[5][6] := +setsize;  { sros/strs }
-    cdxs[5][7] := 0;
+    cdxs[5][7] :=  0;
 
     { note that all of the comparisions share the same table }
     cdxs[6][1] := +(intsize + intsize) - intsize;   { equi/neqi/geqi/grti/leqi/lesi }
@@ -9862,7 +9862,7 @@ procedure inittables;
     pdx[ 1] := +adrsize;             pdx[ 2] := +adrsize;
     pdx[ 3] := +adrsize;             pdx[ 4] := +adrsize;
     pdx[ 5] := +adrsize;             pdx[ 6] := +adrsize*2;
-    pdx[ 7] := 0;                    pdx[ 8] := +(realsize+intsize);
+    pdx[ 7] :=  0;                   pdx[ 8] := +(realsize+intsize);
     pdx[ 9] := +intsize*2;           pdx[10] := +(adrsize+intsize*2);
     pdx[11] :=  0;                   pdx[12] := +ptrsize*2;
     pdx[13] :=  0;                   pdx[14] := +adrsize-intsize;
