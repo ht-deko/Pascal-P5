@@ -2281,7 +2281,7 @@ var
     filbuff[fn] := False
   end { putfile };
 
-begin { callsp }
+begin
   if q > maxsp then
     errori('Invalid std proc/func    ');
 

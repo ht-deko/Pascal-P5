@@ -1247,6 +1247,7 @@ var
   i: Integer;
   q: Integer;
   p, l: strvsp;
+
   procedure getsqt;
   var
     y: Integer;
@@ -1263,6 +1264,7 @@ var
         l^.next := p
     end
   end { getsqt };
+
 begin
   i := 1;
   q := 1;
@@ -1292,6 +1294,7 @@ end { strchrass };
 procedure prtdsp;
 var
   i: Integer;
+
   procedure prtlnk(p: ctp; f: Integer);
   var
     i: Integer;
@@ -1308,6 +1311,7 @@ var
         prtlnk(p^.rlink, f + 3)
     end
   end { prtlnk };
+
 begin
   Writeln;
   Writeln('Display:');
@@ -1624,6 +1628,7 @@ var
   var
     ch1: Char;
     dummy: Boolean;
+
     procedure switch(var opt: Boolean);
     begin
       nextch;
@@ -1636,6 +1641,7 @@ var
         nextch;
       end
     end { switch };
+
   begin
     repeat
       nextch;
@@ -2549,7 +2555,7 @@ var
           field:
             Write(Output, 'field': intdig, ' ', ctptoint(next): intdig, ' ', fldaddr: intdig);
           proc,
-            func:
+          func:
             begin
               if klass = proc then
                 Write(Output, 'procedure': intdig, ' ')
@@ -2898,7 +2904,9 @@ var
   function filecomponent(fsp: stp): Boolean;
   var
     f: Boolean;
+
     { tour identifier tree }
+
     function filecomponentre(lcp: ctp): Boolean;
     var
       f: Boolean;
@@ -2916,18 +2924,18 @@ var
         end;
       filecomponentre := f
     end { filecomponentre };
+
   begin
     f := False; { set not a file by default }
     if fsp <> nil then
       with fsp^ do
         case form of
-          scalar:
-            ;
-          subrange:
-            ;
-          pointer:
-            ;
-          power:
+          scalar,
+          subrange,
+          pointer,
+          power,
+          tagfld,
+          variant:
             ;
           arrays:
             if filecomponent(aeltype) then
@@ -2937,10 +2945,6 @@ var
               f := True;
           files:
             f := True;
-          tagfld:
-            ;
-          variant:
-            ;
         end;
     filecomponent := f
   end { filecomponent };
@@ -3500,7 +3504,7 @@ var
               skip(fsys + typedels)
             end
           end;
-          { array }if sy = arraysy then
+{ array } if sy = arraysy then
           begin
             insymbol;
             if sy = lbrack then
@@ -4240,7 +4244,7 @@ var
         fpar := nil
     end { parameterlist };
 
-  begin { procdeclaration }
+  begin
     llc := lc;
     lc := lcaftermarkstack;
     forw := False;
@@ -5033,6 +5037,7 @@ var
         lsize: addrrange;
         lmin, lmax: Integer;
         id: stp;
+
         function schblk(fcp: ctp): Boolean;
         var
           i: disprange;
@@ -5044,6 +5049,7 @@ var
               f := True;
           schblk := f
         end { schblk };
+
         procedure checkvrnt(lcp: ctp);
         var
           vp: stp;
@@ -5088,6 +5094,7 @@ var
             end
           end
         end { checkvrnt };
+
       begin
         with fcp^, gattr do
         begin
@@ -6832,7 +6839,7 @@ var
             end
           end { term };
 
-        begin { simpleexpression }
+        begin
           signed := False;
           if (sy = addop) and (op in [plus, minus]) then
           begin
@@ -7694,7 +7701,7 @@ var
         lc := llc;
       end { withstatement };
 
-    begin { statement }
+    begin
       if sy = intconst then { label }
       begin
         searchlabel(llp, level); { search label }

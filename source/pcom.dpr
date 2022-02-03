@@ -1802,6 +1802,7 @@ var
   var
     ch1: Char;
     dummy: Boolean;
+
     procedure switch(var opt: Boolean);
     begin
       nextch;
@@ -1820,7 +1821,8 @@ var
         if prcode then
           Writeln(prr, 'o ', ch1, '+')
       end
-    end { switch }; 
+    end { switch };
+
   begin
     repeat
       nextch;
@@ -3002,7 +3004,7 @@ var
                 varssize: intdig, ' ', vartl: intdig)
             end;
           proc,
-            func:
+          func:
             begin
               if klass = proc then
                 Write('procedure': intdig, ' ')
@@ -3524,7 +3526,9 @@ var
   function filecomponent(fsp: stp): Boolean;
   var
     f: Boolean;
+
     { tour identifier tree }
+
     function filecomponentre(lcp: ctp): Boolean;
     var
       f: Boolean;
@@ -3542,6 +3546,7 @@ var
         end;
       filecomponentre := f
     end { filecomponentre };
+
   begin
     f := False; { set not a file by default }
     if fsp <> nil then
@@ -3853,6 +3858,7 @@ var
       tagp, tagl: ttp;
       mint, maxt: Integer;
       ferr: Boolean;
+
       procedure ordertag(var tp: ttp);
       var
         lp, p, p2, p3: ttp;
@@ -3891,6 +3897,7 @@ var
         end;
         tp := lp
       end { ordertag };
+
     begin
       nxt1 := nil;
       lsp := nil;
@@ -4298,7 +4305,7 @@ var
               skip(fsys + typedels)
             end
           end;
-          { array }if sy = arraysy then
+{ array } if sy = arraysy then
           begin
             insymbol;
             if sy = lbrack then
@@ -4773,6 +4780,7 @@ var
       oldtop: disprange;
       lcs: addrrange;
       test: Boolean;
+
       procedure joinlists;
       var
         lcp, lcp3: ctp;
@@ -4794,6 +4802,7 @@ var
           lcp1 := lcp3
         end
       end { joinlists };
+
     begin
       lcp1 := nil;
       if not (sy in fsy + [lparent]) then
@@ -5976,6 +5985,7 @@ var
             end
           end
         end { checkvrnt };
+
       begin
         with fcp^, gattr do
         begin
