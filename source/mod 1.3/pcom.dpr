@@ -283,7 +283,7 @@ type
 
   valu = record
     case {intval:} Boolean of { intval never set nor tested }
-      True: (ival: Integer);
+      True:  (ival: Integer);
       False: (valp: csp)
   end;
 
@@ -304,23 +304,23 @@ type
     size: addrrange;
     packing: Boolean; { packing status }
     case form: structform of
-      scalar: (case scalkind: declkind of
-                 declared: (fconst: ctp);
-                 standard: ());
+      scalar:   (case scalkind: declkind of
+                   declared: (fconst: ctp);
+                   standard: ());
       subrange: (rangetype: stp;
                  min, max: valu);
-      pointer: (eltype: stp);
-      power: (elset: stp;
-              matchpack: Boolean);
-      arrays: (aeltype, inxtype: stp);
-      records: (fstfld: ctp;
-                recvar: stp;
-                recyc: stp);
-      files: (filtype: stp);
-      tagfld: (tagfieldp: ctp;
-               fstvar: stp);
-      variant: (nxtvar, subvar, caslst: stp;
-                varval: valu)
+      pointer:  (eltype: stp);
+      power:    (elset: stp;
+                 matchpack: Boolean);
+      arrays:   (aeltype, inxtype: stp);
+      records:  (fstfld: ctp;
+                 recvar: stp;
+                 recyc: stp);
+      files:    (filtype: stp);
+      tagfld:   (tagfieldp: ctp;
+                 fstvar: stp);
+      variant:  (nxtvar, subvar, caslst: stp;
+                 varval: valu)
   end;
 
                                                             { names }
@@ -343,11 +343,11 @@ type
     case klass: idclass of
       types: ();
       konst: (values: valu);
-      vars: (vkind: idkind;
-             vlev: levrange;
-             vaddr: addrrange;
-             threat: Boolean;
-             forcnt: Integer);
+      vars:  (vkind: idkind;
+              vlev: levrange;
+              vaddr: addrrange;
+              threat: Boolean;
+              forcnt: Integer);
       field: (fldaddr: addrrange;
               varnt: stp;
               varlb: ctp;
@@ -356,17 +356,16 @@ type
               varsaddr: addrrange;
               varssize: addrrange);
       proc,
-      func: (pfaddr: addrrange;
-             pflist: ctp; { param list }
-             asgn: Boolean; { assigned }
-             case pfdeckind: declkind of
-               standard: (key: 1..18);
-               declared: (pflev: levrange;
-                          pfname: Integer;
-                          case pfkind: idkind of
-                            actual: (forwdecl,
-                                     externl: Boolean);
-                            formal: ()))
+      func:  (pfaddr: addrrange;
+              pflist: ctp; { param list }
+              asgn: Boolean; { assigned }
+              case pfdeckind: declkind of
+                standard: (key: 1..18);
+                declared: (pflev: levrange;
+                           pfname: Integer;
+                           case pfkind: idkind of
+                             actual: (forwdecl, externl: Boolean);
+                             formal: ()))
   end;
 
   disprange = 0..displimit;
@@ -380,7 +379,7 @@ type
   attr = record
     typtr: stp;
     case kind: attrkind of
-      cst: (cval: valu);
+      cst:   (cval: valu);
       varbl: (packing: Boolean;
               packcom: Boolean;
               tagfield: Boolean;
@@ -390,11 +389,11 @@ type
               vartagoff: addrrange;
               varssize: addrrange;
               case access: vaccess of
-                drct: (vlevel: levrange;
-                       dplmt: addrrange);
+                drct:   (vlevel: levrange;
+                         dplmt: addrrange);
                 indrct: (idplmt: addrrange);
-                inxd: ());
-      expr: ()
+                inxd:   ());
+      expr:  ()
   end;
 
                                                             { labels }

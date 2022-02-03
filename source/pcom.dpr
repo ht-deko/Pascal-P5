@@ -322,7 +322,7 @@ type
                  fstvar: stp; 
                  vart: vartpt;
                  varts: varinx);
-      variant:  (nxtvar, subvar, caslst: stp; 
+      variant:  (nxtvar, subvar, caslst: stp;
                  varval: valu;
                  varln: Integer)
   end;
@@ -344,7 +344,7 @@ type
     llink, rlink: ctp;
     idtype: stp; 
     next: ctp; 
-    keep: Boolean; 
+    keep: Boolean;
     refer: Boolean;
     defined: Boolean;
     case klass: idclass of
@@ -363,16 +363,17 @@ type
               varsaddr: addrrange; 
               varssize: addrrange;
               vartl: Integer);
-      proc, func:  (pfaddr: addrrange; 
-                    pflist: ctp; { param list }
-                    asgn: Boolean; { assigned }
-                    case pfdeckind: declkind of
-                      standard: (key: 1..18);
-                      declared: (pflev: levrange; 
-                                 pfname: Integer;
-                                 case pfkind: idkind of
-                                   actual: (forwdecl, externl: Boolean);
-                                   formal: ()))
+      proc,
+      func:  (pfaddr: addrrange;
+              pflist: ctp; { param list }
+              asgn: Boolean; { assigned }
+              case pfdeckind: declkind of
+                standard: (key: 1..18);
+                declared: (pflev: levrange;
+                           pfname: Integer;
+                           case pfkind: idkind of
+                             actual: (forwdecl, externl: Boolean);
+                             formal: ()))
   end;
 
 
@@ -388,7 +389,7 @@ type
     typtr: stp;
     case kind: attrkind of
       cst:   (cval: valu);
-      varbl: (packing: Boolean; 
+      varbl: (packing: Boolean;
               packcom: Boolean;
               tagfield: Boolean; 
               taglvl: Integer; 
@@ -1020,7 +1021,6 @@ begin
 end { lenpv };
 
 { find padded length of id string }
-
 function lenp(var s: idstr): Integer;
 var
   l: Integer;
