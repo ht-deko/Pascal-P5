@@ -245,8 +245,8 @@ var
   store       : packed array [0..maxstr] of Byte; { complete program storage }
   storedef    : packed array [0..maxdef] of Byte; { defined bits }
   sdi         : 0..maxdef; { index for that }
-  cp          : address;  {  pointer to next free constant position  }
-  mp, sp, np, ep: address;  {  address registers  }
+  cp          : address;  { pointer to next free constant position }
+  mp, sp, np, ep: address;  { address registers  }
   { mp  points to beginning of a data segment
     sp  points to top of the stack
     ep  points to the maximum extent of the stack
@@ -257,7 +257,7 @@ var
 
   prd, prr    : Text; { prd for read only, prr for write only  }
 
-  instr       : array [instyp] of alfa; {  mnemonic instruction codes  }
+  instr       : array [instyp] of alfa; { mnemonic instruction codes }
   sptable     : array [0..maxsp] of alfa; { standard functions and procedures }
   insp        : array [instyp] of Boolean; { instruction includes a p parameter }
   insq        : array [instyp] of 0..32; { length of q parameter }
@@ -1265,7 +1265,7 @@ var
 
   procedure generate; { generate segment of code }
   var
-    x: Integer; {  label number  }
+    x: Integer; { label number }
     l: Integer;
     again: Boolean;
     ch1: Char;
@@ -1277,7 +1277,7 @@ var
     begin
       if Eof(prd) then
         errorl('unexpected eof on input  ');
-      getnxt; {  first character of line }
+      getnxt; { first character of line }
       if not CharInSet(ch, ['!', 'l', 'q', ' ', ':', 'o', 'g', 'v', 'f', 'x'])
         then
         errorl('unexpected line start    ');
@@ -1435,7 +1435,7 @@ var
     c: Char;
     str: packed array [1..stringlgth] of Char; { buffer for string constants }
 
-    procedure lookup(x: labelrg); {  search in label table }
+    procedure lookup(x: labelrg); { search in label table }
     begin
       case labeltab[x].st of
         entered:
@@ -2414,7 +2414,7 @@ var
   procedure writestr(var f: Text; ad: address; w: Integer; l: Integer);
   var
     i: Integer;
-  begin {  l and w are numbers of characters  }
+  begin { l and w are numbers of characters }
     if w > l then
       for i := 1 to w - l do
         Write(f, ' ')
@@ -3494,7 +3494,7 @@ begin
     fndpow(maxpow16, 16, hexdig);
 
     Writeln('Assembling/loading program');
-    load; {  assembles and stores code  }
+    load; { assembles and stores code }
 
     { check and abort if source errors: this indicates a bad intermediate }
     if errsinprg > 0 then
@@ -3793,7 +3793,7 @@ begin
             pc := pc + intsize;
             pshint(i)
           end;
-        125 { ldcn }: pshadr(nilval) {  load nil  };
+        125 { ldcn }: pshadr(nilval) { load nil };
         124 { ldcr }:
           begin
             getq;
@@ -3875,8 +3875,8 @@ begin
           begin
             { p=level of calling procedure minus level of called
               procedure + 1;  set dl and sl, decrement sp }
-            {  then length of this element is
-              max(intsize, realsize, boolsize, charsize, ptrsize  }
+            { then length of this element is
+              max(intsize, realsize, boolsize, charsize, ptrsize }
             getp;
             getq;
             { allocate function result as zeros }
@@ -3894,9 +3894,9 @@ begin
             { for j := 0 to maxresult-1 do putdef(ad+markfv+j, False); }
 
             putadr(ad + marksl, base(p)); { sl }
-            {  the length of this element is ptrsize  }
+            { the length of this element is ptrsize }
             putadr(ad + markdl, mp); { dl }
-            {  idem  }
+            { idem }
             putadr(ad + markep, ep) { ep }
           end;
 
@@ -4476,7 +4476,7 @@ begin
               store[i1 + i3] := store[i2 + i3];
               putdef(i1 + i3, getdef(i2 + i3))
             end;
-            {  q is a number of storage units  }
+            { q is a number of storage units }
           end;
          56 { lca }:
           begin

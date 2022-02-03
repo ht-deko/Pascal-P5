@@ -203,13 +203,13 @@ const
     in pint. However, it is used frequently in Perberton's documentation, so I
     left it, but equated it to the more portable marksize. }
   lcaftermarkstack = -marksize;
-  {  stackelsize = minimum size for 1 stackelement
-                 = k*stackal
-     stackal     = scm(all other al-constants)
-     charmax     = scm(charsize, charal)
-                   scm = smallest common multiple
-     lcaftermarkstack >= maxresult+3*ptrsize+max(x-size)
-                       = k1*stackelsize           }
+  { stackelsize = minimum size for 1 stackelement
+                = k*stackal
+    stackal     = scm(all other al-constants)
+    charmax     = scm(charsize, charal)
+                  scm = smallest common multiple
+    lcaftermarkstack >= maxresult+3*ptrsize+max(x-size)
+                      = k1*stackelsize           }
   parmal     = stackal;
   parmsize   = stackelsize;
   recal      = stackal;
@@ -458,48 +458,48 @@ type
 { ------------------------------------------------------------------------- }
 
 var
-  prd, prr: Text;                 { output code file }
+  prd, prr: Text;                  { output code file }
 
-                                  { returned by source program scanner
-                                   insymbol:
-                                   ********* }
+                                   { returned by source program scanner
+                                    insymbol:
+                                    ********* }
 
-  sy: symbol;                     { last symbol }
-  op: operatort;                  { classification of last symbol }
-  val: valu;                      { value of last constant }
-  lgth: Integer;                  { length of last string constant }
-  id: idstr;                      { last identifier (possibly truncated) }
-  kk: 1..maxids;                  { nr of chars in last identifier }
-  ch: Char;                       { last character }
-  eol: Boolean;                   { end of line flag }
+  sy: symbol;                      { last symbol }
+  op: operatort;                   { classification of last symbol }
+  val: valu;                       { value of last constant }
+  lgth: Integer;                   { length of last string constant }
+  id: idstr;                       { last identifier (possibly truncated) }
+  kk: 1..maxids;                   { nr of chars in last identifier }
+  ch: Char;                        { last character }
+  eol: Boolean;                    { end of line flag }
 
 
-                                  { counters: }
-                                  { ********* }
+                                   { counters: }
+                                   { ********* }
 
-  chcnt: Integer;                 { character counter }
-  ic, gc: addrrange;              { data location and instruction counter }
+  chcnt: Integer;                  { character counter }
+  ic, gc: addrrange;               { data location and instruction counter }
   lc: stkoff;
   linecount: Integer;
 
-                                  { switches: }
-                                  { ********* }
+                                   { switches: }
+                                   { ********* }
 
-  dp,                             { declaration part }
+  dp,                              { declaration part }
 
-  list: Boolean;                  { -- l: source program listing }
-  prcode: Boolean;                { -- c: print symbolic code }
-  prtables: Boolean;              { -- t: displaying ident and struct tables }
-  chkvar: Boolean;                { -- v: check variant records }
-  debug: Boolean;                 { -- d: Debug checks }
-  chkref: Boolean;                { -- r: Reference checks }
-  chkudtc, chkudtf: Boolean;      { -- u: Check undefined tagfields, candidate
-                                       and final }
-  dodmplex: Boolean;              { -- x: dump lexical }
-  doprtryc: Boolean;              { -- z: dump recycling tracker counts }
-  doprtlab: Boolean;              { -- b: print labels }
-  dodmpdsp: Boolean;              { -- y: dump the display }
-  chkvbk: Boolean;                { -- i: check VAR block violations }
+  list: Boolean;                   { -- l: source program listing }
+  prcode: Boolean;                 { -- c: print symbolic code }
+  prtables: Boolean;               { -- t: displaying ident and struct tables }
+  chkvar: Boolean;                 { -- v: check variant records }
+  debug: Boolean;                  { -- d: Debug checks }
+  chkref: Boolean;                 { -- r: Reference checks }
+  chkudtc, chkudtf: Boolean;       { -- u: Check undefined tagfields, candidate
+                                        and final }
+  dodmplex: Boolean;               { -- x: dump lexical }
+  doprtryc: Boolean;               { -- z: dump recycling tracker counts }
+  doprtlab: Boolean;               { -- b: print labels }
+  dodmpdsp: Boolean;               { -- y: dump the display }
+  chkvbk: Boolean;                 { -- i: check VAR block violations }
 
   { switches passed through to pint }
 
@@ -517,54 +517,54 @@ var
   { -- p: check reuse of freed entry }
   { -- q: check undefined accesses }
 
-  option: array ['a'..'z'] of     { option array }
+  option: array ['a'..'z'] of      { option array }
             Boolean;
 
 
-                                  { pointers: }
-                                  { ********* }
+                                   { pointers: }
+                                   { ********* }
   parmptr,
   intptr, realptr, charptr,
-  boolptr, nilptr, textptr: stp;  { pointers to entries of standard ids }
+  boolptr, nilptr, textptr: stp;   { pointers to entries of standard ids }
   uvarptr,
-  uprcptr, ufctptr,               { pointers to entries for undeclared ids }
-  fwptr: ctp;                     { head of chain of forw decl type ids }
-  outputptr, inputptr: ctp;       { pointers to default files }
-  usclrptr: ctp;                  { used to satisfy broken record tag fields }
-  fextfilep: extfilep;            { head of chain of external files }
-  wthstk: wtp;                    { stack of with entries active }
+  uprcptr, ufctptr,                { pointers to entries for undeclared ids }
+  fwptr: ctp;                      { head of chain of forw decl type ids }
+  outputptr, inputptr: ctp;        { pointers to default files }
+  usclrptr: ctp;                   { used to satisfy broken record tag fields }
+  fextfilep: extfilep;             { head of chain of external files }
+  wthstk: wtp;                     { stack of with entries active }
 
-                                  { bookkeeping of declaration levels: }
-                                  { ********************************** }
+                                   { bookkeeping of declaration levels: }
+                                   { ********************************** }
 
-  level: levrange;                { current static level }
-  scopen: Integer;                { scope open count }
-  disx,                           { level of last id searched by searchid }
-  top: disprange;                 { top of display }
+  level: levrange;                 { current static level }
+  scopen: Integer;                 { scope open count }
+  disx,                            { level of last id searched by searchid }
+  top: disprange;                  { top of display }
 
-  display:                        { where:   means: }
+  display:                         { where:   means: }
     array [disprange] of
-      packed record               { =blck:   id is variable id }
-        fname: ctp; 
-        flabel: lbp;              { =crec:   id is field id in record with }
-        fconst: csp; 
+      packed record                { =blck:   id is variable id }
+        fname: ctp;
+        flabel: lbp;               { =crec:   id is field id in record with }
+        fconst: csp;
         fstruct: stp;
-        packing: Boolean;         { used for with derived from packed }
-        packcom: Boolean;         { used for with derived from packed }
-        ptrrec: Boolean;          { record derived from pointer }
-        case occur: where of      {    constant address }
-          crec: (clev: levrange;  { =vrec:   id is field id in record with }
-                cdspl: addrrange);{    variable address }
+        packing: Boolean;          { used for with derived from packed }
+        packcom: Boolean;          { used for with derived from packed }
+        ptrrec: Boolean;           { record derived from pointer }
+        case occur: where of       {    constant address }
+          crec: (clev: levrange;   { =vrec:   id is field id in record with }
+                 cdspl: addrrange);{    variable address }
           vrec: (vdspl: addrrange);
-          blck: (bname: ctp);     { block id }
-          rec: ()
-      end;                        {  --> procedure withstatement }
+          blck: (bname: ctp);      { block id }
+          rec:  ()
+      end;                         {  --> procedure withstatement }
 
 
-                                  { error messages: }
-                                  { *************** }
+                                   { error messages: }
+                                   { *************** }
 
-  errinx: 0..10;                  { nr of errors in current source line }
+  errinx: 0..10;                   { nr of errors in current source line }
   errlist:
     array [1..10] of
       packed record 
@@ -574,13 +574,13 @@ var
 
 
 
-                                  { expression compilation: }
-                                  { *********************** }
+                                   { expression compilation: }
+                                   { *********************** }
 
-  gattr: attr;                    { describes the expr currently compiled }
+  gattr: attr;                     { describes the expr currently compiled }
 
-                                  { structured constants: }
-                                  { ********************* }
+                                   { structured constants: }
+                                   { ********************* }
 
   constbegsys, simptypebegsys, typebegsys, blockbegsys, selectsys, facbegsys,
   statbegsys, typedels: setofsys;
@@ -2241,7 +2241,7 @@ begin
   until syv;
 
   if dodmplex then
-  begin {  lexical dump }
+  begin { lexical dump }
     Writeln;
     Write('symbol: ');
     case sy of
@@ -5537,7 +5537,7 @@ var
                     Write(prr, 's(');
                     with cstptr[fp2]^ do
                       for k := setlow to sethigh do
-                        {  increased for testing [sam]  }
+                        { increased for testing [sam] }
                         if k in pval then
                           Write(prr, k: 7 { 3 });
                     Writeln(prr, ')');
@@ -8453,7 +8453,7 @@ var
         lsy: symbol;
         lcix, laddr: Integer;
         llc, lcs: addrrange;
-        typind: Char; {  added for typing [sam]  }
+        typind: Char; { added for typing [sam] }
         typ: stp;
       begin
         lcp := nil;
@@ -8469,7 +8469,7 @@ var
           dplmt := 0;
           packing := False
         end;
-        typind := 'i'; {  default to integer [sam]  }
+        typind := 'i'; { default to integer [sam] }
         if sy = ident then
         begin
           searchid([vars], lcp);
@@ -8495,7 +8495,7 @@ var
               typtr := nil
             end
           end;
-          {  determine type of control variable [sam]  }
+          { determine type of control variable [sam] }
           if lattr.typtr = boolptr then
             typind := 'b'
           else if lattr.typtr = charptr then
@@ -9558,7 +9558,7 @@ begin
   wthstk := nil;
   lc := lcaftermarkstack;
   gc := 0;
-  {  note in the above reservation of buffer store for 2 text files  }
+  { note in the above reservation of buffer store for 2 text files }
   ic := 3;
   eol := True;
   linecount := 0;

@@ -307,8 +307,8 @@ var
   store         : packed array [0..maxstr] of Byte; { complete program storage }
   storedef      : packed array [0..maxdef] of Byte; { defined bits }
   sdi           : 0..maxdef; { index for that }
-  cp            : address;   {  pointer to next free constant position  }
-  mp, sp, np, ep: address;   {  address registers  }
+  cp            : address;   { pointer to next free constant position  }
+  mp, sp, np, ep: address;   { address registers  }
   { mp  points to beginning of a data segment
     sp  points to top of the stack
     ep  points to the maximum extent of the stack
@@ -319,7 +319,7 @@ var
 
   prd, prr      : Text; { prd for read only, prr for write only  }
 
-  instr         : array [instyp] of alfa; {  mnemonic instruction codes  }
+  instr         : array [instyp] of alfa; { mnemonic instruction codes  }
   sptable       : array [0..maxsp] of alfa; { standard functions and procedures }
   insp          : array [instyp] of Boolean; { instruction includes a p parameter }
   insq          : array [instyp] of 0..16; { length of q parameter }
@@ -1285,7 +1285,7 @@ var
 
   procedure generate; { generate segment of code }
   var
-    x: Integer; {  label number  }
+    x: Integer; { label number }
     again: Boolean;
     ch1: Char;
     s: string;
@@ -1295,8 +1295,7 @@ var
     begin
       if Eof(prd) then
         errorl('unexpected eof on input  ');
-      getnxt; {  first character of line }
-      //                if not CharInSet(ch, ['i', 'l', 'q', ' ', ':', 'o', 'g']) then
+      getnxt; { first character of line }
       if not CharInSet(ch, ['i', 'l', 'q', ' ', ':', 'o', 'g', 'x']) then
         errorl('unexpected line start    ');
       case ch of
@@ -1388,7 +1387,7 @@ var
     str: packed array [1..stringlgth] of Char; { buffer for string constants }
     t: Integer; { [sam] temp for compiler bug }
 
-    procedure lookup(x: labelrg); {  search in label table }
+    procedure lookup(x: labelrg); { search in label table }
     begin
       case labeltab[x].st of
         entered:
@@ -1480,7 +1479,7 @@ var
     if op = maxins then
       errorl('illegal instruction      ');
 
-    case op of {  get parameters p,q  }
+    case op of { get parameters p,q }
 
       { lod, str, lda, lip }
         0, 193, 105, 106, 107, 108, 109, 195,
@@ -2256,7 +2255,7 @@ var
   procedure writestr(var f: Text; ad: address; w: Integer; l: Integer);
   var
     i: Integer;
-  begin {  l and w are numbers of characters  }
+  begin { l and w are numbers of characters }
     if w > l then
       for i := 1 to w - l do
         Write(f, ' ')
@@ -3247,7 +3246,7 @@ begin
       storedef[sdi] := 0; { clear storage defined flags }
 
     Writeln('Assembling/loading program');
-    load; {  assembles and stores code  }
+    load; { assembles and stores code }
 
     pc := 0;
     sp := cp;
@@ -3539,7 +3538,7 @@ begin
             pc := pc + intsize;
             pshint(i)
           end;
-        125 { ldcn }: pshadr(nilval) {  load nil  };
+        125 { ldcn }: pshadr(nilval) { load nil };
         124 { ldcr }:
           begin
             getq;
@@ -3621,19 +3620,19 @@ begin
           begin
             { p=level of calling procedure minus level of called
               procedure + 1;  set dl and sl, decrement sp }
-            {  then length of this element is
-              max(intsize, realsize, boolsize, charsize, ptrsize  }
+            { then length of this element is
+              max(intsize, realsize, boolsize, charsize, ptrsize }
             getp;
             ad := sp; { save mark base }
             { allocate mark }
             for j := 1 to marksize div intsize do
               pshint(0);
             putadr(ad + marksl, base(p)); { sl }
-            {  the length of this element is ptrsize  }
+            { the length of this element is ptrsize }
             putadr(ad + markdl, mp); { dl }
-            {  idem  }
+            { idem }
             putadr(ad + markep, ep); { ep }
-            {  idem  }
+            { idem }
           end;
 
          12 { cup }:
@@ -4242,7 +4241,7 @@ begin
               store[i1 + i3] := store[i2 + i3];
               putdef(i1 + i3, getdef(i2 + i3))
             end;
-            {  q is a number of storage units  }
+            { q is a number of storage units }
           end;
          56 { lca }:
           begin
