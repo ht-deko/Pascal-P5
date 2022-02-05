@@ -1,5 +1,6 @@
 # Pascal-P5
-Pascal-P5 for Delphi.
+P5 Pascal compiler for Delphi.
+Pascal-P5 complies with the requirements of level 0 of ISO/IEC 7185.
 
 ![image](https://user-images.githubusercontent.com/14885863/149734940-da303252-b089-4ee0-a337-8d3fa69633ee.png)
 ![image](https://user-images.githubusercontent.com/14885863/149663300-e320f4ce-f4ba-45bc-9771-1442c391f140.png)
