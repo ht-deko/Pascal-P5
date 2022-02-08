@@ -3,7 +3,7 @@ unit uPCommon;
 interface
 
 uses
-  System.SysUtils, System.Math, System.IOUtils;
+  System.SysUtils, System.IOUtils;
 
 const
   p5temp     = 'P5TMP';
@@ -48,10 +48,9 @@ end { Get };
 
 function Mod2(a, n: Integer): Integer;
 begin
-  if n = 0 then
-    Result := a
-  else
-    Result := a - Floor(Extended(a / n)) * n;
+  Result := a - (a div n) * n;
+  if Result < 0 then
+    Result := Result + n;
 end { Mod2 };
 
 procedure Page(var F: Text);
